@@ -203,7 +203,7 @@ func main() {
 		Name: "MCP Gateway", Description: "个人 MCP 服务与本机网关管理器", LogLevel: slog.LevelWarn,
 		Services:       []application.Service{application.NewService(service)},
 		Assets:         application.AssetOptions{Handler: application.BundledAssetFileServer(assets)},
-		Mac:            application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: false},
+		Mac:            application.MacOptions{ActivationPolicy: application.ActivationPolicyAccessory, ApplicationShouldTerminateAfterLastWindowClosed: false},
 		SingleInstance: &application.SingleInstanceOptions{UniqueID: "com.mcp-gateway.desktop", EncryptionKey: sha256.Sum256([]byte("com.mcp-gateway.desktop.activation")), OnSecondInstanceLaunch: func(application.SecondInstanceData) { show() }},
 		ShouldQuit: func() bool {
 			if quitAllowed.Load() {

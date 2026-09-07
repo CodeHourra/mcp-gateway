@@ -9,7 +9,7 @@ export interface ServiceConfig {
   sources?: string[]
 }
 export interface Service extends ServiceConfig {
-  id: string; status: string; statusMessage?: string; toolCount: number; lastConnected?: string
+  id: string; status: string; statusMessage?: string; statusDetail?: string; toolCount: number; lastConnected?: string
   authStatus?: string; catalogStatus?: string
 }
 export interface Tool {

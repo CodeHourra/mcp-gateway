@@ -411,6 +411,10 @@ func (m *Manager) Snapshot(ctx context.Context) (any, error) {
 		out := Object{}
 		_ = json.Unmarshal(b, &out)
 		out["status"], out["statusMessage"], out["toolCount"], out["authStatus"] = r["status"], m.RedactText(stringValue(object(r["health"])["summary"])), r["tool_count"], r["oauth_status"]
+		if detail := m.RedactText(stringValue(r["last_error"])); detail != "" && !boolean(r["connected"]) {
+			out["statusDetail"] = detail
+			out["statusMessage"] = connectionErrorSummary(s.Command, detail)
+		}
 		out["catalogStatus"] = "live"
 		if !boolean(r["connected"]) {
 			out["catalogStatus"] = "cached"

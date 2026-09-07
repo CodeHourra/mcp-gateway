@@ -1,0 +1,166 @@
+--- a/internal/secureenv/manager.go
++++ b/internal/secureenv/manager.go
+@@ -4,6 +4,7 @@
+ 	"net/url"
+ 	"os"
+ 	"runtime"
++	"slices"
+ 	"strings"
+ 
+ 	"github.com/smart-mcp-proxy/mcpproxy-go/internal/shellwrap"
+@@ -404,14 +405,8 @@
+ // well-known tool directories, and the existing PATH inherited from the
+ // parent process.
+ //
+-// Enhancement is gated on EnvConfig.EnhancePath being explicitly opted in
+-// (true today only for stdio upstream servers — see core/client.go) and on
+-// the existing PATH NOT already containing a comprehensive tool directory.
+-// Issue #439: the previous gate `len(pathParts) <= 2` blocked enhancement
+-// for the launchd-handed `/usr/bin:/bin:/usr/sbin:/sbin` (4 entries), which
+-// is exactly the bad PATH that triggers the bug. We drop that gate and
+-// instead rely on login-shell capture + static discovery to enrich PATH
+-// whenever it lacks /usr/local/bin or /opt/homebrew/bin.
++// Existing common-tool PATHs keep their priority and gain missing discovered
++// directories when enhancement is enabled; other paths also use login-shell capture.
+ func (m *Manager) buildEnhancedPath(existingPath string) string {
+ 	sep := string(os.PathListSeparator)
+ 
+@@ -421,8 +416,8 @@
+ 
+ 	pathParts := strings.Split(existingPath, sep)
+ 
+-	// If PATH already contains a common tool directory the user is fine —
+-	// don't pollute their carefully-set PATH with login-shell capture.
++	// For common tool paths, preserve priority and append discovered directories
++	// without invoking another login shell.
+ 	commonToolDirs := []string{"/usr/local/bin", "/opt/homebrew/bin"}
+ 	if runtime.GOOS == osWindows {
+ 		commonToolDirs = []string{`C:\Program Files\Docker\Docker\resources\bin`}
+@@ -430,7 +425,15 @@
+ 	for _, toolDir := range commonToolDirs {
+ 		for _, pathPart := range pathParts {
+ 			if pathPart == toolDir {
+-				return existingPath
++				// Preserve configured priority, but Homebrew alone does not include user tools.
++				if m.config.EnhancePath {
++					for _, discovered := range m.pathDiscovery.DiscoveredPaths {
++						if !slices.Contains(pathParts, discovered) {
++							pathParts = append(pathParts, discovered)
++						}
++					}
++				}
++				return strings.Join(pathParts, sep)
+ 			}
+ 		}
+ 	}
+--- a/internal/secureenv/docker_path_test.go
++++ b/internal/secureenv/docker_path_test.go
+@@ -107,14 +107,14 @@
+ 		assert.True(t, usrBinIndex >= 0, "/usr/bin should be in the PATH")
+ 	})
+ 
+-	t.Run("PATH enhancement skipped for comprehensive paths", func(t *testing.T) {
++	t.Run("PATH enhancement preserves common path priority", func(t *testing.T) {
+ 		// Set up a comprehensive PATH that already includes common tool directories
+ 		os.Setenv("PATH", "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin")
+ 
+ 		manager := NewManager(&EnvConfig{
+ 			InheritSystemSafe: true,
+ 			AllowedSystemVars: []string{"PATH", "HOME"},
+-			EnhancePath:       true, // Enabled, but should not enhance comprehensive paths
++			EnhancePath:       true, // Preserve existing priority and add missing paths
+ 		})
+ 
+ 		envVars := manager.BuildSecureEnvironment()
+@@ -128,9 +128,11 @@
+ 			}
+ 		}
+ 
+-		// Should NOT be enhanced because it already has /usr/local/bin
+-		assert.Equal(t, "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", envMap["PATH"],
+-			"Comprehensive PATH should not be enhanced")
++		// Existing directories stay first; missing discovered tools are appended.
++		assert.True(t, strings.HasPrefix(envMap["PATH"], "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"))
++		for _, dir := range manager.pathDiscovery.DiscoveredPaths {
++			assert.Contains(t, strings.Split(envMap["PATH"], string(os.PathListSeparator)), dir)
++		}
+ 	})
+ }
+ 
+--- a/internal/secureenv/launchd_path_test.go
++++ b/internal/secureenv/launchd_path_test.go
+@@ -174,11 +174,7 @@
+ 	assert.Greater(t, len(parts), 4, "even without login-shell capture, static discovery must enhance the launchd-minimal PATH")
+ }
+ 
+-// TestLaunchdMinimalPath_AlreadyComprehensive verifies the existing
+-// behaviour: when PATH is already comprehensive (contains /usr/local/bin or
+-// /opt/homebrew/bin), do not touch it. Same as the existing
+-// "PATH enhancement skipped for comprehensive paths" test, restated for
+-// clarity in the launchd context.
++// TestLaunchdMinimalPath_AlreadyComprehensive preserves priority without shell capture.
+ func TestLaunchdMinimalPath_AlreadyComprehensive(t *testing.T) {
+ 	if runtime.GOOS == "windows" {
+ 		t.Skip("launchd PATH semantics are macOS/Linux-only")
+@@ -211,8 +207,11 @@
+ 	})
+ 
+ 	pathVal := getPATH(manager.BuildSecureEnvironment())
+-	assert.Equal(t, comprehensivePath, pathVal,
+-		"comprehensive PATH must be returned unchanged — terminal-launched processes should not be polluted by login-shell capture")
++	assert.True(t, strings.HasPrefix(pathVal, comprehensivePath))
++	assert.NotContains(t, pathVal, "/Users/test/.local/share/mise/shims", "must not invoke login-shell capture on this path")
++	for _, dir := range manager.pathDiscovery.DiscoveredPaths {
++		assert.Contains(t, strings.Split(pathVal, string(os.PathListSeparator)), dir)
++	}
+ }
+ 
+ // TestBuildSecureEnvironment_AllowsHydratedDockerVars verifies the allow-list
+--- /dev/null
++++ b/internal/secureenv/gateway_path_test.go
+@@ -0,0 +1,45 @@
++package secureenv
++
++import (
++	"os"
++	"os/exec"
++	"path/filepath"
++	"runtime"
++	"strings"
++	"testing"
++
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/shellwrap"
++)
++
++func TestGatewayUserToolAlongsideHomebrew(t *testing.T) {
++	if runtime.GOOS != "darwin" {
++		t.Skip("macOS login shell regression")
++	}
++	home := t.TempDir()
++	bin := filepath.Join(home, ".local", "bin")
++	if err := os.MkdirAll(bin, 0700); err != nil {
++		t.Fatal(err)
++	}
++	if err := os.WriteFile(filepath.Join(bin, "gateway-uvx-test"), []byte("#!/bin/sh\nprintf user-tool-found"), 0700); err != nil {
++		t.Fatal(err)
++	}
++	t.Setenv("HOME", home)
++	t.Setenv("SHELL", "/bin/zsh")
++	t.Setenv("PATH", "/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin")
++	cfg := DefaultEnvConfig()
++	cfg.EnhancePath = true
++	manager := NewManager(cfg)
++	env := manager.BuildSecureEnvironment()
++	shell, args := shellwrap.WrapWithUserShell(nil, "gateway-uvx-test", nil)
++	cmd := exec.CommandContext(t.Context(), shell, args...)
++	cmd.Env = env
++	out, err := cmd.CombinedOutput()
++	if err != nil || string(out) != "user-tool-found" {
++		t.Fatalf("tool launch: %v %s", err, out)
++	}
++	cfg.EnhancePath = false
++	unchanged := manager.buildEnhancedPath(os.Getenv("PATH"))
++	if strings.Contains(unchanged, bin) {
++		t.Fatal("opt-out must remain unchanged")
++	}
++}
