@@ -1,0 +1,34 @@
+{
+  "assets": [
+    "wails://localhost/assets/index-iT6XfGHX.js",
+    "wails://localhost/assets/index-BoBN_fZV.css"
+  ],
+  "colorScheme": "dark",
+  "gateway": {
+    "activeCalls": 0,
+    "address": "http://127.0.0.1:19240/mcp/call",
+    "credentialStorage": "macOS 钥匙串",
+    "error": "",
+    "paused": false,
+    "status": "running",
+    "version": "0.1.0-dev"
+  },
+  "localTheme": "dark",
+  "picker": "dark",
+  "rootBackground": "rgb(32, 33, 36)",
+  "services": [
+    {
+      "id": "native-echo",
+      "status": "ready"
+    }
+  ],
+  "settings": {
+    "launchAtLogin": false,
+    "listenAddress": "127.0.0.1:19240",
+    "logRetentionDays": 14,
+    "mode": "progressive",
+    "theme": "dark"
+  },
+  "sidebarBackground": "rgb(39, 41, 45)",
+  "theme": "dark"
+}

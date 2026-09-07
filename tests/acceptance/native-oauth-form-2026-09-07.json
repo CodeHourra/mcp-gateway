@@ -1,0 +1,87 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "clear_authorization_confirmation",
+      "value": "清除本地授权这会清除本机保存的授权凭证，服务将需要重新登录；不会撤销提供方账户中的授权。取消清除本地授权"
+    },
+    {
+      "name": "local_oauth_cleared",
+      "value": {
+        "serviceStatus": "disconnected",
+        "message": "已清除本地授权；提供方的授权需在其账户设置中撤销。"
+      }
+    },
+    {
+      "name": "oauth_cancelled_from_ui",
+      "value": {
+        "message": "",
+        "status": "completed"
+      }
+    },
+    {
+      "name": "cancelled_flow_remains_unauthorized_after_fixture_autosubmit",
+      "value": {
+        "serviceStatus": "error"
+      }
+    },
+    {
+      "name": "oauth_native_browser_login_started",
+      "value": {
+        "message": "授权请求已发起，请完成浏览器授权。",
+        "status": "pending"
+      }
+    },
+    {
+      "name": "oauth_authorized_service",
+      "value": {
+        "service": {
+          "args": [],
+          "auth": {
+            "env": [],
+            "headers": [],
+            "scopes": [],
+            "type": "oauth"
+          },
+          "authStatus": null,
+          "catalogStatus": "live",
+          "command": "",
+          "cwd": "",
+          "enabled": true,
+          "id": "native-oauth",
+          "name": "native-oauth",
+          "sources": [],
+          "status": "ready",
+          "statusMessage": "Connected (2 tools)",
+          "toolCount": 2,
+          "transport": "http",
+          "url": "http://127.0.0.1:63949/mcp"
+        },
+        "consentMechanism": "The actual browser loads the official loopback fixture page, whose login.html submits its public test account and consent after five seconds. No agent POST or manual consent click is claimed."
+      }
+    },
+    {
+      "name": "oauth_refresh_from_ui",
+      "value": {
+        "message": "",
+        "status": "completed"
+      }
+    },
+    {
+      "name": "authorized_oauth_tool_call",
+      "value": {
+        "content": [
+          {
+            "text": "Echo: native OAuth form proof",
+            "type": "text"
+          }
+        ]
+      }
+    }
+  ],
+  "scenario": "oauth-form",
+  "passed": true,
+  "appSHA256": "258c5910c02a9793b1b748f5bd8784318ed776099439f79991a0f5578413380f",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "artifactIdentitySource": "Root supplied running bundle identity for this recorded execution; current script now records file hashes automatically."
+}

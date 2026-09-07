@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "valid": true,
+  "values": [
+    {
+      "checked": false,
+      "value": "native-echo"
+    },
+    {
+      "checked": false,
+      "value": "/Users/steve/.pyenv/versions/3.12.10/bin/python3"
+    },
+    {
+      "value": "[\"/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/core_probe.py\",\"stdio\"]"
+    },
+    {
+      "checked": false,
+      "value": ""
+    },
+    {
+      "checked": true,
+      "value": "on"
+    }
+  ]
+}

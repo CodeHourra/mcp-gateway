@@ -1,0 +1,20 @@
+{
+  "feedback": "运行设置已保存。\n×\n",
+  "gateway": {
+    "activeCalls": 0,
+    "address": "http://127.0.0.1:19240/mcp/call",
+    "credentialStorage": "macOS 钥匙串",
+    "error": "",
+    "paused": false,
+    "status": "running",
+    "version": "0.1.0-dev"
+  },
+  "localTheme": "dark",
+  "settings": {
+    "launchAtLogin": false,
+    "listenAddress": "127.0.0.1:19240",
+    "logRetentionDays": 14,
+    "mode": "progressive",
+    "theme": "dark"
+  }
+}

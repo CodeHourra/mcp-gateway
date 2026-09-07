@@ -1,0 +1,94 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "existing_oauth_restored_after_final_bundle_restart",
+      "value": {
+        "ownership": {
+          "appPID": 26211,
+          "corePID": 26279,
+          "listenAddress": "127.0.0.1:19240",
+          "ownershipVerified": true
+        },
+        "oauthStatus": "authenticated",
+        "calls": {
+          "echoSucceeded": true,
+          "oauthToolSucceededWithoutNewLogin": true,
+          "serviceStates": {
+            "native-api-key": "ready",
+            "native-bearer": "ready",
+            "native-echo": "ready",
+            "native-env": "ready",
+            "native-headers": "ready",
+            "native-oauth": "ready"
+          }
+        }
+      }
+    },
+    {
+      "name": "oauth_authenticated_label",
+      "value": "已登录"
+    },
+    {
+      "name": "live_catalog_has_no_offline_notice",
+      "value": {
+        "inspector": "native-echo",
+        "offlineNotice": false
+      }
+    },
+    {
+      "name": "disabled_service_keeps_cached_notice",
+      "value": "工具目录：缓存目录。连接恢复后可重新读取。"
+    },
+    {
+      "name": "reconnected_live_catalog_notice_removed",
+      "value": true
+    },
+    {
+      "name": "oauth_cleared_label",
+      "value": {
+        "authStatus": "none",
+        "label": "需要登录",
+        "message": "已清除本地授权；提供方的授权需在其账户设置中撤销。"
+      }
+    },
+    {
+      "name": "oauth_relogin_and_final_calls",
+      "value": {
+        "echoSucceeded": true,
+        "oauthToolSucceededWithoutNewLogin": true,
+        "serviceStates": {
+          "native-api-key": "ready",
+          "native-bearer": "ready",
+          "native-echo": "ready",
+          "native-env": "ready",
+          "native-headers": "ready",
+          "native-oauth": "ready"
+        }
+      }
+    },
+    {
+      "name": "final_test_profile",
+      "value": {
+        "ownership": {
+          "appPID": 26211,
+          "corePID": 26279,
+          "listenAddress": "127.0.0.1:19240",
+          "ownershipVerified": true
+        },
+        "settings": {
+          "launchAtLogin": false,
+          "listenAddress": "127.0.0.1:19240",
+          "logRetentionDays": 14,
+          "mode": "progressive",
+          "theme": "dark"
+        },
+        "plaintextAdminKeyAbsent": true
+      }
+    }
+  ],
+  "scenario": "final-status-catalog",
+  "appSHA256": "691340596dcdde54b045bea5439383b8f275068a6b92cd786a915ca7c68419bd",
+  "coreSHA256": "0ad7d5b5a5b536f7a267c2b518168fd07320cf88a108d8c10af8e6a619ed3167",
+  "passed": true
+}

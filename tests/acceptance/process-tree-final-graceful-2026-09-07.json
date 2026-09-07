@@ -1,0 +1,30 @@
+{
+  "scope": "controlled core lifecycle; not native app acceptance",
+  "core": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/bin/MCP Gateway.app/Contents/MacOS/mcpproxy",
+  "sha256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "evidence_dir": "/private/tmp/mcp-gateway-process-tree-l_ywkt13",
+  "core_pid": 19372,
+  "core_pgid": 19372,
+  "core_exit_code": 0,
+  "shutdown_seconds": 1.036,
+  "shutdown_mode": "graceful",
+  "stop_result": null,
+  "call_outcome": {},
+  "before": {
+    "upstream:19433": {
+      "pid": 19433,
+      "pgid": 19433,
+      "alive": true
+    },
+    "descendant:19449": {
+      "pid": 19449,
+      "pgid": 19433,
+      "alive": true
+    }
+  },
+  "alive_after_graceful_shutdown": {
+    "upstream:19433": false,
+    "descendant:19449": false
+  },
+  "passed": true
+}

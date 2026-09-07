@@ -1,0 +1,31 @@
+{
+  "feedback": "工具已禁用。×",
+  "selected": "native-crud",
+  "services": [
+    {
+      "enabled": true,
+      "id": "native-crud",
+      "status": "ready"
+    },
+    {
+      "enabled": true,
+      "id": "native-echo",
+      "status": "ready"
+    }
+  ],
+  "toolRows": [
+    "›echoEcho a supplied text messagenative-crud · live已禁用最终调用受此权限控制允许调用参数类型说明text 必填string—查看完整 JSON Schema{\n  \"properties\": {\n    \"text\": {\n      \"type\": \"string\""
+  ],
+  "tools": [
+    {
+      "enabled": false,
+      "id": "WyJuYXRpdmUtY3J1ZCIsImVjaG8iXQ",
+      "service": "native-crud"
+    },
+    {
+      "enabled": true,
+      "id": "WyJuYXRpdmUtZWNobyIsImVjaG8iXQ",
+      "service": "native-echo"
+    }
+  ]
+}

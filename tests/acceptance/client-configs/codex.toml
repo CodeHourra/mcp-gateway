@@ -1,0 +1,4 @@
+# User config: ~/.codex/config.toml. Preserve all other tables when applying.
+[mcp_servers.gateway]
+url = "http://127.0.0.1:19480/mcp"
+bearer_token_env_var = "MCP_GATEWAY_AGENT_TOKEN"

@@ -1,0 +1,227 @@
+{
+  "banners": [],
+  "feedback": "已请求启动网关。\n×\n",
+  "snapshot": {
+    "activity": [
+      {
+        "durationMs": null,
+        "id": "01M1W3X7TW7M4C215Z9KS9R92K",
+        "kind": "system_start",
+        "message": "system_start",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T19:42:45.084245Z",
+        "toolName": null
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VS67677Y0FVPFFVF89KACA",
+        "kind": "system_start",
+        "message": "system_start",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T16:35:24.99994Z",
+        "toolName": null
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VS0WE5EY54FQY8KJFS7P3R",
+        "kind": "system_stop",
+        "message": "signal",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T16:32:30.149823Z",
+        "toolName": null
+      },
+      {
+        "durationMs": 67,
+        "id": "01M1VRF2MMK5S5J1HGVXTHZY8F",
+        "kind": "tool_call",
+        "message": "tool_call",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "success",
+        "time": "2026-09-06T16:22:46.676515Z",
+        "toolName": "echo"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VRE0GCRMTHX1X34FSYW1EP",
+        "kind": "tool_call",
+        "message": "tool 'echo' on server 'native-echo' failed: GATEWAY_PAUSED: new tool calls are paused. Check server configuration, authentication, and tool parameters",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "error",
+        "time": "2026-09-06T16:22:11.724519Z",
+        "toolName": "echo"
+      },
+      {
+        "durationMs": 74,
+        "id": "01M1VQRJT49H3GVXG48WBFSBWF",
+        "kind": "tool_call",
+        "message": "tool_call",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "success",
+        "time": "2026-09-06T16:10:29.572914Z",
+        "toolName": "echo"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQRJNSW2ZZ8TMZBT0XWZF9",
+        "kind": "internal_tool_call",
+        "message": "internal_tool_call",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T16:10:29.433095Z",
+        "toolName": "describe_tool"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQRJN1F6J1YT3KH9YGYTSA",
+        "kind": "internal_tool_call",
+        "message": "internal_tool_call",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T16:10:29.40916Z",
+        "toolName": "retrieve_tools"
+      },
+      {
+        "durationMs": 89,
+        "id": "01M1VQK23DNG79T9770XPCXWGF",
+        "kind": "tool_call",
+        "message": "tool_call",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "success",
+        "time": "2026-09-06T16:07:28.621005Z",
+        "toolName": "echo"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQG85SETY4BA1BQ02ZW67G",
+        "kind": "security_scan",
+        "message": "security_scan",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "success",
+        "time": "2026-09-06T16:05:56.53714Z",
+        "toolName": "security_scan"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQG706A44EJDA860FNYSC3",
+        "kind": "tool_quarantine_change",
+        "message": "tool_quarantine_change",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "tool_auto_approved",
+        "time": "2026-09-06T16:05:55.334612Z",
+        "toolName": "echo"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQ62PXY0E5V71RVGC5AGHG",
+        "kind": "system_start",
+        "message": "system_start",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T16:00:23.261268Z",
+        "toolName": null
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQ08EY6WFZ66H9Z02VX8SJ",
+        "kind": "system_stop",
+        "message": "signal",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T15:57:12.542505Z",
+        "toolName": null
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VPJ6V6JTHMP6B8GY657TQG",
+        "kind": "system_start",
+        "message": "system_start",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T15:49:32.134134Z",
+        "toolName": null
+      }
+    ],
+    "gateway": {
+      "activeCalls": 0,
+      "address": "http://127.0.0.1:19240/mcp/call",
+      "credentialStorage": "macOS 钥匙串",
+      "error": "",
+      "paused": false,
+      "status": "running",
+      "version": "0.1.0-dev"
+    },
+    "services": [
+      {
+        "args": [
+          "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/core_probe.py",
+          "stdio"
+        ],
+        "auth": {
+          "env": [],
+          "headers": [],
+          "scopes": [],
+          "type": "none"
+        },
+        "authStatus": null,
+        "catalogStatus": "live",
+        "command": "/Users/steve/.pyenv/versions/3.12.10/bin/python3",
+        "cwd": "",
+        "enabled": true,
+        "id": "native-echo",
+        "name": "native-echo",
+        "sources": [],
+        "status": "ready",
+        "statusMessage": "Connected (1 tool)",
+        "toolCount": 1,
+        "transport": "stdio",
+        "url": ""
+      }
+    ],
+    "settings": {
+      "launchAtLogin": false,
+      "listenAddress": "127.0.0.1:19240",
+      "logRetentionDays": 14,
+      "mode": "progressive",
+      "theme": "dark"
+    },
+    "tools": [
+      {
+        "catalogStatus": "live",
+        "description": "Echo a supplied text message",
+        "enabled": true,
+        "id": "WyJuYXRpdmUtZWNobyIsImVjaG8iXQ",
+        "inputSchema": {
+          "properties": {
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "type": "object"
+        },
+        "name": "echo",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo"
+      }
+    ]
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "scope": "Historical native Bearer failure caused by the CI=true test launch environment; final no-CI rerun passed.",
+  "originalFailedUIReportRetained": false,
+  "evidence": "Original runner JSON was replaced by its successful rerun; these are retained actual fixture rejection events after six fixture prechecks and core environment warnings, not reconstructed UI output.",
+  "rejectedNativeRequests": [
+    {
+      "at": "2026-09-07T06:13:34+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": "initialize",
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:13:34+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": "initialize",
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:13:34+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": null,
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:13:34+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": null,
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:13:34+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": "initialize",
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:13:34+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": "initialize",
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:13:34+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": null,
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:13:34+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": null,
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:14:04+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": "initialize",
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:14:04+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": "initialize",
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:14:04+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": null,
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    },
+    {
+      "at": "2026-09-07T06:14:04+0800",
+      "path": "/bearer/mcp",
+      "http_method": "POST",
+      "rpc_method": null,
+      "expected_headers_matched": {
+        "Authorization": false
+      },
+      "authentication_accepted": false
+    }
+  ],
+  "coreEnvironmentWarnings": [
+    {
+      "timestamp": "2026-09-07T06:13:34+08:00",
+      "server": "native-bearer",
+      "blocking_conditions": [
+        "CI=true",
+        "HEADLESS=true"
+      ]
+    },
+    {
+      "timestamp": "2026-09-07T06:13:34+08:00",
+      "server": "native-bearer",
+      "blocking_conditions": [
+        "CI=true",
+        "HEADLESS=true"
+      ]
+    },
+    {
+      "timestamp": "2026-09-07T06:14:04+08:00",
+      "server": "native-bearer",
+      "blocking_conditions": [
+        "CI=true",
+        "HEADLESS=true"
+      ]
+    }
+  ],
+  "resolution": "Remove CI from the native app and production probe environment; unchanged saved Keychain credential then reached the fixture correctly."
+}

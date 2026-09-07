@@ -1,0 +1,16 @@
+{
+  "bounds": {
+    "height": 0,
+    "width": 0,
+    "x": 0,
+    "y": 0
+  },
+  "classes": [
+    "control",
+    "primary"
+  ],
+  "disabled": true,
+  "tag": "button",
+  "text": "正在保存…",
+  "value": ""
+}

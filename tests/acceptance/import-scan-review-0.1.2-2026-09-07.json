@@ -1,0 +1,53 @@
+{
+  "executedAt": "2026-09-07T09:45:46.231765+08:00",
+  "scope": "Independent final-source review and isolated Go tests. Native WebView behavior is recorded separately. No real client configuration, credentials, upstream services, or model calls accessed.",
+  "sourceSHA256": {
+    "internal/gateway/import_scan.go": "1781a4970e049d8053559b02e8b92761ce026dfb475c333085f6532e2d32c47e",
+    "internal/gateway/import_scan_test.go": "bb4a696b413ffa27bbbb153c57b1327fb764304e6ac786261d58bdd03fd3a1a4",
+    "internal/gateway/adapters.go": "81bf0377f0400f8f9fddf749db91df4d6715dc161f4cccbca40cc04efcb74c6e",
+    "internal/gateway/imports.go": "9404d4aa2695ea35177d64bf745dc778d954b55ccfff13a91e14642d6cb68025",
+    "internal/gateway/request.go": "21d31ebf96270d483ca37ade0dd8399603fd0d7d85a330e1b1ab877b0bf3f5e5",
+    "frontend/src/ChoiceGroup.vue": "5a21b8442225ad60a22551c0a2597c2f40ad78477b370a96114c947e1c920bac",
+    "frontend/src/App.vue": "a3bbfe15d75d5be5d4f20a0c1cb311116022507712e49a87af4cf08495e48a65",
+    "frontend/src/ServiceForm.vue": "6ba14a69add517b1caff250db18217da7f212441bec8c08e89bbef29451588d7",
+    "frontend/src/api.ts": "9baf7e3b83c88142e136efebfe446b020e1ecd436824a329dfbfb119a5f8a25f",
+    "frontend/src/style.css": "9e59bd10d8ed24757bc920d50bee1da23181e881f65d2a54665eb1caa1b5b99a"
+  },
+  "command": "GOCACHE=\"$PWD/.cache/go-build\" GOTOOLCHAIN=auto go test -race ./internal/gateway -run '^(TestScanImportSources|TestPreviewScannedImport|TestImportBlocksOnlyGatewayConnectorStructure)' -count=1 -v",
+  "exitCode": 0,
+  "testSeconds": 1.646,
+  "tests": [
+    {
+      "name": "TestScanImportSourcesSummariesAndFreshPreview",
+      "passed": true
+    },
+    {
+      "name": "TestScanImportSourcesIsolatesPathFailuresAndLimits",
+      "passed": true
+    },
+    {
+      "name": "TestPreviewScannedImportReresolvesCurrentSymlink",
+      "passed": true
+    },
+    {
+      "name": "TestImportBlocksOnlyGatewayConnectorStructure",
+      "passed": true
+    }
+  ],
+  "reviewChecks": [
+    "Exactly five adapter summary rows and seven fields per row; no source content or credentials returned.",
+    "Scans create no preview plan or persistent state and do not execute source expressions.",
+    "Preview takes only a known source ID, reselects candidate and resolves current symlink, rereads bounded current content, then uses existing import preview.",
+    "Missing, invalid, non-regular, oversized and unresolved OMP override configurations report per-source status.",
+    "CodeBuddy display name maps to its existing JSONC and normalization source.",
+    "App-generated stdio connect structure is blocked and defaults to skip; a same-name ordinary service is allowed.",
+    "Seven remaining native select controls use a shared semantic fieldset and native radio component, unique names and typed string or number models.",
+    "Import scan is triggered by entering the import page or explicit refresh; snapshot polling does not call it."
+  ],
+  "limits": [
+    "Tests use temporary HOME and six additional path/profile environment variables.",
+    "The 10 MB growth bound is implemented with LimitReader; tests cover exact size and oversized files, not an adversarial live file-swap race.",
+    "Native radio OS keyboard defaults and pixel focus appearance require separate real-device checks."
+  ],
+  "passed": true
+}

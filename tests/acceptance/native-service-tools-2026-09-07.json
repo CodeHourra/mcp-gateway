@@ -1,0 +1,189 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "created_service",
+      "value": {
+        "args": [
+          "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/core_probe.py",
+          "stdio"
+        ],
+        "auth": {
+          "env": [],
+          "headers": [],
+          "scopes": [],
+          "type": "none"
+        },
+        "authStatus": null,
+        "catalogStatus": "live",
+        "command": "/Users/steve/.pyenv/versions/3.12.10/bin/python3",
+        "cwd": "",
+        "enabled": true,
+        "id": "native-crud",
+        "name": "native-crud",
+        "sources": [],
+        "status": "ready",
+        "statusMessage": "Connected (1 tool)",
+        "toolCount": 1,
+        "transport": "stdio",
+        "url": ""
+      }
+    },
+    {
+      "name": "测试连接",
+      "value": {
+        "busy": false,
+        "errors": [],
+        "feedback": "连接测试已执行，查看服务状态和活动以确认结果。×",
+        "title": "MCP 服务"
+      }
+    },
+    {
+      "name": "重新连接",
+      "value": {
+        "busy": false,
+        "errors": [],
+        "feedback": "已请求重新连接。×",
+        "title": "MCP 服务"
+      }
+    },
+    {
+      "name": "edited_service",
+      "value": {
+        "args": [
+          "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/core_probe.py",
+          "stdio",
+          "edited-by-native-ui"
+        ],
+        "auth": {
+          "env": [],
+          "headers": [],
+          "scopes": [],
+          "type": "none"
+        },
+        "authStatus": null,
+        "catalogStatus": "live",
+        "command": "/Users/steve/.pyenv/versions/3.12.10/bin/python3",
+        "cwd": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway",
+        "enabled": true,
+        "id": "native-crud",
+        "name": "native-crud",
+        "sources": [],
+        "status": "ready",
+        "statusMessage": "Connected (1 tool)",
+        "toolCount": 1,
+        "transport": "stdio",
+        "url": ""
+      }
+    },
+    {
+      "name": "service_disabled_cached_call",
+      "value": {
+        "service": {
+          "args": [
+            "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/core_probe.py",
+            "stdio",
+            "edited-by-native-ui"
+          ],
+          "auth": {
+            "env": [],
+            "headers": [],
+            "scopes": [],
+            "type": "none"
+          },
+          "authStatus": null,
+          "catalogStatus": "cached",
+          "command": "/Users/steve/.pyenv/versions/3.12.10/bin/python3",
+          "cwd": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway",
+          "enabled": false,
+          "id": "native-crud",
+          "name": "native-crud",
+          "sources": [],
+          "status": "disconnected",
+          "statusMessage": "Disabled",
+          "toolCount": 0,
+          "transport": "stdio",
+          "url": ""
+        },
+        "call": {
+          "error": "RuntimeError: 当前工具目录中没有此工具，请刷新"
+        }
+      }
+    },
+    {
+      "name": "tool_disabled_cached_call",
+      "value": {
+        "tool": {
+          "catalogStatus": "live",
+          "description": "Echo a supplied text message",
+          "enabled": false,
+          "id": "WyJuYXRpdmUtY3J1ZCIsImVjaG8iXQ",
+          "inputSchema": {
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "name": "echo",
+          "serviceId": "native-crud",
+          "serviceName": "native-crud"
+        },
+        "call": {
+          "error": "RuntimeError: 工具已停用"
+        },
+        "callButtonDisabled": true
+      }
+    },
+    {
+      "name": "tool_reenabled_call",
+      "value": {
+        "result": {
+          "content": [
+            {
+              "text": "native-reenabled-tool",
+              "type": "text"
+            }
+          ],
+          "structuredContent": {
+            "echo": "native-reenabled-tool"
+          }
+        }
+      }
+    },
+    {
+      "name": "tool_search_empty",
+      "value": {
+        "text": "工具按需查找，再读取参数定义与执行调用。渐进发现工具来源全部服务native-crudnative-echo⌕没有匹配的工具调整搜索条件，或检查服务是否连接并完成工具发现。",
+        "toolRows": 0
+      }
+    },
+    {
+      "name": "service_search_empty",
+      "value": {
+        "serviceRows": 0,
+        "text": "MCP 服务所有工具来源，在这里统一管理。↓ 导入＋ 添加服务⌕0 个服务没有匹配的服务"
+      }
+    },
+    {
+      "name": "service_deleted",
+      "value": {
+        "serviceIds": [
+          "native-echo"
+        ],
+        "cachedCall": {
+          "error": "RuntimeError: 网关操作失败 (HTTP 404): Server not found: native-crud"
+        }
+      }
+    }
+  ],
+  "scenario": "service-tools",
+  "passed": true,
+  "appSHA256": "2a7a15df58891bbe7fd88f540210662f0f15f3bdeb3755122abf142edaff5636",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "artifactIdentitySource": "Root supplied running bundle identity for this recorded execution; current script now records file hashes automatically."
+}

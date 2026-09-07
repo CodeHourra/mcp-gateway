@@ -1,0 +1,23 @@
+{
+  "scope": "Actual production app startup, one owned core, second-instance activation, SIGTERM shutdown, and no debug listener; no menu or pixel claims",
+  "appSHA256": "60fbb01a19a049ffd02493147771012c87ca5775a728900f13429327bfd15b06",
+  "coreSHA256": "0ad7d5b5a5b536f7a267c2b518168fd07320cf88a108d8c10af8e6a619ed3167",
+  "profile": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/production-59rcsp3a",
+  "appPID": 90444,
+  "corePID": 90507,
+  "ready": true,
+  "ownedCoreCount": 1,
+  "secondInstanceExitCode": 0,
+  "sameCoreAfterSecondLaunch": true,
+  "adminKeyAbsentFromConfig": true,
+  "explicitCoreDefaults": {
+    "telemetry": false,
+    "dockerIsolation": false,
+    "directToolResponseMode": "full"
+  },
+  "debugPort19199Closed": true,
+  "appExitCode": 0,
+  "ownedCoreExited": true,
+  "passed": true,
+  "temporaryAdminKeyDeleted": true
+}

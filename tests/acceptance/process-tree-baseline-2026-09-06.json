@@ -1,0 +1,27 @@
+{
+  "scope": "controlled core lifecycle; not native app acceptance",
+  "core": "/private/tmp/mcp-gateway-mcpproxy-core",
+  "sha256": "7500a363f5ca21fca52f6c9fe3791fc7a6df710f9d554b0139374e3f742cd9b0",
+  "evidence_dir": "/private/tmp/mcp-gateway-process-tree-66tejqqv",
+  "core_pid": 77566,
+  "core_pgid": 77566,
+  "core_exit_code": 0,
+  "shutdown_seconds": 0.921,
+  "before": {
+    "upstream": {
+      "pid": 77632,
+      "pgid": 77632,
+      "alive": true
+    },
+    "descendant": {
+      "pid": 77649,
+      "pgid": 77632,
+      "alive": true
+    }
+  },
+  "alive_after_graceful_shutdown": {
+    "upstream": false,
+    "descendant": true
+  },
+  "passed": false
+}

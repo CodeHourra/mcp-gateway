@@ -1,0 +1,220 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "diagnostics_file_export_1",
+      "value": {
+        "path": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/native-profile/diagnostics/mcp-gateway-diagnostics-20260907-065019.683475000.json",
+        "filename": "mcp-gateway-diagnostics-20260907-065019.683475000.json",
+        "feedback": "诊断已保存：/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/native-profile/diagnostics/mcp-gateway-diagnostics-20260907-065019.683475000.json",
+        "feedbackContainsSavedPath": true,
+        "fileBytes": 1201,
+        "sha256": "616e104e1cda6de7b8c71cd2c8c04ef02b4431766041084707f1e812f719526d",
+        "fileMode": "0o600",
+        "directoryMode": "0o700",
+        "json": {
+          "exportedAt": "2026-09-07T06:50:19.683385+08:00",
+          "gateway": {
+            "activeCalls": 0,
+            "address": "http://127.0.0.1:19240/mcp/call",
+            "credentialStorage": "macOS 钥匙串",
+            "error": "",
+            "paused": false,
+            "status": "running",
+            "version": "0.1.0-dev"
+          },
+          "services": [
+            {
+              "catalogStatus": "live",
+              "id": "native-api-key",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-bearer",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-echo",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "stdio"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-env",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "stdio"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-headers",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-oauth",
+              "status": "ready",
+              "toolCount": 2,
+              "transport": "http"
+            }
+          ],
+          "version": "0.1.0-dev"
+        },
+        "syntheticCredentialMarkersAbsent": true,
+        "toolPayloadMarkersAbsent": true
+      }
+    },
+    {
+      "name": "diagnostics_file_export_2",
+      "value": {
+        "path": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/native-profile/diagnostics/mcp-gateway-diagnostics-20260907-065020.090700000.json",
+        "filename": "mcp-gateway-diagnostics-20260907-065020.090700000.json",
+        "feedback": "诊断已保存：/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/native-profile/diagnostics/mcp-gateway-diagnostics-20260907-065020.090700000.json",
+        "feedbackContainsSavedPath": true,
+        "fileBytes": 1201,
+        "sha256": "bbc3eb4084af71035c0b007a4e728b5f1f8c7a180c887f595efd1b50e09e283d",
+        "fileMode": "0o600",
+        "directoryMode": "0o700",
+        "json": {
+          "exportedAt": "2026-09-07T06:50:20.090382+08:00",
+          "gateway": {
+            "activeCalls": 0,
+            "address": "http://127.0.0.1:19240/mcp/call",
+            "credentialStorage": "macOS 钥匙串",
+            "error": "",
+            "paused": false,
+            "status": "running",
+            "version": "0.1.0-dev"
+          },
+          "services": [
+            {
+              "catalogStatus": "live",
+              "id": "native-api-key",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-bearer",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-echo",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "stdio"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-env",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "stdio"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-headers",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-oauth",
+              "status": "ready",
+              "toolCount": 2,
+              "transport": "http"
+            }
+          ],
+          "version": "0.1.0-dev"
+        },
+        "syntheticCredentialMarkersAbsent": true,
+        "toolPayloadMarkersAbsent": true
+      }
+    },
+    {
+      "name": "repeated_export_preserved_both_files",
+      "value": {
+        "distinctPaths": true,
+        "bothOriginalHashesUnchanged": true
+      }
+    },
+    {
+      "name": "test_profile_credential_scan",
+      "value": [
+        {
+          "file": "core.json",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "services.json",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "settings.json",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-oauth.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-echo.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/core.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-echo-2.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-bearer.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-crud.log",
+          "credentialMarkerAbsent": true
+        }
+      ]
+    },
+    {
+      "name": "final_test_profile",
+      "value": {
+        "ownership": {
+          "appPID": 60361,
+          "corePID": 60368,
+          "listenAddress": "127.0.0.1:19240",
+          "ownershipVerified": true
+        },
+        "settings": {
+          "launchAtLogin": false,
+          "listenAddress": "127.0.0.1:19240",
+          "logRetentionDays": 14,
+          "mode": "progressive",
+          "theme": "dark"
+        }
+      }
+    }
+  ],
+  "scenario": "diagnostics-file",
+  "executedAt": "2026-09-07T06:50:19.591336+08:00",
+  "appSHA256": "bc07424745b2725f7e7a2ba6c58e5be5d80b5d7f98216f20d88db1a7d475e68a",
+  "coreSHA256": "0ad7d5b5a5b536f7a267c2b518168fd07320cf88a108d8c10af8e6a619ed3167",
+  "passed": true
+}

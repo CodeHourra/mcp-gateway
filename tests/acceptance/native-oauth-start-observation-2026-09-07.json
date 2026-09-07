@@ -1,0 +1,62 @@
+{
+  "buttons": [
+    {
+      "disabled": false,
+      "text": "测试连接"
+    },
+    {
+      "disabled": false,
+      "text": "重新连接"
+    },
+    {
+      "disabled": false,
+      "text": "编辑配置"
+    },
+    {
+      "disabled": false,
+      "text": "在浏览器中登录"
+    },
+    {
+      "disabled": false,
+      "text": "取消登录"
+    },
+    {
+      "disabled": false,
+      "text": "刷新授权"
+    },
+    {
+      "disabled": false,
+      "text": "清除本地授权"
+    },
+    {
+      "disabled": false,
+      "text": "移除服务"
+    }
+  ],
+  "calls": [
+    "授权请求已发起，请完成浏览器授权。"
+  ],
+  "errors": [],
+  "oauth": {
+    "args": [],
+    "auth": {
+      "env": [],
+      "headers": [],
+      "scopes": [],
+      "type": "oauth"
+    },
+    "authStatus": null,
+    "catalogStatus": "live",
+    "command": "",
+    "cwd": "",
+    "enabled": true,
+    "id": "native-oauth",
+    "name": "native-oauth",
+    "sources": [],
+    "status": "ready",
+    "statusMessage": "Connected (2 tools)",
+    "toolCount": 2,
+    "transport": "http",
+    "url": "http://127.0.0.1:63949/mcp"
+  }
+}

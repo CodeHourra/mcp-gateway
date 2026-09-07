@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "gateway": {
+      "type": "streamableHttp",
+      "url": "http://127.0.0.1:19480/mcp",
+      "headers": { "Authorization": "Bearer TEST_ONLY_REPLACE_BEFORE_USE" }
+    }
+  }
+}

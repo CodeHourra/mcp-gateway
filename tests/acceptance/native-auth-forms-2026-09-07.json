@@ -1,0 +1,153 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "native-bearer_existing_saved_fixture",
+      "value": {
+        "id": "native-bearer",
+        "authType": "bearer"
+      }
+    },
+    {
+      "name": "native-bearer_tool_result",
+      "value": {
+        "content": [
+          {
+            "text": "{\"fixture\": \"/bearer/mcp\", \"authentication_accepted\": true, \"expected_headers_matched\": {\"Authorization\": true}, \"counter\": 1, \"text\": \"native form proof\"}",
+            "type": "text"
+          }
+        ],
+        "structuredContent": {
+          "authentication_accepted": true,
+          "counter": 1,
+          "expected_headers_matched": {
+            "Authorization": true
+          },
+          "fixture": "/bearer/mcp",
+          "text": "native form proof"
+        }
+      }
+    },
+    {
+      "name": "native-bearer_saved_credential_form",
+      "value": {
+        "authType": "bearer",
+        "passwords": [
+          {
+            "empty": true,
+            "placeholder": "已保存凭证；留空保持原值",
+            "required": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "native-api-key_tool_result",
+      "value": {
+        "content": [
+          {
+            "text": "{\"fixture\": \"/api-key/mcp\", \"authentication_accepted\": true, \"expected_headers_matched\": {\"X-API-Key\": true}, \"counter\": 1, \"text\": \"native form proof\"}",
+            "type": "text"
+          }
+        ],
+        "structuredContent": {
+          "authentication_accepted": true,
+          "counter": 1,
+          "expected_headers_matched": {
+            "X-API-Key": true
+          },
+          "fixture": "/api-key/mcp",
+          "text": "native form proof"
+        }
+      }
+    },
+    {
+      "name": "native-api-key_saved_credential_form",
+      "value": {
+        "authType": "api_key",
+        "passwords": [
+          {
+            "empty": true,
+            "placeholder": "已保存凭证；留空保持原值",
+            "required": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "native-headers_tool_result",
+      "value": {
+        "content": [
+          {
+            "text": "{\"fixture\": \"/headers/mcp\", \"authentication_accepted\": true, \"expected_headers_matched\": {\"X-API-Key\": true, \"X-Tenant\": true, \"X-Trace-Label\": true}, \"counter\": 1, \"text\": \"native form proof\"}",
+            "type": "text"
+          }
+        ],
+        "structuredContent": {
+          "authentication_accepted": true,
+          "counter": 1,
+          "expected_headers_matched": {
+            "X-API-Key": true,
+            "X-Tenant": true,
+            "X-Trace-Label": true
+          },
+          "fixture": "/headers/mcp",
+          "text": "native form proof"
+        }
+      }
+    },
+    {
+      "name": "native-headers_saved_credential_form",
+      "value": {
+        "authType": "headers",
+        "passwords": [
+          {
+            "empty": true,
+            "placeholder": "已保存；留空保持",
+            "required": false
+          },
+          {
+            "empty": true,
+            "placeholder": "已保存；留空保持",
+            "required": false
+          },
+          {
+            "empty": true,
+            "placeholder": "已保存；留空保持",
+            "required": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "saved_auth_services",
+      "value": [
+        {
+          "id": "native-api-key",
+          "authType": "api_key",
+          "status": "ready"
+        },
+        {
+          "id": "native-bearer",
+          "authType": "bearer",
+          "status": "ready"
+        },
+        {
+          "id": "native-echo",
+          "authType": "none",
+          "status": "ready"
+        },
+        {
+          "id": "native-headers",
+          "authType": "headers",
+          "status": "ready"
+        }
+      ]
+    }
+  ],
+  "scenario": "auth-forms",
+  "passed": true,
+  "appSHA256": "258c5910c02a9793b1b748f5bd8784318ed776099439f79991a0f5578413380f",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "artifactIdentitySource": "Root supplied running bundle identity for this recorded execution; current script now records file hashes automatically."
+}

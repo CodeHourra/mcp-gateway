@@ -1,0 +1,14 @@
+{
+  "bounds": {
+    "height": 32,
+    "width": 70,
+    "x": 204,
+    "y": 634
+  },
+  "classes": [
+    "control"
+  ],
+  "tag": "button",
+  "text": "执行调用",
+  "value": ""
+}

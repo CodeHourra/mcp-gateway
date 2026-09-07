@@ -1,0 +1,21 @@
+{
+  "appStyle": "grid",
+  "bodyStyle": "block",
+  "height": 780,
+  "ready": "complete",
+  "rect": {
+    "bottom": 835.28125,
+    "height": 835.28125,
+    "left": 0,
+    "right": 1180,
+    "top": 0,
+    "width": 1180,
+    "x": 0,
+    "y": 0
+  },
+  "styles": [
+    "wails://localhost/assets/index-DfwTQvN8.css"
+  ],
+  "visibility": "hidden",
+  "width": 1180
+}

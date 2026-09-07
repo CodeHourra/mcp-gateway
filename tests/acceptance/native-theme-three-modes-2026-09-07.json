@@ -1,0 +1,32 @@
+[
+  {
+    "background": "#fff",
+    "colorScheme": "light",
+    "foreground": "#252b36",
+    "persisted": "light",
+    "picker": "light",
+    "requested": "light",
+    "systemPrefersDark": false,
+    "theme": "light"
+  },
+  {
+    "background": "#fff",
+    "colorScheme": "dark",
+    "foreground": "#252b36",
+    "persisted": "dark",
+    "picker": "dark",
+    "requested": "dark",
+    "systemPrefersDark": false,
+    "theme": "dark"
+  },
+  {
+    "background": "#fff",
+    "colorScheme": "light dark",
+    "foreground": "#252b36",
+    "persisted": "system",
+    "picker": "system",
+    "requested": "system",
+    "systemPrefersDark": false,
+    "theme": "system"
+  }
+]

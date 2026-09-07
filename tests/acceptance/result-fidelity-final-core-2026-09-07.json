@@ -1,0 +1,1113 @@
+{
+  "scope": "Real stdio baseline versus final bundle core REST full_result, ordinary and progressive MCP",
+  "core": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/bin/MCP Gateway.app/Contents/MacOS/mcpproxy",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "evidenceDirectory": "/private/tmp/mcp-gateway-result-fidelity-5gcbm26i",
+  "baseline": {
+    "success": {
+      "fields": [
+        "_meta",
+        "content",
+        "isError",
+        "structuredContent"
+      ],
+      "canonical": {
+        "bytes": 2578675,
+        "sha256": "f36e0ea69ff5e00fa3fee36fbcc41b3d8b94bd50bf6b5307ead930f0cd3dccdb"
+      },
+      "content": [
+        {
+          "index": 0,
+          "type": "text",
+          "fields": [
+            "_meta",
+            "annotations",
+            "text",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 1200157,
+            "sha256": "b40b8d4ee54d3c791a0e517603fd2a8e5cd6faab906e423ebcc23b4081565472"
+          },
+          "textUTF8": {
+            "bytes": 1120000,
+            "sha256": "122529944dab2fab57aebd316776507d22025886b4608b1e0126dd99a1df5cf8"
+          }
+        },
+        {
+          "index": 1,
+          "type": "image",
+          "fields": [
+            "_meta",
+            "annotations",
+            "data",
+            "mimeType",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 274,
+            "sha256": "ba63a0b8a0303a76470ffcd0656b9e5111d2e75cd2363b8944a8e6a3ca143a4d"
+          },
+          "decodedBinary": {
+            "bytes": 68,
+            "sha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15"
+          }
+        },
+        {
+          "index": 2,
+          "type": "audio",
+          "fields": [
+            "_meta",
+            "annotations",
+            "data",
+            "mimeType",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 2374,
+            "sha256": "d9a15c1a73f08f893f5f62259cb88be7f47a6247e684ced3552b639e9a328423"
+          },
+          "decodedBinary": {
+            "bytes": 1644,
+            "sha256": "c726d333dd159a31423f3480dbb1c5c4a9dfcd30efe1f7e12ade390dc92e8908"
+          }
+        },
+        {
+          "index": 3,
+          "type": "resource",
+          "fields": [
+            "_meta",
+            "annotations",
+            "resource",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 299,
+            "sha256": "47338b8c4562c0863d2f5f11a778f187f569e1e2fe3235a6b24d9cf8cdf7776c"
+          },
+          "resourceTextUTF8": {
+            "bytes": 29,
+            "sha256": "2190a73fb49d2fb30d2f73de9bc3b7817ea0021507faf187aec9f8268b03766e"
+          }
+        },
+        {
+          "index": 4,
+          "type": "resource",
+          "fields": [
+            "_meta",
+            "annotations",
+            "resource",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 175047,
+            "sha256": "094f88b58de7abc1f7c7f95889dada0a87475e92ce215e35a7c258f6078251df"
+          },
+          "resourceDecodedBinary": {
+            "bytes": 131072,
+            "sha256": "59f410ae5e17962412e2aed4f815918f634932f2abf084f00bb638c4db017850"
+          }
+        },
+        {
+          "index": 5,
+          "type": "resource_link",
+          "fields": [
+            "_meta",
+            "annotations",
+            "description",
+            "mimeType",
+            "name",
+            "size",
+            "title",
+            "type",
+            "uri"
+          ],
+          "canonical": {
+            "bytes": 329,
+            "sha256": "424bd088b82ec3fe07b20d1b769a5a02712a59f031291c8ff334dbf4a08b87eb"
+          }
+        }
+      ],
+      "structuredContent": {
+        "bytes": 1200093,
+        "sha256": "854d51c1354ea05cba8deec5c4c0685ffb36e01fe89d2de3fcf70b3d7536a64c"
+      },
+      "isError": false
+    },
+    "tool-error": {
+      "fields": [
+        "_meta",
+        "content",
+        "isError",
+        "structuredContent"
+      ],
+      "canonical": {
+        "bytes": 2578674,
+        "sha256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e"
+      },
+      "content": [
+        {
+          "index": 0,
+          "type": "text",
+          "fields": [
+            "_meta",
+            "annotations",
+            "text",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 1200157,
+            "sha256": "b40b8d4ee54d3c791a0e517603fd2a8e5cd6faab906e423ebcc23b4081565472"
+          },
+          "textUTF8": {
+            "bytes": 1120000,
+            "sha256": "122529944dab2fab57aebd316776507d22025886b4608b1e0126dd99a1df5cf8"
+          }
+        },
+        {
+          "index": 1,
+          "type": "image",
+          "fields": [
+            "_meta",
+            "annotations",
+            "data",
+            "mimeType",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 274,
+            "sha256": "ba63a0b8a0303a76470ffcd0656b9e5111d2e75cd2363b8944a8e6a3ca143a4d"
+          },
+          "decodedBinary": {
+            "bytes": 68,
+            "sha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15"
+          }
+        },
+        {
+          "index": 2,
+          "type": "audio",
+          "fields": [
+            "_meta",
+            "annotations",
+            "data",
+            "mimeType",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 2374,
+            "sha256": "d9a15c1a73f08f893f5f62259cb88be7f47a6247e684ced3552b639e9a328423"
+          },
+          "decodedBinary": {
+            "bytes": 1644,
+            "sha256": "c726d333dd159a31423f3480dbb1c5c4a9dfcd30efe1f7e12ade390dc92e8908"
+          }
+        },
+        {
+          "index": 3,
+          "type": "resource",
+          "fields": [
+            "_meta",
+            "annotations",
+            "resource",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 299,
+            "sha256": "47338b8c4562c0863d2f5f11a778f187f569e1e2fe3235a6b24d9cf8cdf7776c"
+          },
+          "resourceTextUTF8": {
+            "bytes": 29,
+            "sha256": "2190a73fb49d2fb30d2f73de9bc3b7817ea0021507faf187aec9f8268b03766e"
+          }
+        },
+        {
+          "index": 4,
+          "type": "resource",
+          "fields": [
+            "_meta",
+            "annotations",
+            "resource",
+            "type"
+          ],
+          "canonical": {
+            "bytes": 175047,
+            "sha256": "094f88b58de7abc1f7c7f95889dada0a87475e92ce215e35a7c258f6078251df"
+          },
+          "resourceDecodedBinary": {
+            "bytes": 131072,
+            "sha256": "59f410ae5e17962412e2aed4f815918f634932f2abf084f00bb638c4db017850"
+          }
+        },
+        {
+          "index": 5,
+          "type": "resource_link",
+          "fields": [
+            "_meta",
+            "annotations",
+            "description",
+            "mimeType",
+            "name",
+            "size",
+            "title",
+            "type",
+            "uri"
+          ],
+          "canonical": {
+            "bytes": 329,
+            "sha256": "424bd088b82ec3fe07b20d1b769a5a02712a59f031291c8ff334dbf4a08b87eb"
+          }
+        }
+      ],
+      "structuredContent": {
+        "bytes": 1200093,
+        "sha256": "854d51c1354ea05cba8deec5c4c0685ffb36e01fe89d2de3fcf70b3d7536a64c"
+      },
+      "isError": true
+    }
+  },
+  "calls": [
+    {
+      "mode": "rest-full",
+      "case": "success",
+      "httpStatus": 200,
+      "httpBodyBytes": 2578684,
+      "elapsedMs": 265.029,
+      "received": {
+        "fields": [
+          "_meta",
+          "content",
+          "structuredContent"
+        ],
+        "canonical": {
+          "bytes": 2578659,
+          "sha256": "088ddadaff127453e755c58b06282b0f26ad41488ebbe5f96564a765718896de"
+        },
+        "content": [
+          {
+            "index": 0,
+            "type": "text",
+            "fields": [
+              "_meta",
+              "annotations",
+              "text",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 1200157,
+              "sha256": "b40b8d4ee54d3c791a0e517603fd2a8e5cd6faab906e423ebcc23b4081565472"
+            },
+            "textUTF8": {
+              "bytes": 1120000,
+              "sha256": "122529944dab2fab57aebd316776507d22025886b4608b1e0126dd99a1df5cf8"
+            }
+          },
+          {
+            "index": 1,
+            "type": "image",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 274,
+              "sha256": "ba63a0b8a0303a76470ffcd0656b9e5111d2e75cd2363b8944a8e6a3ca143a4d"
+            },
+            "decodedBinary": {
+              "bytes": 68,
+              "sha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15"
+            }
+          },
+          {
+            "index": 2,
+            "type": "audio",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 2374,
+              "sha256": "d9a15c1a73f08f893f5f62259cb88be7f47a6247e684ced3552b639e9a328423"
+            },
+            "decodedBinary": {
+              "bytes": 1644,
+              "sha256": "c726d333dd159a31423f3480dbb1c5c4a9dfcd30efe1f7e12ade390dc92e8908"
+            }
+          },
+          {
+            "index": 3,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 299,
+              "sha256": "47338b8c4562c0863d2f5f11a778f187f569e1e2fe3235a6b24d9cf8cdf7776c"
+            },
+            "resourceTextUTF8": {
+              "bytes": 29,
+              "sha256": "2190a73fb49d2fb30d2f73de9bc3b7817ea0021507faf187aec9f8268b03766e"
+            }
+          },
+          {
+            "index": 4,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 175047,
+              "sha256": "094f88b58de7abc1f7c7f95889dada0a87475e92ce215e35a7c258f6078251df"
+            },
+            "resourceDecodedBinary": {
+              "bytes": 131072,
+              "sha256": "59f410ae5e17962412e2aed4f815918f634932f2abf084f00bb638c4db017850"
+            }
+          },
+          {
+            "index": 5,
+            "type": "resource_link",
+            "fields": [
+              "_meta",
+              "annotations",
+              "description",
+              "mimeType",
+              "name",
+              "size",
+              "title",
+              "type",
+              "uri"
+            ],
+            "canonical": {
+              "bytes": 329,
+              "sha256": "424bd088b82ec3fe07b20d1b769a5a02712a59f031291c8ff334dbf4a08b87eb"
+            }
+          }
+        ],
+        "structuredContent": {
+          "bytes": 1200093,
+          "sha256": "854d51c1354ea05cba8deec5c4c0685ffb36e01fe89d2de3fcf70b3d7536a64c"
+        },
+        "isError": false
+      },
+      "normalizedResultSHA256": "f36e0ea69ff5e00fa3fee36fbcc41b3d8b94bd50bf6b5307ead930f0cd3dccdb",
+      "baselineNormalizedSHA256": "f36e0ea69ff5e00fa3fee36fbcc41b3d8b94bd50bf6b5307ead930f0cd3dccdb",
+      "exactlyPreserved": true
+    },
+    {
+      "mode": "rest-full",
+      "case": "tool-error",
+      "httpStatus": 200,
+      "httpBodyBytes": 2578699,
+      "elapsedMs": 173.144,
+      "received": {
+        "fields": [
+          "_meta",
+          "content",
+          "isError",
+          "structuredContent"
+        ],
+        "canonical": {
+          "bytes": 2578674,
+          "sha256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e"
+        },
+        "content": [
+          {
+            "index": 0,
+            "type": "text",
+            "fields": [
+              "_meta",
+              "annotations",
+              "text",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 1200157,
+              "sha256": "b40b8d4ee54d3c791a0e517603fd2a8e5cd6faab906e423ebcc23b4081565472"
+            },
+            "textUTF8": {
+              "bytes": 1120000,
+              "sha256": "122529944dab2fab57aebd316776507d22025886b4608b1e0126dd99a1df5cf8"
+            }
+          },
+          {
+            "index": 1,
+            "type": "image",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 274,
+              "sha256": "ba63a0b8a0303a76470ffcd0656b9e5111d2e75cd2363b8944a8e6a3ca143a4d"
+            },
+            "decodedBinary": {
+              "bytes": 68,
+              "sha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15"
+            }
+          },
+          {
+            "index": 2,
+            "type": "audio",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 2374,
+              "sha256": "d9a15c1a73f08f893f5f62259cb88be7f47a6247e684ced3552b639e9a328423"
+            },
+            "decodedBinary": {
+              "bytes": 1644,
+              "sha256": "c726d333dd159a31423f3480dbb1c5c4a9dfcd30efe1f7e12ade390dc92e8908"
+            }
+          },
+          {
+            "index": 3,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 299,
+              "sha256": "47338b8c4562c0863d2f5f11a778f187f569e1e2fe3235a6b24d9cf8cdf7776c"
+            },
+            "resourceTextUTF8": {
+              "bytes": 29,
+              "sha256": "2190a73fb49d2fb30d2f73de9bc3b7817ea0021507faf187aec9f8268b03766e"
+            }
+          },
+          {
+            "index": 4,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 175047,
+              "sha256": "094f88b58de7abc1f7c7f95889dada0a87475e92ce215e35a7c258f6078251df"
+            },
+            "resourceDecodedBinary": {
+              "bytes": 131072,
+              "sha256": "59f410ae5e17962412e2aed4f815918f634932f2abf084f00bb638c4db017850"
+            }
+          },
+          {
+            "index": 5,
+            "type": "resource_link",
+            "fields": [
+              "_meta",
+              "annotations",
+              "description",
+              "mimeType",
+              "name",
+              "size",
+              "title",
+              "type",
+              "uri"
+            ],
+            "canonical": {
+              "bytes": 329,
+              "sha256": "424bd088b82ec3fe07b20d1b769a5a02712a59f031291c8ff334dbf4a08b87eb"
+            }
+          }
+        ],
+        "structuredContent": {
+          "bytes": 1200093,
+          "sha256": "854d51c1354ea05cba8deec5c4c0685ffb36e01fe89d2de3fcf70b3d7536a64c"
+        },
+        "isError": true
+      },
+      "normalizedResultSHA256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e",
+      "baselineNormalizedSHA256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e",
+      "exactlyPreserved": true
+    },
+    {
+      "mode": "ordinary",
+      "case": "success",
+      "httpStatus": 200,
+      "httpBodyBytes": 2578694,
+      "elapsedMs": 223.752,
+      "received": {
+        "fields": [
+          "_meta",
+          "content",
+          "structuredContent"
+        ],
+        "canonical": {
+          "bytes": 2578659,
+          "sha256": "088ddadaff127453e755c58b06282b0f26ad41488ebbe5f96564a765718896de"
+        },
+        "content": [
+          {
+            "index": 0,
+            "type": "text",
+            "fields": [
+              "_meta",
+              "annotations",
+              "text",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 1200157,
+              "sha256": "b40b8d4ee54d3c791a0e517603fd2a8e5cd6faab906e423ebcc23b4081565472"
+            },
+            "textUTF8": {
+              "bytes": 1120000,
+              "sha256": "122529944dab2fab57aebd316776507d22025886b4608b1e0126dd99a1df5cf8"
+            }
+          },
+          {
+            "index": 1,
+            "type": "image",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 274,
+              "sha256": "ba63a0b8a0303a76470ffcd0656b9e5111d2e75cd2363b8944a8e6a3ca143a4d"
+            },
+            "decodedBinary": {
+              "bytes": 68,
+              "sha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15"
+            }
+          },
+          {
+            "index": 2,
+            "type": "audio",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 2374,
+              "sha256": "d9a15c1a73f08f893f5f62259cb88be7f47a6247e684ced3552b639e9a328423"
+            },
+            "decodedBinary": {
+              "bytes": 1644,
+              "sha256": "c726d333dd159a31423f3480dbb1c5c4a9dfcd30efe1f7e12ade390dc92e8908"
+            }
+          },
+          {
+            "index": 3,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 299,
+              "sha256": "47338b8c4562c0863d2f5f11a778f187f569e1e2fe3235a6b24d9cf8cdf7776c"
+            },
+            "resourceTextUTF8": {
+              "bytes": 29,
+              "sha256": "2190a73fb49d2fb30d2f73de9bc3b7817ea0021507faf187aec9f8268b03766e"
+            }
+          },
+          {
+            "index": 4,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 175047,
+              "sha256": "094f88b58de7abc1f7c7f95889dada0a87475e92ce215e35a7c258f6078251df"
+            },
+            "resourceDecodedBinary": {
+              "bytes": 131072,
+              "sha256": "59f410ae5e17962412e2aed4f815918f634932f2abf084f00bb638c4db017850"
+            }
+          },
+          {
+            "index": 5,
+            "type": "resource_link",
+            "fields": [
+              "_meta",
+              "annotations",
+              "description",
+              "mimeType",
+              "name",
+              "size",
+              "title",
+              "type",
+              "uri"
+            ],
+            "canonical": {
+              "bytes": 329,
+              "sha256": "424bd088b82ec3fe07b20d1b769a5a02712a59f031291c8ff334dbf4a08b87eb"
+            }
+          }
+        ],
+        "structuredContent": {
+          "bytes": 1200093,
+          "sha256": "854d51c1354ea05cba8deec5c4c0685ffb36e01fe89d2de3fcf70b3d7536a64c"
+        },
+        "isError": false
+      },
+      "normalizedResultSHA256": "f36e0ea69ff5e00fa3fee36fbcc41b3d8b94bd50bf6b5307ead930f0cd3dccdb",
+      "baselineNormalizedSHA256": "f36e0ea69ff5e00fa3fee36fbcc41b3d8b94bd50bf6b5307ead930f0cd3dccdb",
+      "exactlyPreserved": true
+    },
+    {
+      "mode": "ordinary",
+      "case": "tool-error",
+      "httpStatus": 200,
+      "httpBodyBytes": 2578709,
+      "elapsedMs": 159.548,
+      "received": {
+        "fields": [
+          "_meta",
+          "content",
+          "isError",
+          "structuredContent"
+        ],
+        "canonical": {
+          "bytes": 2578674,
+          "sha256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e"
+        },
+        "content": [
+          {
+            "index": 0,
+            "type": "text",
+            "fields": [
+              "_meta",
+              "annotations",
+              "text",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 1200157,
+              "sha256": "b40b8d4ee54d3c791a0e517603fd2a8e5cd6faab906e423ebcc23b4081565472"
+            },
+            "textUTF8": {
+              "bytes": 1120000,
+              "sha256": "122529944dab2fab57aebd316776507d22025886b4608b1e0126dd99a1df5cf8"
+            }
+          },
+          {
+            "index": 1,
+            "type": "image",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 274,
+              "sha256": "ba63a0b8a0303a76470ffcd0656b9e5111d2e75cd2363b8944a8e6a3ca143a4d"
+            },
+            "decodedBinary": {
+              "bytes": 68,
+              "sha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15"
+            }
+          },
+          {
+            "index": 2,
+            "type": "audio",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 2374,
+              "sha256": "d9a15c1a73f08f893f5f62259cb88be7f47a6247e684ced3552b639e9a328423"
+            },
+            "decodedBinary": {
+              "bytes": 1644,
+              "sha256": "c726d333dd159a31423f3480dbb1c5c4a9dfcd30efe1f7e12ade390dc92e8908"
+            }
+          },
+          {
+            "index": 3,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 299,
+              "sha256": "47338b8c4562c0863d2f5f11a778f187f569e1e2fe3235a6b24d9cf8cdf7776c"
+            },
+            "resourceTextUTF8": {
+              "bytes": 29,
+              "sha256": "2190a73fb49d2fb30d2f73de9bc3b7817ea0021507faf187aec9f8268b03766e"
+            }
+          },
+          {
+            "index": 4,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 175047,
+              "sha256": "094f88b58de7abc1f7c7f95889dada0a87475e92ce215e35a7c258f6078251df"
+            },
+            "resourceDecodedBinary": {
+              "bytes": 131072,
+              "sha256": "59f410ae5e17962412e2aed4f815918f634932f2abf084f00bb638c4db017850"
+            }
+          },
+          {
+            "index": 5,
+            "type": "resource_link",
+            "fields": [
+              "_meta",
+              "annotations",
+              "description",
+              "mimeType",
+              "name",
+              "size",
+              "title",
+              "type",
+              "uri"
+            ],
+            "canonical": {
+              "bytes": 329,
+              "sha256": "424bd088b82ec3fe07b20d1b769a5a02712a59f031291c8ff334dbf4a08b87eb"
+            }
+          }
+        ],
+        "structuredContent": {
+          "bytes": 1200093,
+          "sha256": "854d51c1354ea05cba8deec5c4c0685ffb36e01fe89d2de3fcf70b3d7536a64c"
+        },
+        "isError": true
+      },
+      "normalizedResultSHA256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e",
+      "baselineNormalizedSHA256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e",
+      "exactlyPreserved": true
+    },
+    {
+      "mode": "progressive",
+      "case": "success",
+      "httpStatus": 200,
+      "httpBodyBytes": 2578694,
+      "elapsedMs": 507.431,
+      "received": {
+        "fields": [
+          "_meta",
+          "content",
+          "structuredContent"
+        ],
+        "canonical": {
+          "bytes": 2578659,
+          "sha256": "088ddadaff127453e755c58b06282b0f26ad41488ebbe5f96564a765718896de"
+        },
+        "content": [
+          {
+            "index": 0,
+            "type": "text",
+            "fields": [
+              "_meta",
+              "annotations",
+              "text",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 1200157,
+              "sha256": "b40b8d4ee54d3c791a0e517603fd2a8e5cd6faab906e423ebcc23b4081565472"
+            },
+            "textUTF8": {
+              "bytes": 1120000,
+              "sha256": "122529944dab2fab57aebd316776507d22025886b4608b1e0126dd99a1df5cf8"
+            }
+          },
+          {
+            "index": 1,
+            "type": "image",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 274,
+              "sha256": "ba63a0b8a0303a76470ffcd0656b9e5111d2e75cd2363b8944a8e6a3ca143a4d"
+            },
+            "decodedBinary": {
+              "bytes": 68,
+              "sha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15"
+            }
+          },
+          {
+            "index": 2,
+            "type": "audio",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 2374,
+              "sha256": "d9a15c1a73f08f893f5f62259cb88be7f47a6247e684ced3552b639e9a328423"
+            },
+            "decodedBinary": {
+              "bytes": 1644,
+              "sha256": "c726d333dd159a31423f3480dbb1c5c4a9dfcd30efe1f7e12ade390dc92e8908"
+            }
+          },
+          {
+            "index": 3,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 299,
+              "sha256": "47338b8c4562c0863d2f5f11a778f187f569e1e2fe3235a6b24d9cf8cdf7776c"
+            },
+            "resourceTextUTF8": {
+              "bytes": 29,
+              "sha256": "2190a73fb49d2fb30d2f73de9bc3b7817ea0021507faf187aec9f8268b03766e"
+            }
+          },
+          {
+            "index": 4,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 175047,
+              "sha256": "094f88b58de7abc1f7c7f95889dada0a87475e92ce215e35a7c258f6078251df"
+            },
+            "resourceDecodedBinary": {
+              "bytes": 131072,
+              "sha256": "59f410ae5e17962412e2aed4f815918f634932f2abf084f00bb638c4db017850"
+            }
+          },
+          {
+            "index": 5,
+            "type": "resource_link",
+            "fields": [
+              "_meta",
+              "annotations",
+              "description",
+              "mimeType",
+              "name",
+              "size",
+              "title",
+              "type",
+              "uri"
+            ],
+            "canonical": {
+              "bytes": 329,
+              "sha256": "424bd088b82ec3fe07b20d1b769a5a02712a59f031291c8ff334dbf4a08b87eb"
+            }
+          }
+        ],
+        "structuredContent": {
+          "bytes": 1200093,
+          "sha256": "854d51c1354ea05cba8deec5c4c0685ffb36e01fe89d2de3fcf70b3d7536a64c"
+        },
+        "isError": false
+      },
+      "normalizedResultSHA256": "f36e0ea69ff5e00fa3fee36fbcc41b3d8b94bd50bf6b5307ead930f0cd3dccdb",
+      "baselineNormalizedSHA256": "f36e0ea69ff5e00fa3fee36fbcc41b3d8b94bd50bf6b5307ead930f0cd3dccdb",
+      "exactlyPreserved": true
+    },
+    {
+      "mode": "progressive",
+      "case": "tool-error",
+      "httpStatus": 200,
+      "httpBodyBytes": 2578709,
+      "elapsedMs": 389.702,
+      "received": {
+        "fields": [
+          "_meta",
+          "content",
+          "isError",
+          "structuredContent"
+        ],
+        "canonical": {
+          "bytes": 2578674,
+          "sha256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e"
+        },
+        "content": [
+          {
+            "index": 0,
+            "type": "text",
+            "fields": [
+              "_meta",
+              "annotations",
+              "text",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 1200157,
+              "sha256": "b40b8d4ee54d3c791a0e517603fd2a8e5cd6faab906e423ebcc23b4081565472"
+            },
+            "textUTF8": {
+              "bytes": 1120000,
+              "sha256": "122529944dab2fab57aebd316776507d22025886b4608b1e0126dd99a1df5cf8"
+            }
+          },
+          {
+            "index": 1,
+            "type": "image",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 274,
+              "sha256": "ba63a0b8a0303a76470ffcd0656b9e5111d2e75cd2363b8944a8e6a3ca143a4d"
+            },
+            "decodedBinary": {
+              "bytes": 68,
+              "sha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15"
+            }
+          },
+          {
+            "index": 2,
+            "type": "audio",
+            "fields": [
+              "_meta",
+              "annotations",
+              "data",
+              "mimeType",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 2374,
+              "sha256": "d9a15c1a73f08f893f5f62259cb88be7f47a6247e684ced3552b639e9a328423"
+            },
+            "decodedBinary": {
+              "bytes": 1644,
+              "sha256": "c726d333dd159a31423f3480dbb1c5c4a9dfcd30efe1f7e12ade390dc92e8908"
+            }
+          },
+          {
+            "index": 3,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 299,
+              "sha256": "47338b8c4562c0863d2f5f11a778f187f569e1e2fe3235a6b24d9cf8cdf7776c"
+            },
+            "resourceTextUTF8": {
+              "bytes": 29,
+              "sha256": "2190a73fb49d2fb30d2f73de9bc3b7817ea0021507faf187aec9f8268b03766e"
+            }
+          },
+          {
+            "index": 4,
+            "type": "resource",
+            "fields": [
+              "_meta",
+              "annotations",
+              "resource",
+              "type"
+            ],
+            "canonical": {
+              "bytes": 175047,
+              "sha256": "094f88b58de7abc1f7c7f95889dada0a87475e92ce215e35a7c258f6078251df"
+            },
+            "resourceDecodedBinary": {
+              "bytes": 131072,
+              "sha256": "59f410ae5e17962412e2aed4f815918f634932f2abf084f00bb638c4db017850"
+            }
+          },
+          {
+            "index": 5,
+            "type": "resource_link",
+            "fields": [
+              "_meta",
+              "annotations",
+              "description",
+              "mimeType",
+              "name",
+              "size",
+              "title",
+              "type",
+              "uri"
+            ],
+            "canonical": {
+              "bytes": 329,
+              "sha256": "424bd088b82ec3fe07b20d1b769a5a02712a59f031291c8ff334dbf4a08b87eb"
+            }
+          }
+        ],
+        "structuredContent": {
+          "bytes": 1200093,
+          "sha256": "854d51c1354ea05cba8deec5c4c0685ffb36e01fe89d2de3fcf70b3d7536a64c"
+        },
+        "isError": true
+      },
+      "normalizedResultSHA256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e",
+      "baselineNormalizedSHA256": "ffff5fd52d71b4b0ba3511ec1576ea039293291851f5c93c277027aa23d0a13e",
+      "exactlyPreserved": true
+    }
+  ],
+  "comparison": "Exact canonical JSON after defaulting only an omitted isError to false; binary decoded hashes also compared",
+  "passed": true,
+  "baselineExitCode": 0,
+  "adminKeyAbsentFromConfig": true,
+  "temporaryTokenRemoved": true,
+  "coreExitCode": 0
+}

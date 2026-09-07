@@ -1,0 +1,5 @@
+{
+  "profile": ".cache/native-profile/core.json",
+  "afterSettingsWrites": true,
+  "apiKeyNonempty": false
+}

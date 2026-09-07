@@ -1,0 +1,56 @@
+{
+  "scope": "controlled core lifecycle; not native app acceptance",
+  "core": "/private/tmp/mcp-gateway-mcpproxy-patched",
+  "sha256": "e12c7209bc81fe337d6364be0dc14c182c5ca69c51b3c6e8ae6df33a32819381",
+  "evidence_dir": "/private/tmp/mcp-gateway-process-tree-f1ntod8l",
+  "core_pid": 98388,
+  "core_pgid": 98388,
+  "core_exit_code": 0,
+  "shutdown_seconds": 3.676,
+  "shutdown_mode": "force-active",
+  "stop_result": {
+    "paused": true,
+    "in_flight": 0,
+    "isolated_sessions": 0
+  },
+  "call_outcome": {
+    "response": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"error\":\"tool 'echo' on server 'process-tree-probe' failed: CallTool failed for 'echo': transport error: context canceled. Check server configuration, authentication, and tool parameters\",\"server_name\":\"process-tree-probe\",\"tool_name\":\"echo\",\"troubleshooting\":\"Check server configuration, connectivity, and authentication credentials\"}"
+        }
+      ],
+      "isError": true
+    }
+  },
+  "before": {
+    "upstream:98500": {
+      "pid": 98500,
+      "pgid": 98500,
+      "alive": true
+    },
+    "descendant:98514": {
+      "pid": 98514,
+      "pgid": 98500,
+      "alive": true
+    },
+    "upstream:98452": {
+      "pid": 98452,
+      "pgid": 98452,
+      "alive": true
+    },
+    "descendant:98496": {
+      "pid": 98496,
+      "pgid": 98452,
+      "alive": true
+    }
+  },
+  "alive_after_graceful_shutdown": {
+    "upstream:98500": false,
+    "descendant:98514": false,
+    "upstream:98452": false,
+    "descendant:98496": false
+  },
+  "passed": true
+}

@@ -1,0 +1,7 @@
+{
+  "scope": "Actual production app startup, one owned core, second-instance activation, SIGTERM shutdown, and no debug listener; no menu or pixel claims",
+  "appSHA256": "f3c0670073cb641cf5baa96694009fbfb1b23a1973c1536a39132bd993067627",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "profile": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/production-b6dgju0z",
+  "temporaryAdminKeyDeleted": true
+}

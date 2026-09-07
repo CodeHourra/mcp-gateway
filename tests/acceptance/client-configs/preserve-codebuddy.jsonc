@@ -1,0 +1,16 @@
+{
+  // Keep this file comment and the unknown top-level object.
+  "x-preserve": { "note": "literal // text and /* text */", "nested": [1, 2,], },
+  "mcpServers": {
+    /* Keep the existing server, its comment, and its optional fields. */
+    "existing": {
+      "type": "http",
+      "url": "https://example.invalid/path//segment",
+      "headers": { "Authorization": "Bearer ${EXISTING_TEST_TOKEN}", },
+      "defer_loading": true,
+      "tools": { "echo": { "defer_loading": false, }, },
+      "x-vendor": { "literal": "quotes: \" and slash: \\" },
+    },
+  },
+  "disabledMcpServers": ["unrelated-disabled",],
+}

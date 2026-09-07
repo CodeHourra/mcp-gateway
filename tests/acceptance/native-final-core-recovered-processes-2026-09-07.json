@@ -1,0 +1,10 @@
+{
+  "appPidUnchanged": 30933,
+  "newCorePid": 96637,
+  "newCoreExecutable": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/artifacts/MCP Gateway Test.app/Contents/MacOS/mcpproxy",
+  "oldProcessesExited": {
+    "30948": true,
+    "31008": true
+  },
+  "newCoreIsDifferent": true
+}

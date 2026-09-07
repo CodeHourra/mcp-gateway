@@ -1,0 +1,98 @@
+{
+  "profile": ".cache/native-profile",
+  "appPID": 60361,
+  "ownedProcessTree": [
+    {
+      "pid": 60361,
+      "ppid": 79935,
+      "executable": "artifacts/MCP Gateway Test.app/Contents/MacOS/mcp-gateway"
+    },
+    {
+      "pid": 60368,
+      "ppid": 60361,
+      "executable": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/artifacts/MCP Gateway Test.app/Contents/MacOS/mcpproxy"
+    },
+    {
+      "pid": 60423,
+      "ppid": 60368,
+      "executable": "/Users/steve/.pyenv/versions/3.12.10/bin/python3"
+    },
+    {
+      "pid": 60444,
+      "ppid": 60368,
+      "executable": "/Users/steve/.pyenv/versions/3.12.10/bin/python3"
+    }
+  ],
+  "shutdown": "SIGTERM to the exact owned app; app drains and stops its core",
+  "ownedProcessesAllStopped": true,
+  "remainingOwnedPIDs": [],
+  "testCredentials": [
+    {
+      "service": "MCP Gateway",
+      "account": "1f9142856b7f5d95-admin",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-17a4ce54527f344f4e3774d571ef47a5",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-2001515d634137dddf1d4ec47ef94689",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-281b1836a052b10accf316939d97d609",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-2af3ba2f6c65e0e20eb6b7eaebf34650",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-2da5ceee548fa8960390912dfda8c2f0",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-38894b8ed0de838a7a35140ed574932b",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-4f7ed92a935b943a51168ab00d889cc0",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-79ddbe65e6b286e053787bf1685bb4c7",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.upstream",
+      "account": "1f9142856b7f5d95-up-d2eb386fff5736bb57111af9876ef8f6",
+      "deleted": true,
+      "verifiedAbsent": true
+    },
+    {
+      "service": "com.mcp-gateway.credentials",
+      "account": "oauth-master:7fc230f883fa155f2b8be44ad5f278b0",
+      "deleted": true,
+      "verifiedAbsent": true
+    }
+  ],
+  "allPlannedTestCredentialsAbsent": true
+}

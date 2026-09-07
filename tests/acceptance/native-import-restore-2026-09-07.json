@@ -1,0 +1,107 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "import_preview",
+      "value": [
+        {
+          "name": "native-added",
+          "options": [
+            "add",
+            "skip"
+          ],
+          "reason": "native-added新增native-added 的导入处理方式添加服务跳过stdio · /Users/steve/.pyenv/versions/3.12.10/bin/python3自动识别 · native-added未发现相同连接，将添加为独立服务。",
+          "status": "新增"
+        },
+        {
+          "name": "native-echo",
+          "options": [
+            "keep_both",
+            "skip"
+          ],
+          "reason": "native-echo存在差异native-echo 的导入处理方式保留两份跳过stdio · /Users/steve/.pyenv/versions/3.12.10/bin/python3自动识别 · native-echo名称或地址相同，但连接身份不同；保留两份不会覆盖已有服务。参数及顺序不同（敏感值不回显）",
+          "status": "存在差异"
+        },
+        {
+          "name": "native-echo-copy",
+          "options": [
+            "merge",
+            "keep_both",
+            "skip"
+          ],
+          "reason": "native-echo-copy相同连接native-echo-copy 的导入处理方式合并配置来源保留两份跳过stdio · /Users/steve/.pyenv/versions/3.12.10/bin/python3自动识别 · native-echo-copy完整连接身份相同，可合并配置来源。",
+          "status": "相同连接"
+        },
+        {
+          "name": "native-skip",
+          "options": [
+            "add",
+            "skip"
+          ],
+          "reason": "native-skip新增native-skip 的导入处理方式添加服务跳过stdio · /Users/steve/.pyenv/versions/3.12.10/bin/python3自动识别 · native-skip未发现相同连接，将添加为独立服务。",
+          "status": "新增"
+        }
+      ]
+    },
+    {
+      "name": "import_result",
+      "value": {
+        "backupId": "20260906T220545.456253000Z-V3B22USC",
+        "text": "导入配置收拢已有 MCP，先检查，再合并。1选择来源2检查与合并3导入完成✓导入已完成新增 2 项，合并 1 项，跳过 1 项。备份编号：20260906T220545.456253000Z-V3B22USC。可在设置中恢复。继续导入查看服务"
+      }
+    },
+    {
+      "name": "apply_preservation",
+      "value": {
+        "serviceIds": [
+          "native-added",
+          "native-echo",
+          "native-echo-2"
+        ],
+        "originalArgumentsPreserved": true,
+        "sourceMerged": [
+          "自动识别 · native-echo-copy"
+        ],
+        "existingUnrelatedCoreFieldsEqual": true,
+        "addedCoreDefaultFields": [
+          "features"
+        ],
+        "settingsEqual": true
+      }
+    },
+    {
+      "name": "restored_configuration",
+      "value": {
+        "files": {
+          "core.json": {
+            "semanticEqual": true,
+            "exactBytesEqual": true
+          },
+          "services.json": {
+            "semanticEqual": true,
+            "exactBytesEqual": true
+          },
+          "settings.json": {
+            "semanticEqual": true,
+            "exactBytesEqual": true
+          }
+        },
+        "serviceIds": [
+          "native-echo"
+        ],
+        "settings": {
+          "launchAtLogin": false,
+          "listenAddress": "127.0.0.1:19240",
+          "logRetentionDays": 14,
+          "mode": "progressive",
+          "theme": "dark"
+        }
+      }
+    }
+  ],
+  "scenario": "import-restore",
+  "passed": true,
+  "appSHA256": "2a7a15df58891bbe7fd88f540210662f0f15f3bdeb3755122abf142edaff5636",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "artifactIdentitySource": "Root supplied running bundle identity for this recorded execution; current script now records file hashes automatically."
+}

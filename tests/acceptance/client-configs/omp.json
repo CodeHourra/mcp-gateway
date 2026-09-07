@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "gateway": {
+      "type": "http",
+      "url": "http://127.0.0.1:19480/mcp",
+      "headers": { "Authorization": "Bearer ${MCP_GATEWAY_AGENT_TOKEN}" }
+    }
+  }
+}

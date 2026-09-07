@@ -1,0 +1,1897 @@
+{
+  "executedAt": "2026-09-07T09:16:51.161960+08:00",
+  "scope": "Isolated real WKWebView DOM, native window resize, HTML radio semantics, theme colors and state. No user app actions, OS keyboard, pixel screenshot, or system appearance change.",
+  "profile": ".cache/theme-ui-check-plrwwc20/profile",
+  "appSHA256": "59faa8e380eeb1baa3c4883cbf16334c7f0b73d8587b612e90105204d007f7dd",
+  "coreSHA256": "0ad7d5b5a5b536f7a267c2b518168fd07320cf88a108d8c10af8e6a619ed3167",
+  "checks": [
+    {
+      "name": "initial",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1156,
+            "width": 64.84375,
+            "x": 1091.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1073.15625,
+            "width": 144.546875,
+            "x": 928.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1180,
+            "width": 1006,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 251.40625,
+            "width": 53.40625,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "system",
+        "rootBackground": "rgb(255, 255, 255)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 969.75,
+              "width": 37.140625,
+              "x": 932.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1008.890625,
+              "width": 37.140625,
+              "x": 971.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(234, 241, 253)",
+            "foreground": "rgb(35, 100, 197)",
+            "outline": "rgb(35, 100, 197) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1069.15625,
+              "width": 58.265625,
+              "x": 1010.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 4.999
+          }
+        ],
+        "settings": [],
+        "sidebarBackground": "rgb(244, 245, 247)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "system",
+        "toolbar": [
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1180,
+          "height": 780,
+          "scrollWidth": 1180,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "toolbar_light",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1156,
+            "width": 64.84375,
+            "x": 1091.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1073.15625,
+            "width": 144.546875,
+            "x": 928.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1180,
+            "width": 1006,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 251.40625,
+            "width": 53.40625,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "light",
+        "rootBackground": "rgb(255, 255, 255)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(234, 241, 253)",
+            "foreground": "rgb(35, 100, 197)",
+            "outline": "rgb(35, 100, 197) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 969.75,
+              "width": 37.140625,
+              "x": 932.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 4.999
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1008.890625,
+              "width": 37.140625,
+              "x": 971.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1069.15625,
+              "width": 58.265625,
+              "x": 1010.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 13.492
+          }
+        ],
+        "settings": [],
+        "sidebarBackground": "rgb(244, 245, 247)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "light",
+        "toolbar": [
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1180,
+          "height": 780,
+          "scrollWidth": 1180,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "toolbar_dark",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1156,
+            "width": 64.84375,
+            "x": 1091.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1073.15625,
+            "width": 144.546875,
+            "x": 928.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1180,
+            "width": 1006,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 251.40625,
+            "width": 53.40625,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "dark",
+        "rootBackground": "rgb(32, 33, 36)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(40, 42, 48)",
+            "foreground": "rgb(230, 232, 237)",
+            "outline": "rgb(230, 232, 237) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 969.75,
+              "width": 37.140625,
+              "x": 932.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 11.7
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(38, 60, 95)",
+            "foreground": "rgb(141, 184, 250)",
+            "outline": "rgb(141, 184, 250) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1008.890625,
+              "width": 37.140625,
+              "x": 971.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 5.475
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(40, 42, 48)",
+            "foreground": "rgb(230, 232, 237)",
+            "outline": "rgb(230, 232, 237) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1069.15625,
+              "width": 58.265625,
+              "x": 1010.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 11.7
+          }
+        ],
+        "settings": [],
+        "sidebarBackground": "rgb(39, 41, 45)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "dark",
+        "toolbar": [
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1180,
+          "height": 780,
+          "scrollWidth": 1180,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "toolbar_system",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1156,
+            "width": 64.84375,
+            "x": 1091.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1073.15625,
+            "width": 144.546875,
+            "x": 928.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1180,
+            "width": 1006,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 251.40625,
+            "width": 53.40625,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "system",
+        "rootBackground": "rgb(255, 255, 255)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 969.75,
+              "width": 37.140625,
+              "x": 932.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1008.890625,
+              "width": 37.140625,
+              "x": 971.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(234, 241, 253)",
+            "foreground": "rgb(35, 100, 197)",
+            "outline": "rgb(35, 100, 197) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1069.15625,
+              "width": 58.265625,
+              "x": 1010.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 4.999
+          }
+        ],
+        "settings": [],
+        "sidebarBackground": "rgb(244, 245, 247)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "system",
+        "toolbar": [
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1180,
+          "height": 780,
+          "scrollWidth": 1180,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "toolbar_to_settings_light",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1141,
+            "width": 64.84375,
+            "x": 1076.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1058.15625,
+            "width": 144.546875,
+            "x": 913.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1165,
+            "width": 991,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 221.03125,
+            "width": 23.03125,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "light",
+        "rootBackground": "rgb(255, 255, 255)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(234, 241, 253)",
+            "foreground": "rgb(35, 100, 197)",
+            "outline": "rgb(35, 100, 197) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 954.75,
+              "width": 37.140625,
+              "x": 917.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 4.999
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 993.890625,
+              "width": 37.140625,
+              "x": 956.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1054.15625,
+              "width": 58.265625,
+              "x": 995.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 13.492
+          }
+        ],
+        "settings": [
+          {
+            "checked": true,
+            "clip": "auto",
+            "disabled": false,
+            "label": "浅色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "深色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "sidebarBackground": "rgb(244, 245, 247)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "light",
+        "toolbar": [
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1165,
+          "height": 780,
+          "scrollWidth": 1165,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "toolbar_to_settings_dark",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1141,
+            "width": 64.84375,
+            "x": 1076.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1058.15625,
+            "width": 144.546875,
+            "x": 913.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1165,
+            "width": 991,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 221.03125,
+            "width": 23.03125,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "dark",
+        "rootBackground": "rgb(32, 33, 36)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(40, 42, 48)",
+            "foreground": "rgb(230, 232, 237)",
+            "outline": "rgb(230, 232, 237) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 954.75,
+              "width": 37.140625,
+              "x": 917.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 11.7
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(38, 60, 95)",
+            "foreground": "rgb(141, 184, 250)",
+            "outline": "rgb(141, 184, 250) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 993.890625,
+              "width": 37.140625,
+              "x": 956.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 5.475
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(40, 42, 48)",
+            "foreground": "rgb(230, 232, 237)",
+            "outline": "rgb(230, 232, 237) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1054.15625,
+              "width": 58.265625,
+              "x": 995.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 11.7
+          }
+        ],
+        "settings": [
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "浅色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": true,
+            "clip": "auto",
+            "disabled": false,
+            "label": "深色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "sidebarBackground": "rgb(39, 41, 45)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "dark",
+        "toolbar": [
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1165,
+          "height": 780,
+          "scrollWidth": 1165,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "toolbar_to_settings_system",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1141,
+            "width": 64.84375,
+            "x": 1076.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1058.15625,
+            "width": 144.546875,
+            "x": 913.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1165,
+            "width": 991,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 221.03125,
+            "width": 23.03125,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "system",
+        "rootBackground": "rgb(255, 255, 255)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 954.75,
+              "width": 37.140625,
+              "x": 917.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 993.890625,
+              "width": 37.140625,
+              "x": 956.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(234, 241, 253)",
+            "foreground": "rgb(35, 100, 197)",
+            "outline": "rgb(35, 100, 197) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1054.15625,
+              "width": 58.265625,
+              "x": 995.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 4.999
+          }
+        ],
+        "settings": [
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "浅色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "深色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": true,
+            "clip": "auto",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "sidebarBackground": "rgb(244, 245, 247)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "system",
+        "toolbar": [
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1165,
+          "height": 780,
+          "scrollWidth": 1165,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "settings_to_toolbar_light",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1141,
+            "width": 64.84375,
+            "x": 1076.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1058.15625,
+            "width": 144.546875,
+            "x": 913.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1165,
+            "width": 991,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 221.03125,
+            "width": 23.03125,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "light",
+        "rootBackground": "rgb(255, 255, 255)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(234, 241, 253)",
+            "foreground": "rgb(35, 100, 197)",
+            "outline": "rgb(35, 100, 197) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 954.75,
+              "width": 37.140625,
+              "x": 917.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 4.999
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 993.890625,
+              "width": 37.140625,
+              "x": 956.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1054.15625,
+              "width": 58.265625,
+              "x": 995.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 13.492
+          }
+        ],
+        "settings": [
+          {
+            "checked": true,
+            "clip": "auto",
+            "disabled": false,
+            "label": "浅色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "深色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "sidebarBackground": "rgb(244, 245, 247)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "light",
+        "toolbar": [
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1165,
+          "height": 780,
+          "scrollWidth": 1165,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "settings_to_toolbar_dark",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1141,
+            "width": 64.84375,
+            "x": 1076.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1058.15625,
+            "width": 144.546875,
+            "x": 913.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1165,
+            "width": 991,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 221.03125,
+            "width": 23.03125,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "dark",
+        "rootBackground": "rgb(32, 33, 36)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(40, 42, 48)",
+            "foreground": "rgb(230, 232, 237)",
+            "outline": "rgb(230, 232, 237) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 954.75,
+              "width": 37.140625,
+              "x": 917.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 11.7
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(38, 60, 95)",
+            "foreground": "rgb(141, 184, 250)",
+            "outline": "rgb(141, 184, 250) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 993.890625,
+              "width": 37.140625,
+              "x": 956.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 5.475
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(40, 42, 48)",
+            "foreground": "rgb(230, 232, 237)",
+            "outline": "rgb(230, 232, 237) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1054.15625,
+              "width": 58.265625,
+              "x": 995.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 11.7
+          }
+        ],
+        "settings": [
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "浅色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": true,
+            "clip": "auto",
+            "disabled": false,
+            "label": "深色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "sidebarBackground": "rgb(39, 41, 45)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "dark",
+        "toolbar": [
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1165,
+          "height": 780,
+          "scrollWidth": 1165,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "settings_to_toolbar_system",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 36,
+            "height": 17,
+            "right": 1141,
+            "width": 64.84375,
+            "x": 1076.15625,
+            "y": 19
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 1058.15625,
+            "width": 144.546875,
+            "x": 913.609375,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 1165,
+            "width": 991,
+            "x": 174,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 221.03125,
+            "width": 23.03125,
+            "x": 198,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "system",
+        "rootBackground": "rgb(255, 255, 255)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 954.75,
+              "width": 37.140625,
+              "x": 917.609375,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 993.890625,
+              "width": 37.140625,
+              "x": 956.75,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(234, 241, 253)",
+            "foreground": "rgb(35, 100, 197)",
+            "outline": "rgb(35, 100, 197) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 1054.15625,
+              "width": 58.265625,
+              "x": 995.890625,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 4.999
+          }
+        ],
+        "settings": [
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "浅色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "深色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": true,
+            "clip": "auto",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "sidebarBackground": "rgb(244, 245, 247)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "system",
+        "toolbar": [
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 1165,
+          "height": 780,
+          "scrollWidth": 1165,
+          "width": 1180
+        }
+      }
+    },
+    {
+      "name": "minimum_window_light",
+      "value": {
+        "bounds": {
+          ".gateway-state": {
+            "bottom": 35,
+            "height": 15,
+            "right": 726,
+            "width": 60.03125,
+            "x": 665.96875,
+            "y": 20
+          },
+          ".theme-picker": {
+            "bottom": 43,
+            "height": 31,
+            "right": 655.96875,
+            "width": 144.546875,
+            "x": 511.421875,
+            "y": 12
+          },
+          ".toolbar": {
+            "bottom": 56,
+            "height": 56,
+            "right": 746,
+            "width": 601,
+            "x": 145,
+            "y": 0
+          },
+          ".toolbar-title": {
+            "bottom": 36.5,
+            "height": 18,
+            "right": 188.03125,
+            "width": 23.03125,
+            "x": 165,
+            "y": 18.5
+          }
+        },
+        "fieldset": {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "boxShadow": "none",
+          "legend": "主题",
+          "selectCount": 0,
+          "tag": "FIELDSET"
+        },
+        "localTheme": "light",
+        "rootBackground": "rgb(255, 255, 255)",
+        "scripts": [
+          "wails://localhost/assets/index-BxUnCBAH.js"
+        ],
+        "segments": [
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(234, 241, 253)",
+            "foreground": "rgb(35, 100, 197)",
+            "outline": "rgb(35, 100, 197) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 552.5625,
+              "width": 37.140625,
+              "x": 515.421875,
+              "y": 16
+            },
+            "text": "浅色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 4.999
+          },
+          {
+            "availableTextWidth": 21,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 591.703125,
+              "width": 37.140625,
+              "x": 554.5625,
+              "y": 16
+            },
+            "text": "深色",
+            "textWidth": 21.131591796875,
+            "contrastRatio": 13.492
+          },
+          {
+            "availableTextWidth": 42,
+            "background": "rgb(248, 249, 251)",
+            "foreground": "rgb(37, 43, 54)",
+            "outline": "rgb(37, 43, 54) none 0px",
+            "rect": {
+              "bottom": 39,
+              "height": 23,
+              "right": 651.96875,
+              "width": 58.265625,
+              "x": 593.703125,
+              "y": 16
+            },
+            "text": "跟随系统",
+            "textWidth": 42.26318359375,
+            "contrastRatio": 13.492
+          }
+        ],
+        "settings": [
+          {
+            "checked": true,
+            "clip": "auto",
+            "disabled": false,
+            "label": "浅色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "深色",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "auto",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "theme",
+            "position": "static",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "sidebarBackground": "rgb(244, 245, 247)",
+        "stylesheets": [
+          "wails://localhost/assets/index-CindxhB8.css"
+        ],
+        "systemDark": false,
+        "theme": "light",
+        "toolbar": [
+          {
+            "checked": true,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "浅色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "light"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "深色",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "dark"
+          },
+          {
+            "checked": false,
+            "clip": "rect(0px, 0px, 0px, 0px)",
+            "disabled": false,
+            "label": "跟随系统",
+            "name": "toolbar-theme",
+            "position": "absolute",
+            "type": "radio",
+            "value": "system"
+          }
+        ],
+        "viewport": {
+          "documentWidth": 746,
+          "height": 533,
+          "scrollWidth": 746,
+          "width": 761
+        }
+      }
+    }
+  ],
+  "passed": false,
+  "nativeMinimumSizeRequest": {
+    "width": 760,
+    "height": 560,
+    "result": {
+      "focused": false,
+      "fullscreen": false,
+      "height": 560,
+      "id": 1,
+      "maximised": false,
+      "minimised": false,
+      "name": "manager",
+      "visible": false,
+      "width": 760,
+      "x": 274,
+      "y": 143,
+      "zoom": 1
+    }
+  },
+  "restoredTheme": "system",
+  "harnessFailure": "Native window_control set_size reported width 760; WKWebView innerWidth was 761 and document clientWidth 746. Layout assertions passed. The test incorrectly required equality between native frame width and DOM innerWidth."
+}

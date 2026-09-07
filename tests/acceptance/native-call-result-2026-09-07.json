@@ -1,0 +1,138 @@
+{
+  "snapshot": {
+    "activity": [
+      {
+        "durationMs": 89,
+        "id": "01M1VQK23DNG79T9770XPCXWGF",
+        "kind": "tool_call",
+        "message": "tool_call",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "success",
+        "time": "2026-09-06T16:07:28.621005Z",
+        "toolName": "echo"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQG85SETY4BA1BQ02ZW67G",
+        "kind": "security_scan",
+        "message": "security_scan",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "success",
+        "time": "2026-09-06T16:05:56.53714Z",
+        "toolName": "security_scan"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQG706A44EJDA860FNYSC3",
+        "kind": "tool_quarantine_change",
+        "message": "tool_quarantine_change",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo",
+        "status": "tool_auto_approved",
+        "time": "2026-09-06T16:05:55.334612Z",
+        "toolName": "echo"
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQ62PXY0E5V71RVGC5AGHG",
+        "kind": "system_start",
+        "message": "system_start",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T16:00:23.261268Z",
+        "toolName": null
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VQ08EY6WFZ66H9Z02VX8SJ",
+        "kind": "system_stop",
+        "message": "signal",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T15:57:12.542505Z",
+        "toolName": null
+      },
+      {
+        "durationMs": null,
+        "id": "01M1VPJ6V6JTHMP6B8GY657TQG",
+        "kind": "system_start",
+        "message": "system_start",
+        "serviceId": null,
+        "serviceName": null,
+        "status": "success",
+        "time": "2026-09-06T15:49:32.134134Z",
+        "toolName": null
+      }
+    ],
+    "gateway": {
+      "activeCalls": 0,
+      "address": "http://127.0.0.1:19240/mcp/call",
+      "credentialStorage": "macOS 钥匙串",
+      "error": "",
+      "paused": false,
+      "status": "running",
+      "version": "0.1.0-dev"
+    },
+    "services": [
+      {
+        "args": [
+          "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/core_probe.py",
+          "stdio"
+        ],
+        "auth": {
+          "env": [],
+          "headers": [],
+          "scopes": [],
+          "type": "none"
+        },
+        "authStatus": null,
+        "catalogStatus": "live",
+        "command": "/Users/steve/.pyenv/versions/3.12.10/bin/python3",
+        "cwd": "",
+        "enabled": true,
+        "id": "native-echo",
+        "name": "native-echo",
+        "sources": [],
+        "status": "ready",
+        "statusMessage": "Connected (1 tool)",
+        "toolCount": 1,
+        "transport": "stdio",
+        "url": ""
+      }
+    ],
+    "settings": {
+      "launchAtLogin": false,
+      "listenAddress": "127.0.0.1:19240",
+      "logRetentionDays": 7,
+      "mode": "progressive",
+      "theme": "system"
+    },
+    "tools": [
+      {
+        "catalogStatus": "live",
+        "description": "Echo a supplied text message",
+        "enabled": true,
+        "id": "WyJuYXRpdmUtZWNobyIsImVjaG8iXQ",
+        "inputSchema": {
+          "properties": {
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "type": "object"
+        },
+        "name": "echo",
+        "serviceId": "native-echo",
+        "serviceName": "native-echo"
+      }
+    ]
+  },
+  "text": "工具\n按需查找，再读取参数定义与执行调用。\n渐进发现\n工具来源\n⌕\n\n›\necho\nEcho a supplied text message\nnative-echo · live\n允许调用\n最终调用受此权限控制\n允许调用\n参数\t类型\t说明\ntext 必填\tstring\t—\n查看完整 JSON Schema\n调用参数 JSON 对象\n调用会实际执行此上游工具，请先核对参数与操作影响。\n执行调用\n调用结果\n{\n  \"content\": [\n    {\n      \"text\": \"native-ui-acceptance-2026-09-07\",\n      \"type\": \"text\"\n    }\n  ],\n  \"structuredContent\": {\n    \"echo\": \"native-ui-acceptance-2026-09-07\"\n  }\n}\n"
+}

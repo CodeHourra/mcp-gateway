@@ -1,0 +1,120 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "large_result_rendered_and_scrolled",
+      "value": {
+        "clientHeight": 418,
+        "clientWidth": 675,
+        "overflowX": "auto",
+        "overflowY": "auto",
+        "renderedJSONBytes": 2097314,
+        "scrollHeight": 422890,
+        "scrollLeft": 63144,
+        "scrollTop": 422472,
+        "scrollWidth": 63819,
+        "structuredTailPresent": true,
+        "structuredTextLength": 1048598,
+        "textLength": 1048598,
+        "textTailPresent": true,
+        "whiteSpace": "pre-wrap"
+      }
+    },
+    {
+      "name": "diagnostics_button_generated_download",
+      "value": {
+        "anchorInvoked": true,
+        "blobBytes": 911,
+        "filename": "mcp-gateway-diagnostics.json",
+        "json": {
+          "exportedAt": "2026-09-07T06:19:47.367284+08:00",
+          "gateway": {
+            "activeCalls": 0,
+            "address": "http://127.0.0.1:19240/mcp/call",
+            "credentialStorage": "macOS 钥匙串",
+            "error": "",
+            "paused": false,
+            "status": "running",
+            "version": "0.1.0-dev"
+          },
+          "services": [
+            {
+              "catalogStatus": "live",
+              "id": "native-api-key",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-bearer",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-echo",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "stdio"
+            },
+            {
+              "catalogStatus": "live",
+              "id": "native-headers",
+              "status": "ready",
+              "toolCount": 1,
+              "transport": "http"
+            }
+          ],
+          "version": "0.1.0-dev"
+        },
+        "largeToolPayloadAbsent": true,
+        "mimeType": "application/json",
+        "syntheticCredentialAbsent": true
+      }
+    },
+    {
+      "name": "test_profile_credential_scan",
+      "value": [
+        {
+          "file": "core.json",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "services.json",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "settings.json",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-echo.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/core.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-echo-2.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-bearer.log",
+          "credentialMarkerAbsent": true
+        },
+        {
+          "file": "logs/server-native-crud.log",
+          "credentialMarkerAbsent": true
+        }
+      ]
+    }
+  ],
+  "scenario": "big-diagnostics",
+  "passed": true,
+  "appSHA256": "258c5910c02a9793b1b748f5bd8784318ed776099439f79991a0f5578413380f",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "artifactIdentitySource": "Root supplied running bundle identity for this recorded execution; current script now records file hashes automatically."
+}

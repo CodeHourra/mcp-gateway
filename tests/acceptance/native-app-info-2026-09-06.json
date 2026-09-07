@@ -1,0 +1,21 @@
+{
+  "arch": "arm64",
+  "endpoint": "http://127.0.0.1:19199/mcp",
+  "os": "darwin",
+  "windows": [
+    {
+      "focused": false,
+      "fullscreen": false,
+      "height": 807,
+      "id": 1,
+      "maximised": false,
+      "minimised": false,
+      "name": "manager",
+      "visible": false,
+      "width": 1179,
+      "x": 274,
+      "y": 143,
+      "zoom": 1
+    }
+  ]
+}

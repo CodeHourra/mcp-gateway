@@ -1,0 +1,21 @@
+{
+  "feedback": "已暂停新调用。\n×\n",
+  "gateway": {
+    "activeCalls": 0,
+    "address": "http://127.0.0.1:19240/mcp/call",
+    "credentialStorage": "macOS 钥匙串",
+    "error": "",
+    "paused": true,
+    "status": "running",
+    "version": "0.1.0-dev"
+  },
+  "result": {
+    "content": [
+      {
+        "text": "{\"error\":\"tool 'echo' on server 'native-echo' failed: GATEWAY_PAUSED: new tool calls are paused. Check server configuration, authentication, and tool parameters\",\"server_name\":\"native-echo\",\"tool_name\":\"echo\",\"troubleshooting\":\"Check server configuration, connectivity, and authentication credentials\"}",
+        "type": "text"
+      }
+    ],
+    "isError": true
+  }
+}

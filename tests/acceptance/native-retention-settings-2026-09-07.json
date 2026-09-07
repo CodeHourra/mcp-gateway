@@ -1,0 +1,75 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "retention_7_days_applied",
+      "value": {
+        "appPID": 51114,
+        "corePID": 18423,
+        "listenAddress": "127.0.0.1:19240",
+        "ownershipVerified": true,
+        "activityRetentionDays": 7,
+        "logArchiveMaxAge": 7,
+        "calls": {
+          "echoSucceeded": true,
+          "oauthToolSucceededWithoutNewLogin": true,
+          "serviceStates": {
+            "native-api-key": "ready",
+            "native-bearer": "ready",
+            "native-echo": "ready",
+            "native-env": "ready",
+            "native-headers": "ready",
+            "native-oauth": "ready"
+          }
+        }
+      }
+    },
+    {
+      "name": "retention_14_days_applied",
+      "value": {
+        "appPID": 51114,
+        "corePID": 18618,
+        "listenAddress": "127.0.0.1:19240",
+        "ownershipVerified": true,
+        "activityRetentionDays": 14,
+        "logArchiveMaxAge": 14,
+        "calls": {
+          "echoSucceeded": true,
+          "oauthToolSucceededWithoutNewLogin": true,
+          "serviceStates": {
+            "native-api-key": "ready",
+            "native-bearer": "ready",
+            "native-echo": "ready",
+            "native-env": "ready",
+            "native-headers": "ready",
+            "native-oauth": "ready"
+          }
+        }
+      }
+    },
+    {
+      "name": "theme_only_save_light",
+      "value": {
+        "appPID": 51114,
+        "corePID": 18618,
+        "listenAddress": "127.0.0.1:19240",
+        "ownershipVerified": true,
+        "coreNotRestarted": true
+      }
+    },
+    {
+      "name": "theme_only_save_dark",
+      "value": {
+        "appPID": 51114,
+        "corePID": 18618,
+        "listenAddress": "127.0.0.1:19240",
+        "ownershipVerified": true,
+        "coreNotRestarted": true
+      }
+    }
+  ],
+  "scenario": "retention-settings",
+  "appSHA256": "258c5910c02a9793b1b748f5bd8784318ed776099439f79991a0f5578413380f",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "passed": true
+}

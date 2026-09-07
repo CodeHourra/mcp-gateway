@@ -1,0 +1,17 @@
+# Preserve this file comment and all unrelated fields/tables.
+model = "adapter-fixture-only-not-a-real-model"
+x_preserve = "literal # text and // text"
+
+[mcp_servers.existing]
+command = "/absolute/path/to/acceptance-mcp"
+args = ["--first", "a", "--second", "b"] # Parameter order matters.
+cwd = "/absolute/path/to/acceptance-workspace"
+env_vars = ["EXISTING_TEST_TOKEN"]
+x_vendor = { keep = true, nested = [1, 2] }
+
+[mcp_servers.existing.env]
+MODE = "fixture"
+
+# This entire unrelated table must survive a gateway-only edit.
+[fixture_unrelated]
+value = "preserve exactly"

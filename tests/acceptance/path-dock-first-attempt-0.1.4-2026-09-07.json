@@ -1,0 +1,8 @@
+{
+  "scope": "Isolated actual WKWebView and AppKit activation policy. Test-only app identity/admin overlay; no real credentials, providers, OS pixel or menu clicks.",
+  "passed": false,
+  "appSHA256": "b48c5f703a06285294b9e81444a2769edb152af66848057b0912f4b4763ed579",
+  "coreSHA256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
+  "exitCode": 0,
+  "ownedChildrenGone": true
+}

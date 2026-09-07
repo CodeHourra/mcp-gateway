@@ -1,0 +1,73 @@
+{
+  "preparedAt": "2026-09-07T09:50:36.054298+08:00",
+  "stage": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/scan-choice-check.UHIwZ9",
+  "home": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/scan-choice-check.UHIwZ9/home",
+  "profile": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/scan-choice-check.UHIwZ9/profile",
+  "noAppStarted": true,
+  "disabledUpstreamCount": 8,
+  "files": {
+    "home/.claude.json": {
+      "sha256": "6bc175f321e764f037142d1624a4c7dcccc03b87dc8444a7caf313b847652d9e",
+      "mode": "0o600",
+      "bytes": 43
+    },
+    "home/.cursor/mcp.json": {
+      "sha256": "d8e397af03b5b032f21d0aa967086f0c78b33c87b76f2e9898ae0a144df7de02",
+      "mode": "0o600",
+      "bytes": 23
+    },
+    "home/.codebuddy/mcp.json": {
+      "sha256": "c70b5838796cb3f11cee9b13e59c74269d172a60f2523f995394e54d6b1086ae",
+      "mode": "0o600",
+      "bytes": 183
+    },
+    "home/.omp/agent/mcp.json": {
+      "sha256": "1de9bd21d7c581c69ed942fda642be08bec41507ce4c29ccb35975915c2c5544",
+      "mode": "0o600",
+      "bytes": 1127
+    },
+    "profile/settings.json": {
+      "sha256": "b0f3f43baba30839ff6afd62842312ecf6dc30988b3e4311673331905056a9b8",
+      "mode": "0o600",
+      "bytes": 139
+    },
+    "profile/core.json": {
+      "sha256": "763e36c589d951d0c5a1c0fabc385b0d92205a9a2b8fd89759e261ff18cbf8b0",
+      "mode": "0o600",
+      "bytes": 3738
+    }
+  },
+  "expectedRows": {
+    "omp": {
+      "status": "found",
+      "serviceCount": 6,
+      "blockedCount": 2
+    },
+    "claude-code": {
+      "status": "invalid"
+    },
+    "cursor": {
+      "status": "empty"
+    },
+    "codebuddy": {
+      "status": "found",
+      "serviceCount": 1,
+      "blockedCount": 0
+    },
+    "codex": {
+      "status": "unavailable"
+    }
+  },
+  "configDirectory": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/scan-choice-check.UHIwZ9/home/.codex/config.toml",
+  "markerMustRemainAbsent": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/.cache/scan-choice-check.UHIwZ9/must-not-execute",
+  "qaStartupBoundary": {
+    "updatedAt": "2026-09-07T10:04:04.362242+08:00",
+    "appSHA256": "284f2ea27e6dcdc1f9ee07773fee238dc7e6721624dacea81ac99027d0b3292e",
+    "overlayHashes": {
+      "main.go": "aabb1bbf547198ca638135f9c68f3596f959b827e05e645f8a1f7680b4552ba4",
+      "manager.go": "08721e47ffe74f5f48f66b00346dd8d2d8f8b93f09ac7533dd4eec6c31a28d8a",
+      "overlay.json": "01882c3953fd3ad1fc25393b168f1662b19abb876b191dfd6288ff7a31e2c5a7"
+    },
+    "scope": "Coordinator reported no default Keychain in the isolated HOME. Exact overlay diff independently checked: three app identity strings plus QA-only Key(admin) environment fallback. Startup will use CI=true; no Keychain or credential transport acceptance claimed."
+  }
+}

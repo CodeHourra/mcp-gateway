@@ -1,0 +1,51 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "three_environment_values_reached_stdio",
+      "value": {
+        "content": [
+          {
+            "text": "{\"pid\": 88386, \"expected_environment_matched\": {\"MCP_GATEWAY_NATIVE_ENV_ALPHA\": true, \"MCP_GATEWAY_NATIVE_ENV_BETA\": true, \"MCP_GATEWAY_NATIVE_ENV_GAMMA\": true}, \"all_environment_matched\": true, \"management_key_not_inherited\": true}",
+            "type": "text"
+          }
+        ],
+        "structuredContent": {
+          "all_environment_matched": true,
+          "expected_environment_matched": {
+            "MCP_GATEWAY_NATIVE_ENV_ALPHA": true,
+            "MCP_GATEWAY_NATIVE_ENV_BETA": true,
+            "MCP_GATEWAY_NATIVE_ENV_GAMMA": true
+          },
+          "management_key_not_inherited": true,
+          "pid": 88386
+        }
+      }
+    },
+    {
+      "name": "environment_form_saved_values_hidden",
+      "value": [
+        {
+          "empty": true,
+          "required": false,
+          "stored": true
+        },
+        {
+          "empty": true,
+          "required": false,
+          "stored": true
+        },
+        {
+          "empty": true,
+          "required": false,
+          "stored": true
+        }
+      ]
+    }
+  ],
+  "scenario": "env-form",
+  "passed": true,
+  "appSHA256": "258c5910c02a9793b1b748f5bd8784318ed776099439f79991a0f5578413380f",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "artifactIdentitySource": "Root supplied running bundle identity for this recorded execution; current script now records file hashes automatically."
+}

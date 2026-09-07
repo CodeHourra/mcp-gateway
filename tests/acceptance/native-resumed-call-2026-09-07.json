@@ -1,0 +1,22 @@
+{
+  "gateway": {
+    "activeCalls": 0,
+    "address": "http://127.0.0.1:19240/mcp/call",
+    "credentialStorage": "macOS 钥匙串",
+    "error": "",
+    "paused": false,
+    "status": "running",
+    "version": "0.1.0-dev"
+  },
+  "result": {
+    "content": [
+      {
+        "text": "native-resumed-positive",
+        "type": "text"
+      }
+    ],
+    "structuredContent": {
+      "echo": "native-resumed-positive"
+    }
+  }
+}

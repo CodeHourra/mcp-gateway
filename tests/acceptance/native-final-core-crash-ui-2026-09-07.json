@@ -1,0 +1,31 @@
+{
+  "banners": [
+    {
+      "html": "<div class=\"connection-banner\" role=\"alert\"><div><strong>网关需要处理</strong><p>网关核心意外退出，请重试启动: signal: killed</p></div><button class=\"control\">重试启动</button></div>",
+      "role": "alert",
+      "text": "网关需要处理\n网关核心意外退出，请重试启动: signal: killed\n重试启动\n"
+    }
+  ],
+  "gatewayText": "网关连接失败",
+  "snapshot": {
+    "activity": [],
+    "gateway": {
+      "activeCalls": 0,
+      "address": "http://127.0.0.1:19240/mcp/call",
+      "credentialStorage": "macOS 钥匙串",
+      "error": "网关核心意外退出，请重试启动: signal: killed",
+      "paused": false,
+      "status": "error",
+      "version": "0.1.0-dev"
+    },
+    "services": [],
+    "settings": {
+      "launchAtLogin": false,
+      "listenAddress": "127.0.0.1:19240",
+      "logRetentionDays": 14,
+      "mode": "progressive",
+      "theme": "dark"
+    },
+    "tools": []
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "alerts": [],
+  "checkbox": false,
+  "feedback": "运行设置已保存。\n×\n",
+  "settings": {
+    "launchAtLogin": false,
+    "listenAddress": "127.0.0.1:19240",
+    "logRetentionDays": 14,
+    "mode": "progressive",
+    "theme": "dark"
+  }
+}

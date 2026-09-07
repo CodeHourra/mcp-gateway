@@ -1,0 +1,46 @@
+[
+  {
+    "colorScheme": "light",
+    "persisted": "light",
+    "picker": "light",
+    "requested": "light",
+    "rootBackground": "rgb(255, 255, 255)",
+    "rootColor": "rgb(37, 43, 54)",
+    "sidebarBackground": "rgb(244, 245, 247)",
+    "systemPrefersDark": false,
+    "theme": "light"
+  },
+  {
+    "colorScheme": "dark",
+    "persisted": "dark",
+    "picker": "dark",
+    "requested": "dark",
+    "rootBackground": "rgb(32, 33, 36)",
+    "rootColor": "rgb(230, 232, 237)",
+    "sidebarBackground": "rgb(39, 41, 45)",
+    "systemPrefersDark": false,
+    "theme": "dark"
+  },
+  {
+    "colorScheme": "light dark",
+    "persisted": "system",
+    "picker": "system",
+    "requested": "system",
+    "rootBackground": "rgb(255, 255, 255)",
+    "rootColor": "rgb(37, 43, 54)",
+    "sidebarBackground": "rgb(244, 245, 247)",
+    "systemPrefersDark": false,
+    "theme": "system"
+  },
+  {
+    "colorScheme": "dark",
+    "persisted": "dark",
+    "picker": "dark",
+    "requested": "dark",
+    "rootBackground": "rgb(32, 33, 36)",
+    "rootColor": "rgb(230, 232, 237)",
+    "sidebarBackground": "rgb(39, 41, 45)",
+    "systemPrefersDark": false,
+    "theme": "dark"
+  }
+]

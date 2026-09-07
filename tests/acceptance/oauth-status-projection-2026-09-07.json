@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-07",
+  "fix": "Preserve runtime oauth_status and token_expires_at in management ListServers conversion; do not infer state from authenticated or alter snapshot logic.",
+  "changed_source_files": [
+    "internal/management/service.go",
+    "internal/management/service_test.go"
+  ],
+  "prior_patch_sha256": "17a7fd60c8344a39932f42f37606f899a7e4311c46a4d6f8308e794cea4a2d63",
+  "patch_sha256": "142ecadf6f941aa2636e12b01b5c57160830daf705bf137113700e9554c03eea",
+  "patch_bytes": 96942,
+  "clean_apply_check": true,
+  "clean_apply_source": "/var/folders/85/gygs7vl158sfrbrky3yr91pc0000gn/T/mcp-gateway-final-status-source-zl75pvqm",
+  "delta_from_previous_patch_matches_only_two_source_files": true,
+  "regression_before_fix": {
+    "command": "go test ./internal/management -run ^TestListServers/preserves_runtime_OAuth_status_and_expiration$ -count=1",
+    "exit_code": 1,
+    "observed": "authenticated/expired/error/none were lost as empty strings; top-level expiry was nil for valid/expired token cases. Non-OAuth omission case passed."
+  },
+  "regression_after_fix": {
+    "command": "go test -race ./internal/management -run ^TestListServers$ -count=1",
+    "exit_code": 0,
+    "stdout": "ok github.com/smart-mcp-proxy/mcpproxy-go/internal/management 1.374s",
+    "coverage": "Existing ListServers suite plus valid, expired, error, no-token, and non-OAuth serialization assertions. Expired tokens preserve authenticated=true from runtime while OAuthStatus stays expired. Missing fields remain omitted."
+  },
+  "boundary": "Earlier protocol, benchmark and idle records retain their actual prior binary hashes. Final same-core native field validation is recorded above with its debug desktop hash; release desktop production acceptance is separate.",
+  "current_production_bundle": {
+    "core_sha256": "0ad7d5b5a5b536f7a267c2b518168fd07320cf88a108d8c10af8e6a619ed3167",
+    "hashes_read_back_from_local_files": true,
+    "native_field_validation": {
+      "passed": true,
+      "report": "tests/acceptance/native-final-status-catalog-2026-09-07.json",
+      "surface": "Real WKWebView via official debug-only Wails MCP with the same final production core",
+      "debug_app_sha256": "691340596dcdde54b045bea5439383b8f275068a6b92cd786a915ca7c68419bd",
+      "observations": [
+        "Full app restart restores authorization and actual OAuth tool calls without a new login",
+        "authenticated is rendered 已登录",
+        "Cleared state none is rendered 需要登录",
+        "Relogin and actual calls succeed"
+      ]
+    },
+    "desktop_executable_manifest": "tests/acceptance/build-manifest-2026-09-07.json"
+  }
+}

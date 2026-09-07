@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-09-06T21:55:32+08:00",
+  "evidence_level": "read-only installation metadata and toolchain version commands",
+  "product_acceptance": "not run",
+  "credentials_read": false,
+  "client_configuration_read_or_changed": false,
+  "os": {"name": "macOS", "version": "15.7.5", "build": "24G624", "architecture": "arm64"},
+  "toolchain": {
+    "go": {"version": "go1.24.7 darwin/arm64", "resolved_path": "/Users/steve/Library/PhpWebStudy/app/static-go-1.24.7/bin/go"},
+    "node": {"version": "v22.22.0", "resolved_path": "/Users/steve/Library/PhpWebStudy/app/nodejs/v22.22.0/bin/node"},
+    "npm": {"version": "10.9.4"},
+    "pnpm": {"version": "11.22.0"},
+    "xcode": {"version": "26.0", "build": "17A324", "sdk": "26.0", "sdk_command_exit_code": 0, "sdk_command_warnings": ["Failed to start fs event stream", "DARWIN_USER_CACHE_DIR confstr Input/output error; using NSCachesDirectory"]},
+    "wails3_on_path": false,
+    "mcpproxy_on_path": false
+  },
+  "clients": [
+    {"name": "OMP", "version": "18.1.6", "kind": "Homebrew installation metadata", "path": "/opt/homebrew/Cellar/omp/18.1.6/bin/omp", "metadata": "/opt/homebrew/Cellar/omp/18.1.6/INSTALL_RECEIPT.json", "architecture": "arm64", "gateway_connection": "not run"},
+    {"name": "Claude Code", "version": "2.1.263", "kind": "npm package metadata", "metadata": "/Users/steve/Library/PhpWebStudy/app/nodejs/v22.22.0/lib/node_modules/@anthropic-ai/claude-code/package.json", "gateway_connection": "not run"},
+    {"name": "Cursor", "version": "3.19.7", "kind": "macOS application metadata", "metadata": "/Applications/Cursor.app/Contents/Info.plist", "cli_wrapper": "/Users/steve/.local/bin/cursor", "cli_version": "not executed or inferred", "gateway_connection": "not run"},
+    {"name": "CodeBuddy CLI", "version": "2.135.0", "kind": "npm package metadata", "metadata": "/Users/steve/Library/PhpWebStudy/app/nodejs/v22.22.0/lib/node_modules/@tencent-ai/codebuddy-code/package.json", "gateway_connection": "not run"},
+    {"name": "CodeBuddy CN", "version": "4.12.0", "kind": "macOS application metadata", "metadata": "/Applications/CodeBuddy CN.app/Contents/Info.plist", "gateway_connection": "not run"},
+    {"name": "Codex CLI", "version": "0.153.0", "kind": "npm package metadata", "metadata": "/Users/steve/Library/PhpWebStudy/app/nodejs/v22.22.0/lib/node_modules/@openai/codex/package.json", "desktop_host_version": "not inferred", "gateway_connection": "not run"}
+  ]
+}

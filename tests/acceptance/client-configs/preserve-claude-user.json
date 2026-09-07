@@ -1,0 +1,17 @@
+{
+  "x-preserve": { "nested": [1, { "literal": "https://example.invalid//keep" }] },
+  "mcpServers": {
+    "existing": { "type": "http", "url": "https://example.invalid/user", "headers": { "Authorization": "Bearer ${USER_TEST_TOKEN}" } }
+  },
+  "projects": {
+    "/absolute/project-a": {
+      "hasTrustDialogAccepted": false,
+      "mcpServers": { "existing": { "type": "http", "url": "https://example.invalid/project-a" } },
+      "x-project-setting": "keep-a"
+    },
+    "/absolute/project-b": {
+      "mcpServers": { "existing": { "type": "stdio", "command": "/absolute/path/to/acceptance-mcp", "args": ["--tag", "b"] } },
+      "x-project-setting": "keep-b"
+    }
+  }
+}

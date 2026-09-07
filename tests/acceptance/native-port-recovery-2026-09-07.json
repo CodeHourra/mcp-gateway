@@ -1,0 +1,77 @@
+{
+  "surface": "real WKWebView DOM through official debug-only Wails MCP",
+  "steps": [
+    {
+      "name": "before_core_failure",
+      "value": {
+        "appPID": 51114,
+        "corePID": 4419,
+        "listenAddress": "127.0.0.1:19240",
+        "ownershipVerified": true
+      }
+    },
+    {
+      "name": "core_failure_visible",
+      "value": "网关需要处理网关核心意外退出，请重试启动: signal: killed重试启动"
+    },
+    {
+      "name": "external_port_owner",
+      "value": {
+        "pid": 14815,
+        "port": 19240,
+        "scope": "controlled external port-occupancy sentinel"
+      }
+    },
+    {
+      "name": "occupied_port_error_visible",
+      "value": "端口 127.0.0.1:19240 无法监听，未连接或终止其他进程: listen tcp 127.0.0.1:19240: bind: address already in use×"
+    },
+    {
+      "name": "offline_settings_recovered_on_safe_port",
+      "value": {
+        "appPID": 51114,
+        "corePID": 14837,
+        "listenAddress": "127.0.0.1:53934",
+        "ownershipVerified": true,
+        "externalPortOwnerUntouched": true,
+        "calls": {
+          "echoSucceeded": true,
+          "oauthToolSucceededWithoutNewLogin": true,
+          "serviceStates": {
+            "native-api-key": "ready",
+            "native-bearer": "ready",
+            "native-echo": "ready",
+            "native-env": "ready",
+            "native-headers": "ready",
+            "native-oauth": "ready"
+          }
+        }
+      }
+    },
+    {
+      "name": "original_port_restored",
+      "value": {
+        "appPID": 51114,
+        "corePID": 15023,
+        "listenAddress": "127.0.0.1:19240",
+        "ownershipVerified": true,
+        "calls": {
+          "echoSucceeded": true,
+          "oauthToolSucceededWithoutNewLogin": true,
+          "serviceStates": {
+            "native-api-key": "ready",
+            "native-bearer": "ready",
+            "native-echo": "ready",
+            "native-env": "ready",
+            "native-headers": "ready",
+            "native-oauth": "ready"
+          }
+        }
+      }
+    }
+  ],
+  "scenario": "port-recovery",
+  "appSHA256": "258c5910c02a9793b1b748f5bd8784318ed776099439f79991a0f5578413380f",
+  "coreSHA256": "aee0b3b1a64fe94096c78acfbb3b24e8536e61bec48ce887bd3d020f6262dcdb",
+  "passed": true
+}

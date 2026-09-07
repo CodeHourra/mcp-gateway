@@ -1,0 +1,12 @@
+{
+  "picker": "system",
+  "settings": {
+    "launchAtLogin": false,
+    "listenAddress": "127.0.0.1:19240",
+    "logRetentionDays": 7,
+    "mode": "progressive",
+    "theme": "system"
+  },
+  "text": "m\nMCP Gateway\n个人工作区\n工作区\n\n▤\nMCP 服务\n1\n\n⌘\n工具\n\n↓\n导入配置\n\n⇄\nAgent 接入\n\n≡\n活动\n\n⚙\n设置\n仅在本机运行\n工具\n选择主题\n网关运行中\n工具\n按需查找，再读取参数定义与执行调用。\n渐进发现\n工具来源\n⌕\n\n›\necho\nEcho a supplied text message\nnative-echo · live\n允许调用\n最终调用受此权限控制\n允许调用\n参数\t类型\t说明\ntext 必填\tstring\t—\n查看完整 JSON Schema\n调用参数 JSON 对象\n调用会实际执行此上游工具，请先核对参数与操作影响。\n执行调用\n调用结果\n{\n  \"content\": [\n    {\n      \"text\": \"native-ui-acceptance-2026-09-07\",\n      \"type\": \"text\"\n    }\n  ],\n  \"structuredContent\": {\n    \"echo\": \"native-ui-acceptance-2026-09-07\"\n  }\n}\n1 / 1 个服务可用\n1 tools · 1 个调用执行中\n本机 · macOS",
+  "theme": "system"
+}

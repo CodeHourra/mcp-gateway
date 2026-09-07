@@ -1,0 +1,21 @@
+{
+  "app": {
+    "pid": 30933,
+    "ppid": 79935,
+    "executable": "artifacts/MCP Gateway Test.app/Contents/MacOS/mcp-gateway"
+  },
+  "core": {
+    "pid": 30948,
+    "ppid": 30933,
+    "executable": "/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/artifacts/MCP Gateway Test.app/Contents/MacOS/mcpproxy"
+  },
+  "ownershipVerified": true,
+  "childrenBeforeCrash": [
+    {
+      "pid": 31008,
+      "ppid": 30948,
+      "executable": "/Users/steve/.pyenv/versions/3.12.10/bin/python3"
+    }
+  ],
+  "injectedSignal": "SIGKILL"
+}

@@ -1,0 +1,9 @@
+{
+  "scope": "Only this isolated UI Check app and its core; no installed user instance stopped",
+  "appPID": 72012,
+  "corePID": 72063,
+  "ownedProcessesExited": true,
+  "temporaryAdminKeyDeleted": true,
+  "remainingGatewayProcesses": [],
+  "passed": true
+}
