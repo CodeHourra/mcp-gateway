@@ -1,0 +1,2643 @@
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 9817e71..a9b96ae 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -634,6 +634,7 @@ const (
+ 
+ // ServerConfig represents upstream MCP server configuration
+ type ServerConfig struct {
++	SessionMode string            `json:"session_mode,omitempty" mapstructure:"session_mode"`
+ 	Name        string            `json:"name,omitempty" mapstructure:"name"`
+ 	URL         string            `json:"url,omitempty" mapstructure:"url"`
+ 	Protocol    string            `json:"protocol,omitempty" mapstructure:"protocol"` // stdio, http, sse, streamable-http, auto
+@@ -2424,6 +2425,9 @@ func (c *Config) validateDetailedCore() []ValidationError {
+ 	for i, server := range c.Servers {
+ 		fieldPrefix := fmt.Sprintf("mcpServers[%d]", i)
+ 
++		if server.SessionMode != "" && server.SessionMode != "isolated" && server.SessionMode != "shared" {
++			errors = append(errors, ValidationError{Field: fieldPrefix + ".session_mode", Message: "session_mode must be isolated or shared"})
++		}
+ 		// Validate per-server isolation mode override (MCP-34.2).
+ 		if server.Isolation != nil && server.Isolation.Mode != nil && !server.Isolation.Mode.IsValid() {
+ 			errors = append(errors, ValidationError{
+diff --git a/internal/config/loader.go b/internal/config/loader.go
+index 8e8e62a..c3ded2e 100644
+--- a/internal/config/loader.go
++++ b/internal/config/loader.go
+@@ -389,8 +389,19 @@ func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
+ }
+ 
+ // SaveConfig saves configuration to file
++// MarshalForPersistence keeps environment-supplied management credentials in
++// memory only. The watcher uses these same bytes for self-write detection.
++func MarshalForPersistence(cfg *Config) ([]byte, error) {
++	if cfg != nil && os.Getenv("MCPPROXY_API_KEY") != "" {
++		copy := *cfg
++		copy.APIKey = ""
++		cfg = &copy
++	}
++	return json.MarshalIndent(cfg, "", "  ")
++}
++
+ func SaveConfig(cfg *Config, path string) error {
+-	data, err := json.MarshalIndent(cfg, "", "  ")
++	data, err := MarshalForPersistence(cfg)
+ 	if err != nil {
+ 		return fmt.Errorf("failed to marshal config: %w", err)
+ 	}
+diff --git a/internal/config/merge.go b/internal/config/merge.go
+index d155f21..545b992 100644
+--- a/internal/config/merge.go
++++ b/internal/config/merge.go
+@@ -226,6 +226,13 @@ func MergeServerConfig(base, patch *ServerConfig, opts MergeOptions) (*ServerCon
+ 		merged.WorkingDir = patch.WorkingDir
+ 	}
+ 
++	if patch.SessionMode != "" && patch.SessionMode != base.SessionMode {
++		if diff != nil {
++			diff.Modified["session_mode"] = FieldChange{Path: "session_mode", From: base.SessionMode, To: patch.SessionMode}
++		}
++		merged.SessionMode = patch.SessionMode
++	}
++
+ 	// TrustMode (spec 086): a PATCH that omits trust_mode keeps the base value
+ 	// (merged started as CopyServerConfig(base)); a non-empty, differing value
+ 	// updates it. Enables REST PATCH /api/v1/servers/{id} to change the trust tier.
+@@ -603,6 +610,7 @@ func CopyServerConfig(src *ServerConfig) *ServerConfig {
+ 		Quarantined:              src.Quarantined,
+ 		SkipQuarantine:           src.SkipQuarantine,
+ 		TrustMode:                src.TrustMode,
++		SessionMode:              src.SessionMode,
+ 		Shared:                   src.Shared,
+ 		Created:                  src.Created,
+ 		Updated:                  src.Updated,
+diff --git a/internal/contracts/converters.go b/internal/contracts/converters.go
+index c8b5b0e..fa33752 100644
+--- a/internal/contracts/converters.go
++++ b/internal/contracts/converters.go
+@@ -43,7 +43,8 @@ func ConvertServerConfig(cfg *config.ServerConfig, globalIsolation *config.Docke
+ 		AutoApproveToolChanges: cfg.AutoApproveToolChanges,
+ 		// Spec 086: surface the per-server trust_mode so callers can read back the
+ 		// persisted trust tier they set via PATCH/POST.
+-		TrustMode: cfg.TrustMode,
++		TrustMode:   cfg.TrustMode,
++		SessionMode: cfg.EffectiveSessionMode(),
+ 		// MCP-3322: surface the per-server init_timeout override so callers can
+ 		// read back a configured handshake deadline.
+ 		InitTimeout: cfg.InitTimeout,
+@@ -275,6 +276,10 @@ func ConvertGenericServersToTyped(genericServers []map[string]interface{}) []Ser
+ 			server.ExposePrompts = &v
+ 		}
+ 		// Spec 086: per-server trust tier round-trips as a plain string.
++		server.SessionMode = "isolated"
++		if mode, ok := generic["session_mode"].(string); ok && mode != "" {
++			server.SessionMode = mode
++		}
+ 		if trustMode, ok := generic["trust_mode"].(string); ok {
+ 			server.TrustMode = trustMode
+ 		}
+diff --git a/internal/contracts/types.go b/internal/contracts/types.go
+index a0673da..7cec84c 100644
+--- a/internal/contracts/types.go
++++ b/internal/contracts/types.go
+@@ -17,6 +17,7 @@ type APIResponse struct {
+ 
+ // Server represents an upstream MCP server configuration and status
+ type Server struct {
++	SessionMode     string            `json:"session_mode"`
+ 	ID              string            `json:"id"`
+ 	Name            string            `json:"name"`
+ 	URL             string            `json:"url,omitempty"`
+diff --git a/internal/httpapi/server.go b/internal/httpapi/server.go
+index 07f6c35..335ad99 100644
+--- a/internal/httpapi/server.go
++++ b/internal/httpapi/server.go
+@@ -817,6 +817,8 @@ func (s *Server) setupRoutes() {
+ 			r.Post("/disable", s.requireServerOp(auth.ServerOpDisable, s.handleDisableServer))
+ 			r.Post("/restart", s.requireServerOp(auth.ServerOpRestart, s.handleRestartServer))
+ 			r.Post("/login", s.requireServerOp(auth.ServerOpLogin, s.handleServerLogin))
++			r.Post("/oauth/cancel", s.handleGatewayOAuthCancel)
++			r.Post("/oauth/refresh", s.handleGatewayOAuthRefresh)
+ 			r.Post("/logout", s.requireServerOp(auth.ServerOpLogout, s.handleServerLogout))
+ 			r.Post("/quarantine", s.requireServerOp(auth.ServerOpQuarantine, s.handleQuarantineServer))
+ 			r.Post("/unquarantine", s.requireServerOp(auth.ServerOpUnquarantine, s.handleUnquarantineServer))
+@@ -907,6 +909,10 @@ func (s *Server) setupRoutes() {
+ 		r.Get("/sessions", s.handleGetSessions)
+ 		r.Get("/sessions/{id}", s.handleGetSessionDetail)
+ 
++		r.Get("/gateway", s.handleGatewayState)
++		r.Post("/gateway", s.handleGatewayPause)
++		r.Post("/gateway/stop", s.handleGatewayStop)
++
+ 		// Tool execution
+ 		r.Post("/tools/call", s.handleCallTool)
+ 
+@@ -1792,6 +1798,7 @@ func (s *Server) enrichServersWithQuarantineStats(servers []contracts.Server) {
+ //
+ // POST (add) ignores nil entries — they have no meaning at create time.
+ type AddServerRequest struct {
++	SessionMode    string             `json:"session_mode,omitempty"`
+ 	Name           string             `json:"name"`
+ 	URL            string             `json:"url,omitempty"`
+ 	Command        string             `json:"command,omitempty"`
+@@ -2056,6 +2063,11 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
+ 		return
+ 	}
+ 
++	if req.SessionMode != "" && req.SessionMode != "isolated" && req.SessionMode != "shared" {
++		s.writeError(w, r, http.StatusBadRequest, "session_mode must be isolated or shared")
++		return
++	}
++
+ 	// Validate required fields
+ 	if req.Name == "" {
+ 		s.writeError(w, r, http.StatusBadRequest, "Server name is required")
+@@ -2146,6 +2158,7 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
+ 		Headers:     flattenNullableMap(req.Headers),
+ 		WorkingDir:  req.WorkingDir,
+ 		Protocol:    protocol,
++		SessionMode: req.SessionMode,
+ 		Enabled:     enabled,
+ 		Quarantined: quarantined,
+ 	}
+@@ -2334,6 +2347,14 @@ func (s *Server) handlePatchServer(w http.ResponseWriter, r *http.Request) {
+ 	// Build partial update config - only set fields that were provided
+ 	updates := &config.ServerConfig{Name: serverName}
+ 	hasUpdates := false
++	if req.SessionMode != "" {
++		if req.SessionMode != "isolated" && req.SessionMode != "shared" {
++			s.writeError(w, r, http.StatusBadRequest, "session_mode must be isolated or shared")
++			return
++		}
++		updates.SessionMode = req.SessionMode
++		hasUpdates = true
++	}
+ 
+ 	if req.URL != "" {
+ 		// #872: the read path masks secrets in the URL query string / userinfo
+@@ -5519,8 +5540,9 @@ func (s *Server) handleCallTool(w http.ResponseWriter, r *http.Request) {
+ 	}
+ 
+ 	var request struct {
+-		ToolName  string                 `json:"tool_name"`
+-		Arguments map[string]interface{} `json:"arguments"`
++		FullResult bool                   `json:"full_result,omitempty"`
++		ToolName   string                 `json:"tool_name"`
++		Arguments  map[string]interface{} `json:"arguments"`
+ 	}
+ 
+ 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+@@ -5541,7 +5563,18 @@ func (s *Server) handleCallTool(w http.ResponseWriter, r *http.Request) {
+ 	ctx := reqcontext.WithRequestSource(r.Context(), toolCallRequestSource(r))
+ 
+ 	// Call tool via controller
+-	result, err := s.controller.CallTool(ctx, request.ToolName, request.Arguments)
++	var result any
++	var err error
++	if request.FullResult {
++		controller, ok := s.controller.(gatewayFullToolController)
++		if !ok {
++			s.writeError(w, r, http.StatusNotImplemented, "full MCP result is unavailable")
++			return
++		}
++		result, err = controller.CallToolFull(ctx, request.ToolName, request.Arguments)
++	} else {
++		result, err = s.controller.CallTool(ctx, request.ToolName, request.Arguments)
++	}
+ 	if err != nil {
+ 		// Spec 093 FR-011: a concurrency-limiter shed is backpressure, not a
+ 		// server fault — answer 429 with a Retry-After derived from the shedding
+diff --git a/internal/management/service.go b/internal/management/service.go
+index 78f4f27..0967942 100644
+--- a/internal/management/service.go
++++ b/internal/management/service.go
+@@ -318,6 +318,10 @@ func (s *service) ListServers(ctx context.Context) ([]*contracts.Server, *contra
+ 				}
+ 			}
+ 		}
++		srv.SessionMode = "isolated"
++		if mode, ok := srvRaw["session_mode"].(string); ok && mode != "" {
++			srv.SessionMode = mode
++		}
+ 		if workingDir, ok := srvRaw["working_dir"].(string); ok {
+ 			srv.WorkingDir = workingDir
+ 		}
+@@ -436,6 +440,12 @@ func (s *service) ListServers(ctx context.Context) ([]*contracts.Server, *contra
+ 		if authenticated, ok := srvRaw["authenticated"].(bool); ok {
+ 			srv.Authenticated = authenticated
+ 		}
++		if oauthStatus, ok := srvRaw["oauth_status"].(string); ok {
++			srv.OAuthStatus = oauthStatus
++		}
++		if expiresAt, ok := srvRaw["token_expires_at"].(time.Time); ok && !expiresAt.IsZero() {
++			srv.TokenExpiresAt = &expiresAt
++		}
+ 
+ 		// Extract OAuth config if present
+ 		if oauthRaw, ok := srvRaw["oauth"].(map[string]interface{}); ok && oauthRaw != nil {
+diff --git a/internal/management/service_test.go b/internal/management/service_test.go
+index f3ffbf0..d542dc0 100644
+--- a/internal/management/service_test.go
++++ b/internal/management/service_test.go
+@@ -2,6 +2,7 @@ package management
+ 
+ import (
+ 	"context"
++	"encoding/json"
+ 	"fmt"
+ 	"sync"
+ 	"testing"
+@@ -429,6 +430,56 @@ func TestListServers(t *testing.T) {
+ 		assert.Equal(t, "https://oauth.example.com/token", server.OAuth.TokenURL)
+ 	})
+ 
++	t.Run("preserves runtime OAuth status and expiration", func(t *testing.T) {
++		for _, tc := range []struct {
++			name          string
++			status        string
++			authenticated bool
++			expiresAt     time.Time
++		}{
++			{"valid token", "authenticated", true, time.Date(2099, 1, 2, 3, 4, 5, 0, time.UTC)},
++			{"expired token", "expired", true, time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC)},
++			{"OAuth error", "error", false, time.Time{}},
++			{"no token", "none", false, time.Time{}},
++			{"non OAuth server", "", false, time.Time{}},
++		} {
++			t.Run(tc.name, func(t *testing.T) {
++				runtime := newMockRuntime()
++				raw := map[string]any{"name": "oauth-status", "authenticated": tc.authenticated}
++				if tc.status != "" {
++					raw["oauth_status"] = tc.status
++				}
++				if !tc.expiresAt.IsZero() {
++					raw["token_expires_at"] = tc.expiresAt
++				}
++				runtime.servers = []map[string]any{raw}
++				svc := NewService(runtime, cfg, "", emitter, nil, logger)
++				servers, _, err := svc.ListServers(t.Context())
++				require.NoError(t, err)
++				require.Len(t, servers, 1)
++				assert.Equal(t, tc.status, servers[0].OAuthStatus)
++				assert.Equal(t, tc.authenticated, servers[0].Authenticated)
++				encoded, err := json.Marshal(servers[0])
++				require.NoError(t, err)
++				var body map[string]any
++				require.NoError(t, json.Unmarshal(encoded, &body))
++				if tc.status == "" {
++					assert.NotContains(t, body, "oauth_status")
++				} else {
++					assert.Equal(t, tc.status, body["oauth_status"])
++				}
++				if tc.expiresAt.IsZero() {
++					assert.Nil(t, servers[0].TokenExpiresAt)
++					assert.NotContains(t, body, "token_expires_at")
++				} else {
++					require.NotNil(t, servers[0].TokenExpiresAt)
++					assert.Equal(t, tc.expiresAt, *servers[0].TokenExpiresAt)
++					assert.Equal(t, tc.expiresAt.Format(time.RFC3339), body["token_expires_at"])
++				}
++			})
++		}
++	})
++
+ 	// ListServers must populate SecurityScan via the wired enricher so that
+ 	// REST and the SSE servers.changed embed (which both call ListServers)
+ 	// share one enrichment site. Without parity, mergeServers on the Web UI
+diff --git a/internal/oauth/persistent_token_store.go b/internal/oauth/persistent_token_store.go
+index 033c8a5..2b16b1e 100644
+--- a/internal/oauth/persistent_token_store.go
++++ b/internal/oauth/persistent_token_store.go
+@@ -142,35 +142,13 @@ func (p *PersistentTokenStore) GetToken(ctx context.Context) (*client.Token, err
+ 	// Join scopes back into space-separated string
+ 	scope := strings.Join(record.Scopes, " ")
+ 
+-	// Adjust ExpiresAt to trigger proactive refresh within grace period
+-	// This prevents race conditions where tokens expire during API calls
+-	//
+-	// IMPORTANT: Only apply grace period if the token has enough remaining lifetime.
+-	// For short-lived tokens (e.g., 30 seconds), subtracting 5 minutes would make
+-	// them appear expired immediately, causing unnecessary re-authentication.
+-	adjustedExpiresAt := record.ExpiresAt
+-	if timeUntilExpiry > TokenRefreshGracePeriod {
+-		// Token has enough lifetime - apply full grace period for proactive refresh
+-		adjustedExpiresAt = record.ExpiresAt.Add(-TokenRefreshGracePeriod)
+-		p.logger.Debug("Applied grace period adjustment for proactive refresh",
+-			zap.Duration("grace_period", TokenRefreshGracePeriod),
+-			zap.Time("original_expires_at", record.ExpiresAt),
+-			zap.Time("adjusted_expires_at", adjustedExpiresAt))
+-	} else if timeUntilExpiry > 0 {
+-		// Token is short-lived but not yet expired - use actual expiration
+-		// This allows the token to be used until it actually expires
+-		p.logger.Debug("Skipping grace period for short-lived token",
+-			zap.Duration("time_until_expiry", timeUntilExpiry),
+-			zap.Duration("grace_period", TokenRefreshGracePeriod),
+-			zap.Time("expires_at", record.ExpiresAt))
+-	}
+-	// If timeUntilExpiry <= 0, token is already expired - adjustedExpiresAt stays as record.ExpiresAt
+-
+ 	token := &client.Token{
+-		AccessToken:  record.AccessToken,
+-		RefreshToken: record.RefreshToken,
++		AccessToken: record.AccessToken,
++		// Gateway: the directory client owns serialized refresh through RefreshOAuthTokenDirect.
++		// SDK transports must not independently consume rotating refresh tokens.
++		RefreshToken: "",
+ 		TokenType:    record.TokenType,
+-		ExpiresAt:    adjustedExpiresAt,
++		ExpiresAt:    record.ExpiresAt,
+ 		Scope:        scope,
+ 	}
+ 
+diff --git a/internal/runtime/config_watcher.go b/internal/runtime/config_watcher.go
+index f588d39..2fd0376 100644
+--- a/internal/runtime/config_watcher.go
++++ b/internal/runtime/config_watcher.go
+@@ -3,7 +3,6 @@ package runtime
+ import (
+ 	"bytes"
+ 	"context"
+-	"encoding/json"
+ 	"os"
+ 	"path/filepath"
+ 	"time"
+@@ -132,7 +131,7 @@ type selfWriteEntry struct {
+ // failed the same way). Recording an already-present payload refreshes its
+ // timestamp; when full, the oldest entry is evicted.
+ func (r *Runtime) noteConfigSelfWrite(cfg *config.Config) {
+-	data, err := json.MarshalIndent(cfg, "", "  ")
++	data, err := config.MarshalForPersistence(cfg)
+ 	if err != nil {
+ 		return
+ 	}
+@@ -159,7 +158,7 @@ func (r *Runtime) noteConfigSelfWrite(cfg *config.Config) {
+ // a genuine external edit the watcher must reload. Only the failed payload is
+ // removed — markers pre-armed by other (successful) saves stay live.
+ func (r *Runtime) forgetConfigSelfWrite(cfg *config.Config) {
+-	data, err := json.MarshalIndent(cfg, "", "  ")
++	data, err := config.MarshalForPersistence(cfg)
+ 	if err != nil {
+ 		return
+ 	}
+@@ -236,7 +235,7 @@ func (r *Runtime) reloadFromDiskIfChanged(absPath string) {
+ 	// degrades to one redundant (idempotent) reload — never a loop, since
+ 	// ReloadConfiguration never writes the file.
+ 	trimmedDisk := bytes.TrimSpace(diskBytes)
+-	if current, merr := json.MarshalIndent(r.ConfigSnapshot().Config, "", "  "); merr == nil {
++	if current, merr := config.MarshalForPersistence(r.ConfigSnapshot().Config); merr == nil {
+ 		if bytes.Equal(bytes.TrimSpace(current), trimmedDisk) {
+ 			// The file now matches memory. If that content matches none of
+ 			// the recorded self-writes, the file has moved past our saves
+diff --git a/internal/runtime/lifecycle.go b/internal/runtime/lifecycle.go
+index 430c14a..a3ee6dc 100644
+--- a/internal/runtime/lifecycle.go
++++ b/internal/runtime/lifecycle.go
+@@ -1101,6 +1101,7 @@ func (r *Runtime) LoadConfiguredServers(cfg *config.Config) error {
+ 			storedServer.URL != serverCfg.URL ||
+ 			storedServer.Command != serverCfg.Command ||
+ 			storedServer.Protocol != serverCfg.Protocol ||
++			storedServer.SessionMode != serverCfg.SessionMode ||
+ 			oauthChanged ||
+ 			exposePromptsChanged
+ 
+diff --git a/internal/runtime/runtime.go b/internal/runtime/runtime.go
+index 7704f6d..3146f95 100644
+--- a/internal/runtime/runtime.go
++++ b/internal/runtime/runtime.go
+@@ -2482,6 +2482,7 @@ func (r *Runtime) GetAllServers() ([]map[string]interface{}, error) {
+ 		// round-trip stdio server configuration or display the auth
+ 		// headers attached to HTTP servers.
+ 		if serverStatus.Config != nil {
++			serverMap["session_mode"] = serverStatus.Config.EffectiveSessionMode()
+ 			if len(serverStatus.Config.Args) > 0 {
+ 				serverMap["args"] = serverStatus.Config.Args
+ 			}
+diff --git a/internal/secret/keyring_provider.go b/internal/secret/keyring_provider.go
+index dbd6ad8..ff10304 100644
+--- a/internal/secret/keyring_provider.go
++++ b/internal/secret/keyring_provider.go
+@@ -15,7 +15,7 @@ import (
+ 
+ const (
+ 	// ServiceName for keyring entries
+-	ServiceName       = "mcpproxy"
++	ServiceName       = "com.mcp-gateway.upstream"
+ 	SecretTypeKeyring = "keyring"
+ 	RegistryKey       = "_mcpproxy_secret_registry"
+ 
+diff --git a/internal/server/mcp.go b/internal/server/mcp.go
+index eef629f..9385096 100644
+--- a/internal/server/mcp.go
++++ b/internal/server/mcp.go
+@@ -492,6 +492,7 @@ func NewMCPProxyServer(
+ 
+ 		// Remove session information (closes in storage)
+ 		sessionStore.RemoveSession(sessionID)
++		upstreamManager.CloseMCPSession(sessionID)
+ 
+ 		logger.Info("MCP session unregistered",
+ 			zap.String("session_id", sessionID),
+@@ -511,6 +512,7 @@ func NewMCPProxyServer(
+ 		mcpserver.WithToolCapabilities(true),
+ 		mcpserver.WithRecovery(),
+ 		mcpserver.WithHooks(hooks),
++		mcpserver.WithToolFilter(filterGatewayTools),
+ 	}
+ 
+ 	// Add prompts capability if enabled
+@@ -6062,6 +6064,10 @@ func (p *MCPProxyServer) monitorConnectionStatus(ctx context.Context, serverName
+ // CallToolDirect calls a tool directly without going through the MCP server's request handling
+ // This is used for REST API calls that bypass the MCP protocol layer
+ func (p *MCPProxyServer) CallToolDirect(ctx context.Context, request mcp.CallToolRequest) (interface{}, error) {
++	return p.callToolDirect(ctx, request, false)
++}
++
++func (p *MCPProxyServer) callToolDirect(ctx context.Context, request mcp.CallToolRequest, fullResult bool) (any, error) {
+ 	toolName := request.Params.Name
+ 
+ 	// Spec 093 FR-011: the REST surface must answer a concurrency-limiter shed
+@@ -6122,6 +6128,9 @@ func (p *MCPProxyServer) CallToolDirect(ctx context.Context, request mcp.CallToo
+ 		return nil, err
+ 	}
+ 
++	if fullResult {
++		return result, nil
++	}
+ 	// Extract the actual result content from the MCP response
+ 	if result.IsError {
+ 		// A shed keeps its typed identity so the HTTP layer can map it to 429 +
+diff --git a/internal/server/mcp_routing.go b/internal/server/mcp_routing.go
+index a3f3fd4..105ea09 100644
+--- a/internal/server/mcp_routing.go
++++ b/internal/server/mcp_routing.go
+@@ -226,9 +226,9 @@ func emptyDirectCatalog(mode string, logger *zap.Logger) *directCatalog {
+ 	return cat
+ }
+ 
+-// renderFullDirectTool is the pre-Spec-102 rendering, moved verbatim out of the
+-// loop and otherwise untouched (FR-015): with deferral off, direct-surface
+-// tools/list payloads must stay byte-identical to pre-feature behavior.
++// renderFullDirectTool retains the entire upstream input schema. Rebuilding
++// only properties/required loses root constraints such as additionalProperties,
++// allOf and $defs and makes direct discovery disagree with describe_tool.
+ func renderFullDirectTool(entry *directCatalogEntry, description string) mcp.Tool {
+ 	opts := []mcp.ToolOption{mcp.WithDescription(description)}
+ 
+@@ -253,21 +253,10 @@ func renderFullDirectTool(entry *directCatalogEntry, description string) mcp.Too
+ 	mcpTool := mcp.NewTool(entry.DisplayName, opts...)
+ 
+ 	if entry.ParamsJSON != "" {
+-		var schema map[string]interface{}
+-		if err := json.Unmarshal([]byte(entry.ParamsJSON), &schema); err == nil {
+-			mcpTool.InputSchema = mcp.ToolInputSchema{Type: "object"}
+-			if props, ok := schema["properties"].(map[string]interface{}); ok {
+-				mcpTool.InputSchema.Properties = props
+-			}
+-			if req, ok := schema["required"].([]interface{}); ok {
+-				reqStrings := make([]string, 0, len(req))
+-				for _, r := range req {
+-					if str, ok := r.(string); ok {
+-						reqStrings = append(reqStrings, str)
+-					}
+-				}
+-				mcpTool.InputSchema.Required = reqStrings
+-			}
++		var schema map[string]json.RawMessage
++		if err := json.Unmarshal([]byte(entry.ParamsJSON), &schema); err == nil && schema != nil {
++			mcpTool.InputSchema = mcp.ToolInputSchema{}
++			mcpTool.RawInputSchema = json.RawMessage(entry.ParamsJSON)
+ 		}
+ 	}
+ 
+@@ -806,34 +795,7 @@ func (p *MCPProxyServer) buildCallToolModeTools() []mcpserver.ServerTool {
+ // being called on config.reloaded.
+ func (p *MCPProxyServer) buildCodeExecutionTool() []mcpserver.ServerTool {
+ 	if cfg := p.currentConfig(); cfg != nil && !cfg.EnableCodeExecution {
+-		// Disabled stub
+-		codeExecutionTool := mcp.NewTool("code_execution",
+-			mcp.WithDescription("Code execution is currently disabled. Enable it by setting \"enable_code_execution\": true in your mcpproxy config."),
+-			mcp.WithTitleAnnotation("Code Execution (Disabled)"),
+-			mcp.WithReadOnlyHintAnnotation(true),
+-			mcp.WithDestructiveHintAnnotation(false),
+-			mcp.WithOpenWorldHintAnnotation(false),
+-			// Spec 097: the stub mirrors the live parameter shape — optional
+-			// `code`, optional `script` — so a stored-script call reaches this
+-			// handler and gets the "enable it" explanation instead of a schema
+-			// rejection. Its DESCRIPTIONS stay minimal and disabled-only: a
+-			// disabled tool must not advertise a contract it cannot honor.
+-			mcp.WithString("code",
+-				mcp.Description("JavaScript source code to execute."),
+-			),
+-			mcp.WithString("script",
+-				mcp.Description("Name of a stored script to execute."),
+-			),
+-		)
+-		return []mcpserver.ServerTool{{
+-			Tool: codeExecutionTool,
+-			Handler: func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+-				// Same wording, same typed identity as the handler-level gate:
+-				// which surface refused must not change what the caller is told.
+-				recordCodeExecRefusal(ctx, config.ErrCodeExecutionDisabled)
+-				return mcp.NewToolResultError(config.CodeExecutionDisabledMessage), nil
+-			},
+-		}}
++		return nil
+ 	}
+ 
+ 	codeExecutionTool := mcp.NewTool("code_execution",
+@@ -940,6 +902,7 @@ func (p *MCPProxyServer) initRoutingModeServers() {
+ 	opts := []mcpserver.ServerOption{
+ 		mcpserver.WithToolCapabilities(true),
+ 		mcpserver.WithRecovery(),
++		mcpserver.WithToolFilter(filterGatewayTools),
+ 	}
+ 	if p.hooks != nil {
+ 		opts = append(opts, mcpserver.WithHooks(p.hooks))
+diff --git a/internal/server/server.go b/internal/server/server.go
+index 23c6d4a..d4211d6 100644
+--- a/internal/server/server.go
++++ b/internal/server/server.go
+@@ -1520,6 +1520,10 @@ func (s *Server) GetAllServers() ([]map[string]interface{}, error) {
+ 			"health":          healthStatus, // Spec 013: Health is source of truth
+ 		}
+ 
++		if serverStatus.Config != nil {
++			serverMap["session_mode"] = serverStatus.Config.EffectiveSessionMode()
++		}
++
+ 		// Spec 086: surface the per-server trust tier on the tray/legacy-REST
+ 		// projection too, so the httpapi fallback path (which runs this map
+ 		// through contracts.ConvertGenericServersToTyped) reads back the same
+@@ -1822,6 +1826,9 @@ func (s *Server) UpdateServer(ctx context.Context, serverName string, updates *c
+ 	if updates.WorkingDir != "" {
+ 		existing.WorkingDir = updates.WorkingDir
+ 	}
++	if updates.SessionMode != "" {
++		existing.SessionMode = updates.SessionMode
++	}
+ 	if updates.Protocol != "" {
+ 		existing.Protocol = updates.Protocol
+ 	}
+diff --git a/internal/storage/async_ops.go b/internal/storage/async_ops.go
+index d86557f..d5acc68 100644
+--- a/internal/storage/async_ops.go
++++ b/internal/storage/async_ops.go
+@@ -199,7 +199,8 @@ func (am *AsyncManager) saveServerSync(serverConfig *config.ServerConfig) error
+ 		EnabledTools:           serverConfig.EnabledTools,
+ 		DisabledTools:          serverConfig.DisabledTools,
+ 		AutoApproveToolChanges: serverConfig.AutoApproveToolChanges, // MCP-2940: persist so REST/UI toggle survives save/restart
+-		TrustMode:              serverConfig.TrustMode,              // spec 086: persist trust tier so REST/UI/MCP-set trust_mode survives save/restart
++		SessionMode:            serverConfig.SessionMode,
++		TrustMode:              serverConfig.TrustMode, // spec 086: persist trust tier so REST/UI/MCP-set trust_mode survives save/restart
+ 
+ 		SourceRegistryID:         serverConfig.SourceRegistryID,
+ 		SourceRegistryProvenance: serverConfig.SourceRegistryProvenance,
+diff --git a/internal/storage/bbolt.go b/internal/storage/bbolt.go
+index 451a301..b282e63 100644
+--- a/internal/storage/bbolt.go
++++ b/internal/storage/bbolt.go
+@@ -2,12 +2,14 @@ package storage
+ 
+ import (
+ 	"bytes"
++	"crypto/cipher"
+ 	"encoding/binary"
+ 	"encoding/json"
+ 	"fmt"
+ 	"io"
+ 	"os"
+ 	"path/filepath"
++	"sync"
+ 	"time"
+ 
+ 	"go.etcd.io/bbolt"
+@@ -31,16 +33,25 @@ func (e *DatabaseLockedError) Unwrap() error {
+ 
+ // BoltDB wraps bolt database operations
+ type BoltDB struct {
+-	db     *bbolt.DB
+-	logger *zap.SugaredLogger
++	db            *bbolt.DB
++	logger        *zap.SugaredLogger
++	dataDir       string
++	oauthCipherMu sync.Mutex
++	oauthCipher   cipher.AEAD
+ }
+ 
+ // NewBoltDB creates a new BoltDB instance
+ func NewBoltDB(dataDir string, logger *zap.SugaredLogger) (*BoltDB, error) {
++	if err := os.MkdirAll(dataDir, 0700); err != nil {
++		return nil, err
++	}
++	if err := os.Chmod(dataDir, 0700); err != nil {
++		return nil, err
++	}
+ 	dbPath := filepath.Join(dataDir, "config.db")
+ 
+ 	// Try to open with timeout, if it fails, immediately return database locked error
+-	db, err := bbolt.Open(dbPath, 0644, &bbolt.Options{
++	db, err := bbolt.Open(dbPath, 0600, &bbolt.Options{
+ 		Timeout: 10 * time.Second,
+ 	})
+ 	if err != nil {
+@@ -59,9 +70,14 @@ func NewBoltDB(dataDir string, logger *zap.SugaredLogger) (*BoltDB, error) {
+ 		return nil, fmt.Errorf("failed to open bolt database: %w", err)
+ 	}
+ 
++	if err := os.Chmod(dbPath, 0600); err != nil {
++		db.Close()
++		return nil, err
++	}
+ 	boltDB := &BoltDB{
+-		db:     db,
+-		logger: logger,
++		dataDir: dataDir,
++		db:      db,
++		logger:  logger,
+ 	}
+ 
+ 	// Initialize buckets and schema
+@@ -634,7 +650,7 @@ func (b *BoltDB) SaveOAuthToken(record *OAuthTokenRecord) error {
+ 
+ 	return b.db.Update(func(tx *bbolt.Tx) error {
+ 		bucket := tx.Bucket([]byte(OAuthTokenBucket))
+-		data, err := record.MarshalBinary()
++		data, err := b.encodeOAuthRecord(record, bucket.Stats().KeyN == 0)
+ 		if err != nil {
+ 			return err
+ 		}
+@@ -654,7 +670,7 @@ func (b *BoltDB) GetOAuthToken(serverName string) (*OAuthTokenRecord, error) {
+ 		}
+ 
+ 		record = &OAuthTokenRecord{}
+-		return record.UnmarshalBinary(data)
++		return b.decodeOAuthRecord(serverName, data, record)
+ 	})
+ 
+ 	return record, err
+@@ -680,7 +696,7 @@ func (b *BoltDB) UpdateOAuthClientCredentials(serverKey, clientID, clientSecret
+ 		if data != nil {
+ 			// Update existing record
+ 			record = &OAuthTokenRecord{}
+-			if err := record.UnmarshalBinary(data); err != nil {
++			if err := b.decodeOAuthRecord(serverKey, data, record); err != nil {
+ 				return err
+ 			}
+ 			record.ClientID = clientID
+@@ -700,7 +716,7 @@ func (b *BoltDB) UpdateOAuthClientCredentials(serverKey, clientID, clientSecret
+ 			}
+ 		}
+ 
+-		newData, err := record.MarshalBinary()
++		newData, err := b.encodeOAuthRecord(record, bucket.Stats().KeyN == 0)
+ 		if err != nil {
+ 			return err
+ 		}
+@@ -719,7 +735,7 @@ func (b *BoltDB) GetOAuthClientCredentials(serverKey string) (clientID, clientSe
+ 		}
+ 
+ 		record := &OAuthTokenRecord{}
+-		if err := record.UnmarshalBinary(data); err != nil {
++		if err := b.decodeOAuthRecord(serverKey, data, record); err != nil {
+ 			return err
+ 		}
+ 		clientID = record.ClientID
+@@ -742,7 +758,7 @@ func (b *BoltDB) ClearOAuthClientCredentials(serverKey string) error {
+ 		}
+ 
+ 		record := &OAuthTokenRecord{}
+-		if err := record.UnmarshalBinary(data); err != nil {
++		if err := b.decodeOAuthRecord(serverKey, data, record); err != nil {
+ 			return err
+ 		}
+ 
+@@ -753,7 +769,7 @@ func (b *BoltDB) ClearOAuthClientCredentials(serverKey string) error {
+ 		record.RedirectURI = ""
+ 		record.Updated = time.Now()
+ 
+-		newData, err := record.MarshalBinary()
++		newData, err := b.encodeOAuthRecord(record, bucket.Stats().KeyN == 0)
+ 		if err != nil {
+ 			return err
+ 		}
+@@ -767,9 +783,9 @@ func (b *BoltDB) ListOAuthTokens() ([]*OAuthTokenRecord, error) {
+ 
+ 	err := b.db.View(func(tx *bbolt.Tx) error {
+ 		bucket := tx.Bucket([]byte(OAuthTokenBucket))
+-		return bucket.ForEach(func(_, v []byte) error {
++		return bucket.ForEach(func(k, v []byte) error {
+ 			record := &OAuthTokenRecord{}
+-			if err := record.UnmarshalBinary(v); err != nil {
++			if err := b.decodeOAuthRecord(string(k), v, record); err != nil {
+ 				return err
+ 			}
+ 			records = append(records, record)
+diff --git a/internal/storage/manager.go b/internal/storage/manager.go
+index b728181..2317244 100644
+--- a/internal/storage/manager.go
++++ b/internal/storage/manager.go
+@@ -136,6 +136,7 @@ func (m *Manager) SaveUpstreamServer(serverConfig *config.ServerConfig) error {
+ 		Isolation:              serverConfig.Isolation,
+ 		ReconnectOnUse:         serverConfig.ReconnectOnUse,
+ 		AutoApproveToolChanges: serverConfig.AutoApproveToolChanges,
++		SessionMode:            serverConfig.SessionMode,
+ 		TrustMode:              serverConfig.TrustMode,
+ 		LauncherWaitTimeout:    serverConfig.LauncherWaitTimeout,
+ 		EnabledTools:           serverConfig.EnabledTools,
+@@ -183,6 +184,7 @@ func (m *Manager) GetUpstreamServer(name string) (*config.ServerConfig, error) {
+ 		Isolation:              record.Isolation,
+ 		ReconnectOnUse:         record.ReconnectOnUse,
+ 		AutoApproveToolChanges: record.AutoApproveToolChanges,
++		SessionMode:            record.SessionMode,
+ 		TrustMode:              record.TrustMode,
+ 		LauncherWaitTimeout:    record.LauncherWaitTimeout,
+ 		EnabledTools:           record.EnabledTools,
+@@ -230,6 +232,7 @@ func (m *Manager) ListUpstreamServers() ([]*config.ServerConfig, error) {
+ 			Isolation:              record.Isolation,
+ 			ReconnectOnUse:         record.ReconnectOnUse,
+ 			AutoApproveToolChanges: record.AutoApproveToolChanges,
++			SessionMode:            record.SessionMode,
+ 			TrustMode:              record.TrustMode,
+ 			LauncherWaitTimeout:    record.LauncherWaitTimeout,
+ 			EnabledTools:           record.EnabledTools,
+@@ -282,6 +285,7 @@ func (m *Manager) ListQuarantinedUpstreamServers() ([]*config.ServerConfig, erro
+ 				Name:          record.Name,
+ 				URL:           record.URL,
+ 				Protocol:      record.Protocol,
++				SessionMode:   record.SessionMode,
+ 				Command:       record.Command,
+ 				Args:          record.Args,
+ 				WorkingDir:    record.WorkingDir,
+diff --git a/internal/storage/models.go b/internal/storage/models.go
+index dbdfd54..439c8e0 100644
+--- a/internal/storage/models.go
++++ b/internal/storage/models.go
+@@ -151,6 +151,7 @@ const OutputSchemaHashSchemaVersion = 3
+ 
+ // UpstreamRecord represents an upstream server record in storage
+ type UpstreamRecord struct {
++	SessionMode    string                  `json:"session_mode,omitempty"`
+ 	ID             string                  `json:"id"`
+ 	Name           string                  `json:"name"`
+ 	URL            string                  `json:"url,omitempty"`
+diff --git a/internal/transport/http.go b/internal/transport/http.go
+index 9f3fe72..5b89216 100644
+--- a/internal/transport/http.go
++++ b/internal/transport/http.go
+@@ -1,8 +1,10 @@
+ package transport
+ 
+ import (
++	"context"
+ 	"fmt"
+ 	"net/http"
++	"net/url"
+ 	"time"
+ 
+ 	"github.com/smart-mcp-proxy/mcpproxy-go/internal/config"
+@@ -128,10 +130,11 @@ func NewEndpointDeprecatedError(url, message, migrationGuide, newEndpoint string
+ 
+ // HTTPTransportConfig holds configuration for HTTP transport
+ type HTTPTransportConfig struct {
+-	URL         string
+-	Headers     map[string]string
+-	OAuthConfig *client.OAuthConfig
+-	UseOAuth    bool
++	SessionAuthorization func(context.Context) (string, error)
++	URL                  string
++	Headers              map[string]string
++	OAuthConfig          *client.OAuthConfig
++	UseOAuth             bool
+ 	// BrokeredAuth, when set, injects a per-user resolved credential into the
+ 	// outbound headers, replacing any configured/inbound auth header (spec 074
+ 	// FR-016/FR-017). It is edition-neutral plain data so the server-edition
+@@ -161,13 +164,21 @@ func (cfg *HTTPTransportConfig) upstreamRoundTripper(base http.RoundTripper, log
+ 	if cfg.RetryAfter != nil {
+ 		rt = NewRetryAfterTransport(rt, cfg.RetryAfter, logger)
+ 	}
++	if cfg.needsCredentialOriginGuard() {
++		origin, _ := url.Parse(cfg.URL)
++		rt = &sessionAuthTransport{next: rt, origin: origin, header: cfg.SessionAuthorization}
++	}
+ 	return rt
+ }
+ 
+ // needsCustomTransport reports whether this config requires us to hand mcp-go
+ // our own *http.Client instead of letting it build the default one.
+ func (cfg *HTTPTransportConfig) needsCustomTransport() bool {
+-	return cfg.TraceEnabled || cfg.RetryAfter != nil
++	return cfg.TraceEnabled || cfg.RetryAfter != nil || cfg.needsCredentialOriginGuard()
++}
++
++func (cfg *HTTPTransportConfig) needsCredentialOriginGuard() bool {
++	return cfg.SessionAuthorization != nil || len(cfg.Headers) > 0 || cfg.BrokeredAuth != nil || (cfg.UseOAuth && cfg.OAuthConfig != nil)
+ }
+ 
+ // effectiveHeaders returns the outbound header set, applying brokered per-user
+diff --git a/internal/transport/retry_after_oauth_test.go b/internal/transport/retry_after_oauth_test.go
+index ae31748..b3b152c 100644
+--- a/internal/transport/retry_after_oauth_test.go
++++ b/internal/transport/retry_after_oauth_test.go
+@@ -99,17 +99,16 @@ func TestOAuthClients_RecordRetryAfter(t *testing.T) {
+ 	}
+ }
+ 
+-// TestOAuthClients_NoRecorder_KeepsMcpGoDefaults pins the opt-out: with no
+-// recorder and no tracing we must hand mcp-go no client at all, leaving its own
+-// defaults (and the OAuth wiring) exactly as they were.
+-func TestOAuthClients_NoRecorder_KeepsMcpGoDefaults(t *testing.T) {
++// OAuth MCP requests retain an origin guard even without tracing or retry
++// recording. OAuth metadata/token requests use their separate HTTP client.
++func TestOAuthClients_NoRecorder_StillGuardsCredentialOrigin(t *testing.T) {
+ 	cfg := &HTTPTransportConfig{
+ 		URL:         "http://127.0.0.1:1/mcp",
+ 		OAuthConfig: oauthTestConfig(),
+ 		UseOAuth:    true,
+ 	}
+-	if cfg.needsCustomTransport() {
+-		t.Fatal("a config with neither tracing nor a recorder must not force a custom transport")
++	if !cfg.needsCustomTransport() {
++		t.Fatal("OAuth MCP requests must use the credential origin guard")
+ 	}
+ 	if c, err := CreateHTTPClient(cfg); err != nil {
+ 		t.Fatalf("CreateHTTPClient: %v", err)
+diff --git a/internal/upstream/core/client.go b/internal/upstream/core/client.go
+index be46985..7c1121f 100644
+--- a/internal/upstream/core/client.go
++++ b/internal/upstream/core/client.go
+@@ -34,8 +34,13 @@ import (
+ 
+ // Client implements basic MCP client functionality without state management
+ type Client struct {
+-	id     string
+-	config *config.ServerConfig
++	sessionParent   *Client
++	refreshMu       sync.Mutex
++	oauthFlowMu     sync.Mutex
++	oauthFlowCancel context.CancelFunc
++	oauthFlowDone   chan struct{}
++	id              string
++	config          *config.ServerConfig
+ 	// exposePrompts mirrors config.ExposePrompts but can be updated without a
+ 	// reconnect (PR #973 review, P2): config itself is set once in NewClient
+ 	// and never reassigned, so ListPrompts/GetPrompt would otherwise keep
+@@ -567,6 +572,11 @@ func (c *Client) httpTransportConfig(serverConfig *config.ServerConfig, oauthCon
+ 	// with — which is exactly what keeps generations from bleeding into each
+ 	// other (#1040).
+ 	cfg.RetryAfter = c.retryAfter.Load()
++	if c.sessionUsesOAuth() {
++		cfg.SessionAuthorization = c.sessionParent.sharedOAuthHeader
++		cfg.OAuthConfig = nil
++		cfg.UseOAuth = false
++	}
+ 	return cfg
+ }
+ 
+@@ -666,6 +676,12 @@ func extractOAuthHandler(mcpClient *client.Client) *transport.OAuthHandler {
+ // client credentials populated. In that case, we fall back to manual refresh
+ // using stored credentials from the OAuthTokenRecord.
+ func (c *Client) RefreshOAuthTokenDirect(ctx context.Context) error {
++	c.refreshMu.Lock()
++	defer c.refreshMu.Unlock()
++	return c.refreshOAuthTokenDirect(ctx)
++}
++
++func (c *Client) refreshOAuthTokenDirect(ctx context.Context) error {
+ 	handler := c.GetOAuthHandler()
+ 	if handler == nil {
+ 		return fmt.Errorf("no OAuth handler available for %s", c.config.Name)
+diff --git a/internal/upstream/core/connection_http.go b/internal/upstream/core/connection_http.go
+index 7a6a00b..3a98e9b 100644
+--- a/internal/upstream/core/connection_http.go
++++ b/internal/upstream/core/connection_http.go
+@@ -23,6 +23,12 @@ type authStrategy struct {
+ // defeat per-user isolation (FR-014/FR-017). Non-brokered connections keep the
+ // historical headers -> no-auth -> OAuth chain unchanged.
+ func (c *Client) httpAuthStrategies() []authStrategy {
++	if c.sessionParent != nil {
++		if c.sessionUsesOAuth() || c.canUseHeadersStrategy() {
++			return []authStrategy{{"headers", c.tryHeadersAuth}}
++		}
++		return []authStrategy{{"no-auth", c.tryNoAuth}}
++	}
+ 	if c.brokeredAuth != nil {
+ 		return []authStrategy{{"headers", c.tryHeadersAuth}}
+ 	}
+@@ -36,6 +42,12 @@ func (c *Client) httpAuthStrategies() []authStrategy {
+ // sseAuthStrategies is the SSE counterpart of httpAuthStrategies, with the same
+ // fail-closed guarantee for brokered connections.
+ func (c *Client) sseAuthStrategies() []authStrategy {
++	if c.sessionParent != nil {
++		if c.sessionUsesOAuth() || c.canUseHeadersStrategy() {
++			return []authStrategy{{"headers", c.trySSEHeadersAuth}}
++		}
++		return []authStrategy{{"no-auth", c.trySSENoAuth}}
++	}
+ 	if c.brokeredAuth != nil {
+ 		return []authStrategy{{"headers", c.trySSEHeadersAuth}}
+ 	}
+@@ -158,7 +170,7 @@ func (c *Client) SetBrokeredAuth(b *transport.BrokeredAuth) {
+ // needs either statically-configured headers or a per-user brokered credential
+ // to inject. A brokered upstream commonly carries no static headers (FR-016).
+ func (c *Client) canUseHeadersStrategy() bool {
+-	return len(c.config.Headers) > 0 || c.brokeredAuth != nil
++	return len(c.config.Headers) > 0 || c.brokeredAuth != nil || c.sessionUsesOAuth()
+ }
+ 
+ // brokeredHTTPConfig builds the HTTP transport config for the headers-auth
+diff --git a/internal/upstream/core/connection_lifecycle.go b/internal/upstream/core/connection_lifecycle.go
+index bae5a4e..fda1cca 100644
+--- a/internal/upstream/core/connection_lifecycle.go
++++ b/internal/upstream/core/connection_lifecycle.go
+@@ -341,10 +341,10 @@ func (c *Client) DisconnectWithContext(_ context.Context) error {
+ 		}
+ 	}
+ 
+-	// Step 5: Force kill process group only if graceful close failed
+-	// For non-Docker stdio processes that didn't exit gracefully
+-	if !gracefulCloseSucceeded && !isDocker && pgid > 0 {
+-		c.logger.Info("Graceful close failed, force killing process group",
++	// A graceful SDK close only reaps the direct child. Descendants can
++	// remain in the recorded process group, so always clean up that owned group.
++	if !isDocker && pgid > 0 {
++		c.logger.Info("Cleaning up owned upstream process group",
+ 			zap.String("server", serverName),
+ 			zap.Int("pgid", pgid))
+ 
+@@ -356,7 +356,7 @@ func (c *Client) DisconnectWithContext(_ context.Context) error {
+ 		}
+ 
+ 		// Also try direct process kill as last resort
+-		if processCmd != nil && processCmd.Process != nil {
++		if !gracefulCloseSucceeded && processCmd != nil && processCmd.Process != nil {
+ 			if err := processCmd.Process.Kill(); err != nil {
+ 				c.logger.Debug("Direct process kill failed (may already be dead)",
+ 					zap.String("server", serverName),
+diff --git a/internal/upstream/core/connection_oauth.go b/internal/upstream/core/connection_oauth.go
+index 91370a3..d805697 100644
+--- a/internal/upstream/core/connection_oauth.go
++++ b/internal/upstream/core/connection_oauth.go
+@@ -1578,6 +1578,9 @@ func (c *Client) handleOAuthAuthorizationWithResult(ctx context.Context, authErr
+ 			return result, fmt.Errorf("failed to process authorization response: %w", err)
+ 		}
+ 
++		if ctx.Err() != nil {
++			return result, ctx.Err()
++		}
+ 		c.logger.Info("✅ OAuth authorization successful",
+ 			zap.String("server", c.config.Name),
+ 			zap.String("correlation_id", result.CorrelationID))
+@@ -1792,6 +1795,16 @@ func (c *Client) StartOAuthFlowQuick(ctx context.Context) (*OAuthStartResult, er
+ 
+ 	// Clear any existing OAuth state
+ 	c.clearOAuthState()
++	ctx, finishFlow, flowErr := c.beginOAuthFlow(ctx)
++	if flowErr != nil {
++		return result, flowErr
++	}
++	flowHandedOff := false
++	defer func() {
++		if !flowHandedOff {
++			finishFlow()
++		}
++	}()
+ 
+ 	// Suppress background reconnect OAuth flows for this server until the user
+ 	// finishes (or the sign-in window expires) — issue #975. Ownership of the
+@@ -1872,7 +1885,9 @@ func (c *Client) StartOAuthFlowQuick(ctx context.Context) (*OAuthStartResult, er
+ 
+ 		// Start OAuth callback handling in background
+ 		waiterOwnsRelease = true
++		flowHandedOff = true
+ 		go func() {
++			defer finishFlow()
+ 			defer releaseManualFlow()
+ 			c.waitForOAuthCallbackAsync(ctx, oauthHandler, codeVerifier, state, result.CorrelationID)
+ 		}()
+@@ -1896,7 +1911,9 @@ func (c *Client) StartOAuthFlowQuick(ctx context.Context) (*OAuthStartResult, er
+ 
+ 	// Start OAuth callback handling in background
+ 	waiterOwnsRelease = true
++	flowHandedOff = true
+ 	go func() {
++		defer finishFlow()
+ 		defer releaseManualFlow()
+ 		c.waitForOAuthCallbackAsync(ctx, oauthHandler, codeVerifier, state, result.CorrelationID)
+ 	}()
+@@ -2203,6 +2220,9 @@ func (c *Client) waitForOAuthCallbackAsync(ctx context.Context, oauthHandler *up
+ 			return
+ 		}
+ 
++		if ctx.Err() != nil {
++			return
++		}
+ 		c.logger.Info("✅ OAuth authorization successful",
+ 			zap.String("server", c.config.Name),
+ 			zap.String("correlation_id", correlationID))
+diff --git a/internal/upstream/managed/client.go b/internal/upstream/managed/client.go
+index 00ea96b..e34733d 100644
+--- a/internal/upstream/managed/client.go
++++ b/internal/upstream/managed/client.go
+@@ -25,7 +25,9 @@ import (
+ 
+ // Client wraps a core client with state management, concurrency control, and background recovery
+ type Client struct {
+-	id string
++	oauthLoginMu sync.Mutex
++	oauthLogin   *core.Client
++	id           string
+ 	// cfg holds the server configuration as an atomic pointer. SetConfig swaps it
+ 	// (reconcile add path, off mc.mu) while many readers — including detached
+ 	// state-change callback goroutines and Connect's unlocked phase — read it
+@@ -144,7 +146,11 @@ type Client struct {
+ 	// admission control at all — the zero-config behaviour (FR-006). Swapped
+ 	// atomically so a hot reload can republish the wiring without a lock; see
+ 	// admission.go.
+-	admission atomic.Pointer[admissionControl]
++	admission       atomic.Pointer[admissionControl]
++	gateway         *GatewayControl
++	sessionMu       sync.Mutex
++	sessions        map[string]*sessionClient
++	sessionsClosing bool
+ }
+ 
+ // livenessProber is the minimal core-client surface the health loop needs: a
+@@ -311,6 +317,9 @@ func (mc *Client) Connect(ctx context.Context) error {
+ 	mc.logger.Debug("Invoking core client Connect for managed client",
+ 		zap.String("server", serverName))
+ 	connectErr := mc.coreClient.Connect(connectCtx)
++	if connectErr == nil && connectCtx.Err() != nil {
++		connectErr = connectCtx.Err()
++	}
+ 
+ 	// Phase 4: Re-acquire lock to update state based on result
+ 	mc.mu.Lock()
+@@ -389,6 +398,9 @@ func (mc *Client) Connect(ctx context.Context) error {
+ 	mc.connectionEpoch.Add(1)
+ 	mc.epochMu.Unlock()
+ 
++	mc.sessionMu.Lock()
++	mc.sessionsClosing = false
++	mc.sessionMu.Unlock()
+ 	// Transition to ready state only if not already ready
+ 	if mc.StateManager.GetState() != types.StateReady {
+ 		mc.StateManager.TransitionTo(types.StateReady)
+@@ -442,11 +454,29 @@ func (mc *Client) Connect(ctx context.Context) error {
+ 
+ // Disconnect closes the connection and stops monitoring
+ func (mc *Client) Disconnect() error {
++	// Close session admission before clearing transports, including an
++	// in-progress directory connection completing at the same time.
++	mc.sessionMu.Lock()
++	mc.sessionsClosing = true
++	mc.sessionMu.Unlock()
++	mc.cancelInFlightListTools()
++	mc.cancelInFlightConnect()
++	mc.StateManager.Reset()
++	mc.closeSessions()
++	if mc.coreClient != nil {
++		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
++		_, _ = mc.CancelOAuthFlow(ctx)
++		cancel()
++	}
+ 	mc.cancelInFlightListTools()
+ 	mc.cancelInFlightConnect()
+ 
+ 	mc.mu.Lock()
+ 	defer mc.mu.Unlock()
++	mc.sessionMu.Lock()
++	mc.sessionsClosing = true
++	mc.sessionMu.Unlock()
++	mc.closeSessions()
+ 
+ 	mc.logger.Info("Disconnecting managed client", zap.String("server", mc.GetConfig().Name))
+ 
+@@ -804,6 +834,11 @@ func (mc *Client) runListToolsAsLeader(listCtx context.Context, release func() b
+ 
+ // CallTool executes a tool with error handling
+ func (mc *Client) CallTool(ctx context.Context, toolName string, args map[string]interface{}) (*mcp.CallToolResult, error) {
++	ctx, releaseGateway, err := mc.gateway.EnterContext(ctx)
++	if err != nil {
++		return nil, err
++	}
++	defer releaseGateway()
+ 	if !mc.IsConnected() {
+ 		return nil, fmt.Errorf("client not connected (state: %s)", mc.StateManager.GetState().String())
+ 	}
+@@ -817,13 +852,35 @@ func (mc *Client) CallTool(ctx context.Context, toolName string, args map[string
+ 		return nil, err
+ 	}
+ 	defer releaseSlot()
++	if mc.gateway != nil {
++		if err := mc.gatewayToolPolicy(toolName); err != nil {
++			return nil, err
++		}
++	}
+ 
+ 	invoker := mc.toolInvoker
+ 	if invoker == nil {
+ 		invoker = mc.coreClient
+ 	}
+ 
++	var isolatedInvoker *core.Client
++	if mc.gateway != nil && mc.GetConfig().SessionMode != "shared" {
++		isolated, release, sessionErr := mc.acquireSession(ctx)
++		if sessionErr != nil {
++			return nil, sessionErr
++		}
++		defer release()
++		invoker = isolated
++		isolatedInvoker = isolated
++	}
++
+ 	result, err := invoker.CallTool(ctx, toolName, args)
++	if err != nil && isolatedInvoker != nil {
++		if ctx.Err() == nil && mc.isConnectionError(err) {
++			mc.discardSessionClient(isolatedInvoker)
++		}
++		return nil, err
++	}
+ 	if err != nil {
+ 		mc.recordCallToolOAuthSignal(toolName, err)
+ 		// A 429 answered to a tools/call is the same instruction as one answered
+diff --git a/internal/upstream/manager.go b/internal/upstream/manager.go
+index f31c8a7..bfc8d35 100644
+--- a/internal/upstream/manager.go
++++ b/internal/upstream/manager.go
+@@ -90,6 +90,7 @@ func getDockerRetryInterval(attempt int) time.Duration {
+ 
+ // Manager manages connections to multiple upstream MCP servers
+ type Manager struct {
++	gateway   managed.GatewayControl
+ 	clients   map[string]*managed.Client
+ 	mu        sync.RWMutex
+ 	logger    *zap.Logger
+@@ -423,7 +424,7 @@ func (m *Manager) AddServerConfig(id string, serverConfig *config.ServerConfig)
+ 			!equalStringMaps(existingConfig.Env, serverConfig.Env) ||
+ 			!equalStringMaps(existingConfig.Headers, serverConfig.Headers) ||
+ 			existingConfig.Enabled != serverConfig.Enabled ||
+-			existingConfig.Quarantined != serverConfig.Quarantined
++			existingConfig.Quarantined != serverConfig.Quarantined || existingConfig.SessionMode != serverConfig.SessionMode
+ 
+ 		if configChanged {
+ 			m.logger.Info("Server configuration changed, disconnecting existing client",
+@@ -464,6 +465,8 @@ func (m *Manager) AddServerConfig(id string, serverConfig *config.ServerConfig)
+ 		return fmt.Errorf("failed to create client for server %s: %w", serverConfig.Name, err)
+ 	}
+ 
++	client.SetGatewayControl(&m.gateway)
++
+ 	// Set up notification callback for state changes
+ 	if m.notificationMgr != nil {
+ 		notifierCallback := StateChangeNotifier(m.notificationMgr, serverConfig.Name)
+@@ -629,6 +632,12 @@ func (m *Manager) RemoveServer(id string) {
+ // This should be called during application shutdown to ensure clean exit
+ func (m *Manager) ShutdownAll(ctx context.Context) error {
+ 	m.logger.Info("Shutting down all upstream servers")
++	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
++	defer cancel()
++	m.gateway.CancelCalls()
++	m.mu.Lock()
++	m.shuttingDown = true
++	m.mu.Unlock()
+ 
+ 	// Cancel shutdown context to stop background goroutines (OAuth monitor, Docker recovery)
+ 	if m.shutdownCancel != nil {
+@@ -707,38 +716,22 @@ func (m *Manager) ShutdownAll(ctx context.Context) error {
+ 		}(id, client)
+ 	}
+ 
+-	// Wait for all disconnections to complete (with timeout)
+-	// Use a shorter timeout (5 seconds) for the disconnect phase
+-	// If servers are stuck in "Connecting" state, their disconnection will hang
+-	// In that case, we'll force-proceed to container cleanup which can handle it
++	// A stop response must mean the owned transports/processes have finished.
+ 	done := make(chan struct{})
+-	go func() {
+-		wg.Wait()
+-		close(done)
+-	}()
+-
+-	disconnectTimeout := 5 * time.Second
+-	disconnectTimer := time.NewTimer(disconnectTimeout)
+-	defer disconnectTimer.Stop()
+-
++	go func() { wg.Wait(); close(done) }()
+ 	select {
+ 	case <-done:
+-		m.logger.Info("All upstream servers disconnected successfully")
+-	case <-disconnectTimer.C:
+-		m.logger.Warn("Disconnect phase timed out after 5 seconds, forcing cleanup")
+-		m.logger.Warn("Some servers may not have disconnected cleanly (likely stuck in Connecting state)")
+-		// Don't wait for stuck goroutines - proceed with container cleanup anyway
+ 	case <-ctx.Done():
+-		m.logger.Warn("Shutdown context cancelled, forcing cleanup",
+-			zap.Error(ctx.Err()))
+-		// Don't wait for stuck goroutines - proceed with container cleanup anyway
++		return fmt.Errorf("upstream cleanup incomplete: %w", ctx.Err())
+ 	}
+ 
+ 	// Additional cleanup: Find and stop ALL mcpproxy-managed containers
+ 	// This catches any orphaned containers from previous crashes AND any containers
+ 	// from servers that were stuck in "Connecting" state and couldn't disconnect
+ 	m.logger.Info("Starting Docker container cleanup phase")
+-	m.cleanupAllManagedContainers(ctx)
++	if m.UsesDockerIsolation() {
++		m.cleanupAllManagedContainers(ctx)
++	}
+ 
+ 	m.logger.Info("All upstream servers shut down successfully")
+ 	return nil
+@@ -752,6 +745,7 @@ func (m *Manager) cleanupAllManagedContainers(ctx context.Context) {
+ 	// Find all containers with our management label
+ 	listCmd := exec.CommandContext(ctx, "docker", "ps", "-a",
+ 		"--filter", "label=com.mcpproxy.managed=true",
++		"--filter", fmt.Sprintf("label=com.mcpproxy.instance=%s", core.GetInstanceID()),
+ 		"--format", "{{.ID}}\t{{.Names}}\t{{.Label \"com.mcpproxy.server\"}}")
+ 
+ 	output, err := listCmd.Output()
+@@ -2463,6 +2457,12 @@ func (m *Manager) StartManualOAuthQuick(serverName string) (*core.OAuthStartResu
+ 		return nil, fmt.Errorf("failed to create core client for OAuth: %w", err)
+ 	}
+ 
++	// The managed server owns this transient login client so cancellation,
++	// disable, restart and shutdown all reach the actual callback waiter.
++	if err := client.SetManualOAuthClient(coreClient); err != nil {
++		return nil, err
++	}
++
+ 	// Use a long-running context for the OAuth callback (30 minutes)
+ 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+ 
+@@ -2473,46 +2473,21 @@ func (m *Manager) StartManualOAuthQuick(serverName string) (*core.OAuthStartResu
+ 	result, err := coreClient.StartOAuthFlowQuick(ctx)
+ 	if err != nil {
+ 		cancel()
++		client.ClearManualOAuthClient(coreClient)
++		_ = coreClient.Disconnect()
+ 		return result, err
+ 	}
+ 
+-	// Set up reconnection after OAuth completes (in background)
++	// Completion follows the owned callback lifetime, including cancellation.
+ 	go func() {
+ 		defer cancel()
+-
+-		// Wait a bit for OAuth to complete (the callback handling runs in background)
+-		// Then trigger reconnect
+-		time.Sleep(2 * time.Second)
+-
+-		// Check if OAuth completed by looking for token
+-		if m.storage != nil {
+-			serverKey := oauth.GenerateServerKey(cfg.Name, cfg.URL)
+-			token, _ := m.storage.GetOAuthToken(serverKey)
+-			if token != nil && token.AccessToken != "" {
+-				m.logger.Info("OAuth token obtained, triggering reconnect",
+-					zap.String("server", cfg.Name))
+-				if err := m.RetryConnection(cfg.Name); err != nil {
+-					m.logger.Warn("Failed to trigger reconnect after OAuth",
+-						zap.String("server", cfg.Name),
+-						zap.Error(err))
+-				}
+-			}
+-		}
+-
+-		// Also set up a watcher for OAuth completion
+-		tokenManager := oauth.GetTokenStoreManager()
+-		for i := 0; i < 60; i++ { // Check for 2 minutes
+-			if tokenManager.HasRecentOAuthCompletion(cfg.Name) {
+-				m.logger.Info("OAuth completion detected, triggering reconnect",
+-					zap.String("server", cfg.Name))
+-				if err := m.RetryConnection(cfg.Name); err != nil {
+-					m.logger.Warn("Failed to trigger reconnect after OAuth completion",
+-						zap.String("server", cfg.Name),
+-						zap.Error(err))
+-				}
+-				return
++		defer client.ClearManualOAuthClient(coreClient)
++		defer coreClient.Disconnect()
++		completed, waitErr := coreClient.WaitOAuthFlow(ctx)
++		if waitErr == nil && completed {
++			if err := m.RetryConnection(cfg.Name); err != nil {
++				m.logger.Warn("Failed to reconnect after OAuth", zap.String("server", cfg.Name), zap.Error(err))
+ 			}
+-			time.Sleep(2 * time.Second)
+ 		}
+ 	}()
+ 
+diff --git a/internal/config/gateway_persistence_test.go b/internal/config/gateway_persistence_test.go
+new file mode 100644
+index 0000000..888a8c1
+--- /dev/null
++++ b/internal/config/gateway_persistence_test.go
+@@ -0,0 +1,36 @@
++package config
++
++import (
++	"encoding/json"
++	"github.com/stretchr/testify/require"
++	"os"
++	"path/filepath"
++	"testing"
++)
++
++func TestGatewayEnvironmentAPIKeyNeverPersists(t *testing.T) {
++	const key = "controlled-environment-management-key"
++	t.Setenv("MCPPROXY_API_KEY", key)
++	cfg := &Config{APIKey: key, Listen: "127.0.0.1:8080"}
++	path := filepath.Join(t.TempDir(), "core.json")
++	require.NoError(t, SaveConfig(cfg, path))
++	data, err := os.ReadFile(path)
++	require.NoError(t, err)
++	require.NotContains(t, string(data), key)
++	var saved map[string]any
++	require.NoError(t, json.Unmarshal(data, &saved))
++	require.NotContains(t, saved, "api_key")
++	require.Equal(t, key, cfg.APIKey, "persistence must not mutate live authentication")
++	again, err := MarshalForPersistence(cfg)
++	require.NoError(t, err)
++	require.JSONEq(t, string(data), string(again), "watcher compares the exact persisted projection")
++	cfg.ToolsLimit = 99
++	require.NoError(t, SaveConfig(cfg, path))
++	data, err = os.ReadFile(path)
++	require.NoError(t, err)
++	require.NotContains(t, string(data), key)
++	t.Setenv("MCPPROXY_API_KEY", "")
++	data, err = MarshalForPersistence(cfg)
++	require.NoError(t, err)
++	require.Contains(t, string(data), key, "standalone config-provided credentials retain upstream behavior")
++}
+diff --git a/internal/config/session_mode.go b/internal/config/session_mode.go
+new file mode 100644
+index 0000000..83f15cd
+--- /dev/null
++++ b/internal/config/session_mode.go
+@@ -0,0 +1,8 @@
++package config
++
++func (sc *ServerConfig) EffectiveSessionMode() string {
++	if sc.SessionMode == "shared" {
++		return "shared"
++	}
++	return "isolated"
++}
+diff --git a/internal/config/session_mode_test.go b/internal/config/session_mode_test.go
+new file mode 100644
+index 0000000..020807c
+--- /dev/null
++++ b/internal/config/session_mode_test.go
+@@ -0,0 +1,25 @@
++package config
++
++import (
++	"encoding/json"
++	"github.com/stretchr/testify/require"
++	"testing"
++)
++
++func TestGatewaySessionModeSurvivesCopyMergeAndJSON(t *testing.T) {
++	base := &ServerConfig{Name: "fixture", SessionMode: "shared"}
++	copy := CopyServerConfig(base)
++	require.Equal(t, "shared", copy.SessionMode)
++	merged, _, err := MergeServerConfig(base, &ServerConfig{Name: "fixture", SessionMode: "isolated"}, DefaultMergeOptions())
++	require.NoError(t, err)
++	require.Equal(t, "isolated", merged.SessionMode)
++	unchanged, _, err := MergeServerConfig(base, &ServerConfig{Name: "fixture"}, DefaultMergeOptions())
++	require.NoError(t, err)
++	require.Equal(t, "shared", unchanged.SessionMode)
++	data, err := json.Marshal(base)
++	require.NoError(t, err)
++	var restored ServerConfig
++	require.NoError(t, json.Unmarshal(data, &restored))
++	require.Equal(t, "shared", restored.EffectiveSessionMode())
++	require.Equal(t, "isolated", (&ServerConfig{}).EffectiveSessionMode())
++}
+diff --git a/internal/httpapi/gateway_control.go b/internal/httpapi/gateway_control.go
+new file mode 100644
+index 0000000..921e404
+--- /dev/null
++++ b/internal/httpapi/gateway_control.go
+@@ -0,0 +1,93 @@
++package httpapi
++
++import (
++	"context"
++	"encoding/json"
++	"net/http"
++
++	"github.com/go-chi/chi/v5"
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/upstream/managed"
++)
++
++type gatewayController interface {
++	GatewayState() managed.GatewayState
++	SetGatewayPaused(bool) managed.GatewayState
++	CancelOAuthFlow(context.Context, string) (bool, error)
++	RefreshGatewayOAuth(string) error
++	StopGateway(context.Context) error
++}
++type gatewayFullToolController interface {
++	CallToolFull(context.Context, string, map[string]any) (any, error)
++}
++
++func (s *Server) gatewayController(w http.ResponseWriter, r *http.Request) (gatewayController, bool) {
++	if !s.requireAdminRead(w, r, "Agent tokens cannot manage the gateway") {
++		return nil, false
++	}
++	controller, ok := s.controller.(gatewayController)
++	if !ok {
++		s.writeError(w, r, http.StatusNotImplemented, "Gateway controls unavailable")
++	}
++	return controller, ok
++}
++func (s *Server) handleGatewayState(w http.ResponseWriter, r *http.Request) {
++	if controller, ok := s.gatewayController(w, r); ok {
++		s.writeSuccess(w, controller.GatewayState())
++	}
++}
++func (s *Server) handleGatewayPause(w http.ResponseWriter, r *http.Request) {
++	controller, ok := s.gatewayController(w, r)
++	if !ok {
++		return
++	}
++	var input struct {
++		Paused *bool `json:"paused"`
++	}
++	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || input.Paused == nil {
++		s.writeError(w, r, http.StatusBadRequest, "paused boolean is required")
++		return
++	}
++	s.writeSuccess(w, controller.SetGatewayPaused(*input.Paused))
++}
++func (s *Server) handleGatewayOAuthCancel(w http.ResponseWriter, r *http.Request) {
++	controller, ok := s.gatewayController(w, r)
++	if !ok {
++		return
++	}
++	pending, err := controller.CancelOAuthFlow(r.Context(), chi.URLParam(r, "id"))
++	if err != nil {
++		s.writeError(w, r, http.StatusBadRequest, err.Error())
++		return
++	}
++	s.writeSuccess(w, map[string]any{"cancelled": pending})
++}
++func (s *Server) handleGatewayOAuthRefresh(w http.ResponseWriter, r *http.Request) {
++	controller, ok := s.gatewayController(w, r)
++	if !ok {
++		return
++	}
++	if err := controller.RefreshGatewayOAuth(chi.URLParam(r, "id")); err != nil {
++		s.writeError(w, r, http.StatusBadRequest, err.Error())
++		return
++	}
++	s.writeSuccess(w, map[string]any{"refreshed": true})
++}
++
++func (s *Server) handleGatewayStop(w http.ResponseWriter, r *http.Request) {
++	controller, ok := s.gatewayController(w, r)
++	if !ok {
++		return
++	}
++	var input struct {
++		Force bool `json:"force"`
++	}
++	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || !input.Force {
++		s.writeError(w, r, http.StatusBadRequest, "force:true is required")
++		return
++	}
++	if err := controller.StopGateway(r.Context()); err != nil {
++		s.writeError(w, r, http.StatusInternalServerError, err.Error())
++		return
++	}
++	s.writeSuccess(w, controller.GatewayState())
++}
+diff --git a/internal/server/gateway_control.go b/internal/server/gateway_control.go
+new file mode 100644
+index 0000000..500a3de
+--- /dev/null
++++ b/internal/server/gateway_control.go
+@@ -0,0 +1,45 @@
++package server
++
++import (
++	"context"
++
++	"github.com/mark3labs/mcp-go/mcp"
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/auth"
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/upstream/managed"
++)
++
++func (s *Server) GatewayState() managed.GatewayState {
++	return s.runtime.UpstreamManager().GatewayState()
++}
++func (s *Server) SetGatewayPaused(paused bool) managed.GatewayState {
++	return s.runtime.UpstreamManager().SetGatewayPaused(paused)
++}
++func (s *Server) CancelOAuthFlow(ctx context.Context, name string) (bool, error) {
++	return s.runtime.UpstreamManager().CancelOAuthFlow(ctx, name)
++}
++func (s *Server) RefreshGatewayOAuth(name string) error { return s.runtime.RefreshOAuthToken(name) }
++func (s *Server) CallToolFull(ctx context.Context, name string, args map[string]any) (any, error) {
++	return s.mcpProxy.callToolDirect(ctx, mcp.CallToolRequest{Params: mcp.CallToolParams{Name: name, Arguments: args}}, true)
++}
++
++// Management stays available over REST to the application. Agent discovery is
++// a fixed capability set, independent of the number of configured servers.
++func filterGatewayTools(ctx context.Context, tools []mcp.Tool) []mcp.Tool {
++	identity := auth.AuthContextFromContext(ctx)
++	if identity == nil || identity.IsAdmin() {
++		return tools
++	}
++	result := make([]mcp.Tool, 0, len(tools))
++	for _, tool := range tools {
++		switch tool.Name {
++		case "upstream_servers", "quarantine_security", "list_registries", "search_servers", "doctor", "set_profile":
++			continue
++		}
++		result = append(result, tool)
++	}
++	return result
++}
++
++func (s *Server) StopGateway(ctx context.Context) error {
++	return s.runtime.UpstreamManager().StopGateway(ctx)
++}
+diff --git a/internal/server/gateway_direct_schema_test.go b/internal/server/gateway_direct_schema_test.go
+new file mode 100644
+index 0000000..74d5c9f
+--- /dev/null
++++ b/internal/server/gateway_direct_schema_test.go
+@@ -0,0 +1,26 @@
++package server
++
++import (
++	"encoding/json"
++	"testing"
++
++	"github.com/stretchr/testify/require"
++)
++
++func TestGatewayDirectFullSchemaPreservesRootConstraints(t *testing.T) {
++	const schema = `{"type":"object","additionalProperties":false,"$defs":{"identifier":{"type":"string","minLength":1}},"properties":{"record_id":{"$ref":"#/$defs/identifier"},"mode":{"enum":["short","full"]}},"required":["record_id"],"allOf":[{"if":{"properties":{"mode":{"const":"full"}}},"then":{"required":["mode"]}}]}`
++	tool := renderFullDirectTool(&directCatalogEntry{
++		DisplayName: "catalog__lookup", ParamsJSON: schema,
++	}, "Lookup record")
++	wire, err := json.Marshal(tool)
++	require.NoError(t, err)
++	var listed struct {
++		Name        string          `json:"name"`
++		Description string          `json:"description"`
++		InputSchema json.RawMessage `json:"inputSchema"`
++	}
++	require.NoError(t, json.Unmarshal(wire, &listed))
++	require.Equal(t, "catalog__lookup", listed.Name)
++	require.Equal(t, "Lookup record", listed.Description)
++	require.JSONEq(t, schema, string(listed.InputSchema))
++}
+diff --git a/internal/storage/oauth_cipher.go b/internal/storage/oauth_cipher.go
+new file mode 100644
+index 0000000..e5355db
+--- /dev/null
++++ b/internal/storage/oauth_cipher.go
+@@ -0,0 +1,98 @@
++package storage
++
++import (
++	"bytes"
++	"crypto/aes"
++	"crypto/cipher"
++	"crypto/rand"
++	"crypto/sha256"
++	"encoding/hex"
++	"errors"
++	"fmt"
++	"path/filepath"
++
++	"github.com/zalando/go-keyring"
++)
++
++const oauthKeychainService = "com.mcp-gateway.credentials"
++const oauthCipherPrefix = "MCPG-OAUTH-1:"
++
++var oauthKeyringGet = keyring.Get
++var oauthKeyringSet = keyring.Set
++
++// Each application data directory owns a key. Missing keys never replace a key
++// for existing ciphertext, and inaccessible Keychain storage never falls back
++// to a config file or an unencrypted database record.
++func (b *BoltDB) oauthAEAD(create bool) (cipher.AEAD, error) {
++	b.oauthCipherMu.Lock()
++	defer b.oauthCipherMu.Unlock()
++	if b.oauthCipher != nil {
++		return b.oauthCipher, nil
++	}
++	absDir, err := filepath.Abs(b.dataDir)
++	if err != nil {
++		return nil, err
++	}
++	digest := sha256.Sum256([]byte(absDir))
++	account := "oauth-master:" + hex.EncodeToString(digest[:16])
++	encoded, err := oauthKeyringGet(oauthKeychainService, account)
++	if errors.Is(err, keyring.ErrNotFound) && create {
++		key := make([]byte, 32)
++		if _, err = rand.Read(key); err != nil {
++			return nil, err
++		}
++		encoded = hex.EncodeToString(key)
++		clear(key)
++		if err = oauthKeyringSet(oauthKeychainService, account, encoded); err != nil {
++			return nil, fmt.Errorf("cannot save OAuth encryption key in Keychain: %w", err)
++		}
++		// Verify writes: a successful subprocess exit is not proof the item was
++		// persisted by a platform keyring implementation.
++		stored, readErr := oauthKeyringGet(oauthKeychainService, account)
++		if readErr != nil || stored != encoded {
++			return nil, fmt.Errorf("OAuth encryption key failed Keychain readback")
++		}
++	} else if err != nil {
++		return nil, fmt.Errorf("OAuth encryption key unavailable in Keychain: %w", err)
++	}
++	key, err := hex.DecodeString(encoded)
++	if err != nil || len(key) != 32 {
++		return nil, fmt.Errorf("OAuth Keychain key must contain 32 bytes")
++	}
++	defer clear(key)
++	block, err := aes.NewCipher(key)
++	if err != nil {
++		return nil, err
++	}
++	b.oauthCipher, err = cipher.NewGCMWithRandomNonce(block)
++	return b.oauthCipher, err
++}
++
++func (b *BoltDB) encodeOAuthRecord(record *OAuthTokenRecord, createKey bool) ([]byte, error) {
++	aead, err := b.oauthAEAD(createKey)
++	if err != nil {
++		return nil, err
++	}
++	plain, err := record.MarshalBinary()
++	if err != nil {
++		return nil, err
++	}
++	defer clear(plain)
++	return aead.Seal([]byte(oauthCipherPrefix), nil, plain, []byte(record.ServerName)), nil
++}
++
++func (b *BoltDB) decodeOAuthRecord(serverKey string, data []byte, record *OAuthTokenRecord) error {
++	if !bytes.HasPrefix(data, []byte(oauthCipherPrefix)) {
++		return fmt.Errorf("unencrypted OAuth record refused; clear local authorization and sign in again")
++	}
++	aead, err := b.oauthAEAD(false)
++	if err != nil {
++		return err
++	}
++	plain, err := aead.Open(nil, nil, data[len(oauthCipherPrefix):], []byte(serverKey))
++	if err != nil {
++		return fmt.Errorf("OAuth credentials could not be authenticated: %w", err)
++	}
++	defer clear(plain)
++	return record.UnmarshalBinary(plain)
++}
+diff --git a/internal/storage/oauth_cipher_test.go b/internal/storage/oauth_cipher_test.go
+new file mode 100644
+index 0000000..649e075
+--- /dev/null
++++ b/internal/storage/oauth_cipher_test.go
+@@ -0,0 +1,126 @@
++package storage
++
++import (
++	"bytes"
++	"errors"
++	"os"
++	"path/filepath"
++	"testing"
++
++	"github.com/stretchr/testify/require"
++	"github.com/zalando/go-keyring"
++	"go.etcd.io/bbolt"
++	"go.uber.org/zap"
++)
++
++func gatewayTestKeychain(t *testing.T) map[string]string {
++	t.Helper()
++	values := map[string]string{}
++	oldGet, oldSet := oauthKeyringGet, oauthKeyringSet
++	oauthKeyringGet = func(service, account string) (string, error) {
++		value, ok := values[service+":"+account]
++		if !ok {
++			return "", keyring.ErrNotFound
++		}
++		return value, nil
++	}
++	oauthKeyringSet = func(service, account, value string) error { values[service+":"+account] = value; return nil }
++	t.Cleanup(func() { oauthKeyringGet, oauthKeyringSet = oldGet, oldSet })
++	return values
++}
++
++func TestGatewayOAuthCipherPersistence(t *testing.T) {
++	values := gatewayTestKeychain(t)
++	dir := t.TempDir()
++	db, err := NewBoltDB(dir, zap.NewNop().Sugar())
++	require.NoError(t, err)
++	record := &OAuthTokenRecord{ServerName: "fixture", AccessToken: "controlled-access-credential", RefreshToken: "controlled-refresh-credential", ClientID: "controlled-client-id", ClientSecret: "controlled-client-secret"}
++	require.NoError(t, db.SaveOAuthToken(record))
++	require.Len(t, values, 1)
++	var ciphertext []byte
++	require.NoError(t, db.db.View(func(tx *bbolt.Tx) error {
++		ciphertext = bytes.Clone(tx.Bucket([]byte(OAuthTokenBucket)).Get([]byte("fixture")))
++		return nil
++	}))
++	require.True(t, bytes.HasPrefix(ciphertext, []byte(oauthCipherPrefix)))
++	for _, credential := range []string{record.AccessToken, record.RefreshToken, record.ClientSecret} {
++		require.NotContains(t, string(ciphertext), credential)
++	}
++	require.NoError(t, db.SaveOAuthToken(record))
++	require.NoError(t, db.db.View(func(tx *bbolt.Tx) error {
++		require.NotEqual(t, ciphertext, tx.Bucket([]byte(OAuthTokenBucket)).Get([]byte("fixture")))
++		return nil
++	}))
++	require.NoError(t, db.Close())
++	for _, mode := range []struct {
++		path string
++		perm os.FileMode
++	}{{dir, 0700}, {filepath.Join(dir, "config.db"), 0600}} {
++		stat, e := os.Stat(mode.path)
++		require.NoError(t, e)
++		require.Equal(t, mode.perm, stat.Mode().Perm())
++	}
++	db, err = NewBoltDB(dir, zap.NewNop().Sugar())
++	require.NoError(t, err)
++	defer db.Close()
++	got, err := db.GetOAuthToken("fixture")
++	require.NoError(t, err)
++	require.Equal(t, record.RefreshToken, got.RefreshToken)
++	require.NoError(t, db.UpdateOAuthClientCredentials("fixture", "next-id", "next-secret", 12345))
++	id, secret, port, err := db.GetOAuthClientCredentials("fixture")
++	require.NoError(t, err)
++	require.Equal(t, "next-id", id)
++	require.Equal(t, "next-secret", secret)
++	require.Equal(t, 12345, port)
++	require.NoError(t, db.ClearOAuthClientCredentials("fixture"))
++	got, err = db.GetOAuthToken("fixture")
++	require.NoError(t, err)
++	require.Empty(t, got.ClientSecret)
++	require.Equal(t, record.AccessToken, got.AccessToken)
++	listed, err := db.ListOAuthTokens()
++	require.NoError(t, err)
++	require.Len(t, listed, 1)
++	require.NoError(t, db.DeleteOAuthToken("fixture"))
++	_, err = db.GetOAuthToken("fixture")
++	require.Error(t, err)
++}
++
++func TestGatewayOAuthCipherRefusesUnsafeRecovery(t *testing.T) {
++	values := gatewayTestKeychain(t)
++	db, err := NewBoltDB(t.TempDir(), zap.NewNop().Sugar())
++	require.NoError(t, err)
++	defer db.Close()
++	record := &OAuthTokenRecord{ServerName: "source", AccessToken: "secret-access"}
++	require.NoError(t, db.SaveOAuthToken(record))
++	var ciphertext []byte
++	require.NoError(t, db.db.View(func(tx *bbolt.Tx) error {
++		ciphertext = bytes.Clone(tx.Bucket([]byte(OAuthTokenBucket)).Get([]byte("source")))
++		return nil
++	}))
++	require.Error(t, db.decodeOAuthRecord("wrong-server", ciphertext, &OAuthTokenRecord{}))
++	ciphertext[len(ciphertext)-1] ^= 1
++	require.Error(t, db.decodeOAuthRecord("source", ciphertext, &OAuthTokenRecord{}))
++	require.ErrorContains(t, db.decodeOAuthRecord("source", []byte("plaintext legacy record"), &OAuthTokenRecord{}), "unencrypted")
++	db.oauthCipher = nil
++	clear(values)
++	_, err = db.GetOAuthToken("source")
++	require.ErrorContains(t, err, "unavailable")
++	require.Error(t, db.SaveOAuthToken(record))
++	require.Empty(t, values, "never create a replacement key over existing ciphertext")
++}
++
++func TestGatewayOAuthCipherKeychainFailureIsClosed(t *testing.T) {
++	gatewayTestKeychain(t)
++	db, err := NewBoltDB(t.TempDir(), zap.NewNop().Sugar())
++	require.NoError(t, err)
++	defer db.Close()
++	oauthKeyringGet = func(string, string) (string, error) { return "", errors.New("Keychain locked") }
++	require.ErrorContains(t, db.SaveOAuthToken(&OAuthTokenRecord{ServerName: "fixture", AccessToken: "never-persist"}), "Keychain locked")
++	oauthKeyringGet = func(string, string) (string, error) { return "", keyring.ErrNotFound }
++	oauthKeyringSet = func(string, string, string) error { return errors.New("write refused") }
++	require.ErrorContains(t, db.SaveOAuthToken(&OAuthTokenRecord{ServerName: "fixture", AccessToken: "never-persist"}), "write refused")
++	require.NoError(t, db.db.View(func(tx *bbolt.Tx) error {
++		require.Equal(t, 0, tx.Bucket([]byte(OAuthTokenBucket)).Stats().KeyN)
++		return nil
++	}))
++}
+diff --git a/internal/transport/gateway_origin_test.go b/internal/transport/gateway_origin_test.go
+new file mode 100644
+index 0000000..eeac902
+--- /dev/null
++++ b/internal/transport/gateway_origin_test.go
+@@ -0,0 +1,110 @@
++package transport
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++	"net/http"
++	"net/http/httptest"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	"github.com/mark3labs/mcp-go/mcp"
++	"github.com/stretchr/testify/require"
++)
++
++func TestGatewayHTTPHeadersRefuseCrossOriginRedirect(t *testing.T) {
++	for _, credential := range []string{"custom", "bearer", "broker", "oauth"} {
++		t.Run(credential, func(t *testing.T) {
++			var foreignRequests, sourceRequests atomic.Int32
++			foreign := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++				foreignRequests.Add(1)
++				w.WriteHeader(http.StatusInternalServerError)
++			}))
++			defer foreign.Close()
++			source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++				sourceRequests.Add(1)
++				http.Redirect(w, r, foreign.URL+"/capture", http.StatusTemporaryRedirect)
++			}))
++			defer source.Close()
++			cfg := &HTTPTransportConfig{URL: source.URL + "/mcp"}
++			switch credential {
++			case "custom":
++				cfg.Headers = map[string]string{"X-Upstream-Key": "controlled-secret"}
++			case "bearer":
++				cfg.Headers = map[string]string{"Authorization": "Bearer controlled-secret"}
++			case "broker":
++				cfg.BrokeredAuth = &BrokeredAuth{Header: "X-Upstream-Key", Format: "{token}", Token: "controlled-secret"}
++			case "oauth":
++				cfg.UseOAuth, cfg.OAuthConfig = true, oauthTestConfig()
++			}
++			client, err := CreateHTTPClient(cfg)
++			require.NoError(t, err)
++			defer client.Close()
++			ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
++			defer cancel()
++			require.NoError(t, client.Start(ctx))
++			_, err = client.Initialize(ctx, mcp.InitializeRequest{})
++			require.Error(t, err)
++			require.Positive(t, sourceRequests.Load())
++			require.Zero(t, foreignRequests.Load(), "no request or credential may reach the foreign origin")
++		})
++	}
++}
++
++func TestGatewayHTTPHeadersAllowSameOriginRedirect(t *testing.T) {
++	var captured atomic.Bool
++	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if r.URL.Path == "/mcp" {
++			http.Redirect(w, r, "/accepted", http.StatusTemporaryRedirect)
++			return
++		}
++		captured.Store(r.Header.Get("X-Upstream-Key") == "controlled-secret")
++		var request struct {
++			ID json.RawMessage `json:"id"`
++		}
++		_ = json.NewDecoder(r.Body).Decode(&request)
++		w.Header().Set("Content-Type", "application/json")
++		_ = json.NewEncoder(w).Encode(map[string]any{"jsonrpc": "2.0", "id": request.ID,
++			"result": map[string]any{"protocolVersion": mcp.LATEST_PROTOCOL_VERSION, "capabilities": map[string]any{},
++				"serverInfo": map[string]any{"name": "same-origin", "version": "1"}}})
++	}))
++	defer source.Close()
++	client, err := CreateHTTPClient(&HTTPTransportConfig{URL: source.URL + "/mcp", Headers: map[string]string{"X-Upstream-Key": "controlled-secret"}})
++	require.NoError(t, err)
++	defer client.Close()
++	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
++	defer cancel()
++	require.NoError(t, client.Start(ctx))
++	_, err = client.Initialize(ctx, mcp.InitializeRequest{})
++	require.NoError(t, err)
++	require.True(t, captured.Load())
++}
++
++func TestGatewaySSEHeadersRefuseForeignMessageEndpoint(t *testing.T) {
++	var foreignRequests atomic.Int32
++	foreign := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		foreignRequests.Add(1)
++		w.WriteHeader(http.StatusAccepted)
++	}))
++	defer foreign.Close()
++	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		w.Header().Set("Content-Type", "text/event-stream")
++		_, _ = fmt.Fprintf(w, "event: endpoint\ndata: %s/message\n\n", foreign.URL)
++		w.(http.Flusher).Flush()
++		<-r.Context().Done()
++	}))
++	defer source.Close()
++	client, err := CreateSSEClient(&HTTPTransportConfig{URL: source.URL + "/sse", Headers: map[string]string{"X-Upstream-Key": "controlled-secret"}})
++	require.NoError(t, err)
++	defer client.Close()
++	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
++	defer cancel()
++	err = client.Start(ctx)
++	if err == nil {
++		_, err = client.Initialize(ctx, mcp.InitializeRequest{})
++	}
++	require.Error(t, err)
++	require.Zero(t, foreignRequests.Load(), "foreign SSE message endpoints must never receive a request")
++}
+diff --git a/internal/transport/session_auth.go b/internal/transport/session_auth.go
+new file mode 100644
+index 0000000..2105044
+--- /dev/null
++++ b/internal/transport/session_auth.go
+@@ -0,0 +1,33 @@
++package transport
++
++import (
++	"context"
++	"fmt"
++	"net/http"
++	"net/url"
++)
++
++// Upstream credentials may change after refresh, but their destination may not.
++// Guarding the actual request also protects static/custom headers, directory
++// OAuth clients and SSE message endpoints from cross-origin forwarding.
++type sessionAuthTransport struct {
++	next   http.RoundTripper
++	origin *url.URL
++	header func(context.Context) (string, error)
++}
++
++func (t *sessionAuthTransport) RoundTrip(r *http.Request) (*http.Response, error) {
++	if r.URL.Scheme != t.origin.Scheme || r.URL.Host != t.origin.Host {
++		return nil, fmt.Errorf("session credential destination does not match the upstream origin")
++	}
++	if t.header == nil {
++		return t.next.RoundTrip(r)
++	}
++	header, err := t.header(r.Context())
++	if err != nil {
++		return nil, err
++	}
++	copy := r.Clone(r.Context())
++	copy.Header.Set("Authorization", header)
++	return t.next.RoundTrip(copy)
++}
+diff --git a/internal/transport/session_auth_test.go b/internal/transport/session_auth_test.go
+new file mode 100644
+index 0000000..ad84458
+--- /dev/null
++++ b/internal/transport/session_auth_test.go
+@@ -0,0 +1,37 @@
++package transport
++
++import (
++	"context"
++	"github.com/stretchr/testify/require"
++	"net/http"
++	"net/url"
++	"testing"
++)
++
++type gatewayRoundTripFunc func(*http.Request) (*http.Response, error)
++
++func (f gatewayRoundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
++
++func TestGatewaySessionCredentialsRefreshAndStayOnOrigin(t *testing.T) {
++	origin, err := url.Parse("https://fixture.invalid/mcp")
++	require.NoError(t, err)
++	token := "first"
++	calls := 0
++	transport := &sessionAuthTransport{origin: origin, header: func(context.Context) (string, error) { calls++; return "Bearer " + token, nil }, next: gatewayRoundTripFunc(func(r *http.Request) (*http.Response, error) {
++		require.Equal(t, "Bearer "+token, r.Header.Get("Authorization"))
++		return &http.Response{StatusCode: 200}, nil
++	})}
++	request, err := http.NewRequestWithContext(t.Context(), "POST", origin.String(), nil)
++	require.NoError(t, err)
++	_, err = transport.RoundTrip(request)
++	require.NoError(t, err)
++	token = "rotated"
++	_, err = transport.RoundTrip(request)
++	require.NoError(t, err)
++	require.Empty(t, request.Header.Get("Authorization"), "caller request remains untouched")
++	foreign, err := http.NewRequestWithContext(t.Context(), "POST", "https://other.invalid/message", nil)
++	require.NoError(t, err)
++	_, err = transport.RoundTrip(foreign)
++	require.ErrorContains(t, err, "destination")
++	require.Equal(t, 2, calls, "foreign destinations never fetch credentials")
++}
+diff --git a/internal/upstream/core/oauth_cancel.go b/internal/upstream/core/oauth_cancel.go
+new file mode 100644
+index 0000000..4a10d76
+--- /dev/null
++++ b/internal/upstream/core/oauth_cancel.go
+@@ -0,0 +1,62 @@
++package core
++
++import (
++	"context"
++	"fmt"
++	"sync"
++)
++
++func (c *Client) beginOAuthFlow(parent context.Context) (context.Context, func(), error) {
++	c.oauthFlowMu.Lock()
++	defer c.oauthFlowMu.Unlock()
++	if c.oauthFlowCancel != nil {
++		return nil, nil, fmt.Errorf("OAuth authorization already in progress")
++	}
++	ctx, cancel := context.WithCancel(parent)
++	done := make(chan struct{})
++	c.oauthFlowCancel, c.oauthFlowDone = cancel, done
++	finish := sync.OnceFunc(func() {
++		cancel()
++		c.oauthFlowMu.Lock()
++		c.oauthFlowCancel = nil
++		close(done)
++		c.oauthFlowMu.Unlock()
++	})
++	return ctx, finish, nil
++}
++
++// A successful cancellation waits until the callback state is unregistered
++// and any in-progress exchange has observed cancellation.
++func (c *Client) CancelOAuthFlow(ctx context.Context) (bool, error) {
++	c.oauthFlowMu.Lock()
++	cancel, done := c.oauthFlowCancel, c.oauthFlowDone
++	c.oauthFlowMu.Unlock()
++	if cancel == nil {
++		return false, nil
++	}
++	cancel()
++	select {
++	case <-done:
++		return true, nil
++	case <-ctx.Done():
++		return true, ctx.Err()
++	}
++}
++
++func (c *Client) WaitOAuthFlow(ctx context.Context) (bool, error) {
++	c.oauthFlowMu.Lock()
++	done := c.oauthFlowDone
++	c.oauthFlowMu.Unlock()
++	if done == nil {
++		return false, nil
++	}
++	select {
++	case <-done:
++		c.oauthMu.RLock()
++		completed := c.oauthCompleted
++		c.oauthMu.RUnlock()
++		return completed, nil
++	case <-ctx.Done():
++		return false, ctx.Err()
++	}
++}
+diff --git a/internal/upstream/core/oauth_cancel_test.go b/internal/upstream/core/oauth_cancel_test.go
+new file mode 100644
+index 0000000..333bd27
+--- /dev/null
++++ b/internal/upstream/core/oauth_cancel_test.go
+@@ -0,0 +1,26 @@
++package core
++
++import (
++	"github.com/stretchr/testify/require"
++	"testing"
++)
++
++func TestGatewayOAuthCancelWaitsForCleanup(t *testing.T) {
++	client := &Client{}
++	ctx, finish, err := client.beginOAuthFlow(t.Context())
++	require.NoError(t, err)
++	_, _, err = client.beginOAuthFlow(t.Context())
++	require.Error(t, err)
++	done := make(chan struct{})
++	go func() { defer close(done); <-ctx.Done(); finish() }()
++	cancelled, err := client.CancelOAuthFlow(t.Context())
++	require.NoError(t, err)
++	require.True(t, cancelled)
++	<-done
++	cancelled, err = client.CancelOAuthFlow(t.Context())
++	require.NoError(t, err)
++	require.False(t, cancelled)
++	_, finish, err = client.beginOAuthFlow(t.Context())
++	require.NoError(t, err)
++	finish()
++}
+diff --git a/internal/upstream/core/session_client.go b/internal/upstream/core/session_client.go
+new file mode 100644
+index 0000000..9245c91
+--- /dev/null
++++ b/internal/upstream/core/session_client.go
+@@ -0,0 +1,48 @@
++package core
++
++import (
++	"context"
++	"fmt"
++	"time"
++
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/oauth"
++)
++
++// NewSessionClient creates a distinct MCP transport/process while keeping the
++// server's existing configuration. Only the directory client owns OAuth flows
++// and refresh; child transports read the current access token for each request.
++func (c *Client) NewSessionClient(id string) (*Client, error) {
++	child, err := NewClient(id, c.config, c.logger, nil, c.globalConfig, c.storage, c.secretResolver)
++	if err != nil {
++		return nil, err
++	}
++	child.sessionParent = c
++	return child, nil
++}
++
++func (c *Client) sessionUsesOAuth() bool {
++	return c.sessionParent != nil && (c.config.OAuth != nil || c.sessionParent.GetOAuthHandler() != nil)
++}
++
++func (c *Client) sharedOAuthHeader(ctx context.Context) (string, error) {
++	c.refreshMu.Lock()
++	defer c.refreshMu.Unlock()
++	if c.storage == nil {
++		return "", fmt.Errorf("OAuth token storage is unavailable")
++	}
++	key := oauth.GenerateServerKey(c.config.Name, c.config.URL)
++	record, err := c.storage.GetOAuthToken(key)
++	if err != nil || record.AccessToken == "" {
++		return "", fmt.Errorf("OAuth sign-in required for %s", c.config.Name)
++	}
++	if !record.ExpiresAt.IsZero() && !record.ExpiresAt.After(time.Now()) {
++		if err := c.refreshOAuthTokenDirect(ctx); err != nil {
++			return "", err
++		}
++		record, err = c.storage.GetOAuthToken(key)
++		if err != nil {
++			return "", err
++		}
++	}
++	return "Bearer " + record.AccessToken, nil
++}
+diff --git a/internal/upstream/gateway_control.go b/internal/upstream/gateway_control.go
+new file mode 100644
+index 0000000..5e4d1e7
+--- /dev/null
++++ b/internal/upstream/gateway_control.go
+@@ -0,0 +1,48 @@
++package upstream
++
++import (
++	"context"
++	"fmt"
++
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/upstream/managed"
++)
++
++func (m *Manager) GatewayState() managed.GatewayState {
++	state := m.gateway.State()
++	m.mu.RLock()
++	defer m.mu.RUnlock()
++	for _, client := range m.clients {
++		state.IsolatedSessions += client.IsolatedSessionCount()
++	}
++	return state
++}
++
++func (m *Manager) SetGatewayPaused(paused bool) managed.GatewayState {
++	m.gateway.SetPaused(paused)
++	return m.GatewayState()
++}
++
++func (m *Manager) CloseMCPSession(sessionID string) {
++	m.mu.RLock()
++	clients := make([]*managed.Client, 0, len(m.clients))
++	for _, client := range m.clients {
++		clients = append(clients, client)
++	}
++	m.mu.RUnlock()
++	for _, client := range clients {
++		client.CloseMCPSession(sessionID)
++	}
++}
++
++func (m *Manager) CancelOAuthFlow(ctx context.Context, name string) (bool, error) {
++	client, ok := m.GetClient(name)
++	if !ok {
++		return false, fmt.Errorf("server not found: %s", name)
++	}
++	return client.CancelOAuthFlow(ctx)
++}
++
++func (m *Manager) StopGateway(ctx context.Context) error {
++	m.gateway.CancelCalls()
++	return m.ShutdownAll(ctx)
++}
+diff --git a/internal/upstream/managed/gateway_control.go b/internal/upstream/managed/gateway_control.go
+new file mode 100644
+index 0000000..7700704
+--- /dev/null
++++ b/internal/upstream/managed/gateway_control.go
+@@ -0,0 +1,76 @@
++package managed
++
++import (
++	"context"
++	"errors"
++	"sync"
++)
++
++var ErrGatewayPaused = errors.New("GATEWAY_PAUSED: new tool calls are paused")
++
++type GatewayState struct {
++	Paused           bool `json:"paused"`
++	InFlight         int  `json:"in_flight"`
++	IsolatedSessions int  `json:"isolated_sessions"`
++}
++
++// GatewayControl belongs to the upstream manager, and is handed to every
++// managed client. Admission and pause share a mutex so pause cannot report
++// success while a later call sneaks past its boundary.
++type GatewayControl struct {
++	mu       sync.Mutex
++	paused   bool
++	inFlight int
++	nextID   uint64
++	calls    map[uint64]context.CancelFunc
++}
++
++func (g *GatewayControl) SetPaused(paused bool) {
++	g.mu.Lock()
++	g.paused = paused
++	g.mu.Unlock()
++}
++
++func (g *GatewayControl) State() GatewayState {
++	g.mu.Lock()
++	defer g.mu.Unlock()
++	return GatewayState{Paused: g.paused, InFlight: g.inFlight}
++}
++
++func (mc *Client) SetGatewayControl(g *GatewayControl) {
++	mc.gateway = g
++}
++
++func (g *GatewayControl) EnterContext(parent context.Context) (context.Context, func(), error) {
++	if g == nil {
++		return parent, func() {}, nil
++	}
++	g.mu.Lock()
++	defer g.mu.Unlock()
++	if g.paused {
++		return nil, nil, ErrGatewayPaused
++	}
++	ctx, cancel := context.WithCancel(parent)
++	g.nextID++
++	id := g.nextID
++	if g.calls == nil {
++		g.calls = make(map[uint64]context.CancelFunc)
++	}
++	g.calls[id] = cancel
++	g.inFlight++
++	return ctx, sync.OnceFunc(func() {
++		cancel()
++		g.mu.Lock()
++		delete(g.calls, id)
++		g.inFlight--
++		g.mu.Unlock()
++	}), nil
++}
++func (g *GatewayControl) CancelCalls() {
++	g.mu.Lock()
++	defer g.mu.Unlock()
++	g.paused = true
++	for _, cancel := range g.calls {
++		cancel()
++	}
++}
+diff --git a/internal/upstream/managed/gateway_control_test.go b/internal/upstream/managed/gateway_control_test.go
+new file mode 100644
+index 0000000..fd6616f
+--- /dev/null
++++ b/internal/upstream/managed/gateway_control_test.go
+@@ -0,0 +1,46 @@
++package managed
++
++import (
++	"context"
++	"errors"
++	"github.com/stretchr/testify/require"
++	"sync"
++	"testing"
++)
++
++func TestGatewayPauseDrainAndForceCancellation(t *testing.T) {
++	var gate GatewayControl
++	ctx, release, err := gate.EnterContext(t.Context())
++	require.NoError(t, err)
++	gate.SetPaused(true)
++	require.Equal(t, 1, gate.State().InFlight)
++	_, _, err = gate.EnterContext(t.Context())
++	require.True(t, errors.Is(err, ErrGatewayPaused))
++	require.NoError(t, ctx.Err(), "pause must let existing work finish")
++	release()
++	release()
++	require.Equal(t, 0, gate.State().InFlight)
++	gate.SetPaused(false)
++	ctx, release, err = gate.EnterContext(t.Context())
++	require.NoError(t, err)
++	gate.CancelCalls()
++	require.ErrorIs(t, ctx.Err(), context.Canceled)
++	release()
++	require.Equal(t, 0, gate.State().InFlight)
++}
++
++func TestGatewayConcurrentAdmissionsAccountExactly(t *testing.T) {
++	var gate GatewayControl
++	var wg sync.WaitGroup
++	for range 100 {
++		wg.Go(func() {
++			_, release, err := gate.EnterContext(t.Context())
++			if err == nil {
++				release()
++				release()
++			}
++		})
++	}
++	wg.Wait()
++	require.Equal(t, 0, gate.State().InFlight)
++}
+diff --git a/internal/upstream/managed/gateway_policy.go b/internal/upstream/managed/gateway_policy.go
+new file mode 100644
+index 0000000..b97f8ac
+--- /dev/null
++++ b/internal/upstream/managed/gateway_policy.go
+@@ -0,0 +1,30 @@
++package managed
++
++import (
++	"errors"
++	"fmt"
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/storage"
++)
++
++// This final local policy check also covers REST history replay, which bypasses
++// the MCP wrapper. Unknown tools still receive the upstream's own response.
++func (mc *Client) gatewayToolPolicy(name string) error {
++	cfg := mc.GetConfig()
++	if cfg == nil || !cfg.Enabled {
++		return fmt.Errorf("server is disabled")
++	}
++	if cfg.Quarantined || !cfg.IsToolAllowedByConfig(name) {
++		return fmt.Errorf("tool is disabled by server policy")
++	}
++	if mc.storage == nil {
++		return fmt.Errorf("tool policy storage unavailable")
++	}
++	record, err := mc.storage.GetToolApproval(cfg.Name, name)
++	if err != nil && !errors.Is(err, storage.ErrToolApprovalNotFound) {
++		return fmt.Errorf("tool policy could not be checked: %w", err)
++	}
++	if record != nil && record.Disabled {
++		return fmt.Errorf("tool is disabled")
++	}
++	return nil
++}
+diff --git a/internal/upstream/managed/session_clients.go b/internal/upstream/managed/session_clients.go
+new file mode 100644
+index 0000000..a31e866
+--- /dev/null
++++ b/internal/upstream/managed/session_clients.go
+@@ -0,0 +1,229 @@
++package managed
++
++import (
++	"context"
++	"crypto/sha256"
++	"encoding/hex"
++	"fmt"
++	"strings"
++	"sync"
++	"time"
++
++	mcpserver "github.com/mark3labs/mcp-go/server"
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/auth"
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/upstream/core"
++)
++
++const sessionIdleTimeout = 15 * time.Minute
++
++type sessionClient struct {
++	client *core.Client
++	ready  chan struct{}
++	err    error
++	cancel context.CancelFunc
++	timer  *time.Timer
++	active int
++}
++
++// SessionKey binds server-side session identity to its authenticated caller.
++// REST management uses a separate, stable workspace from every agent session.
++// An agent REST call without a protocol session is refused for isolated servers.
++func SessionKey(ctx context.Context) (string, error) {
++	identity := auth.AuthContextFromContext(ctx)
++	if identity == nil || identity.Anonymous {
++		return "", fmt.Errorf("isolated calls require an authenticated session")
++	}
++	owner := identity.Type + ":" + identity.AgentName + ":" + identity.TokenPrefix + ":" + identity.UserID
++	if session := mcpserver.ClientSessionFromContext(ctx); session != nil {
++		return owner + ":mcp:" + session.SessionID(), nil
++	}
++	if identity.IsAdmin() {
++		return owner + ":management", nil
++	}
++	return "", fmt.Errorf("isolated agent calls require an MCP session; use /mcp/call or /mcp/all")
++}
++
++func (mc *Client) acquireSession(ctx context.Context) (*core.Client, func(), error) {
++	key, err := SessionKey(ctx)
++	if err != nil {
++		return nil, nil, err
++	}
++	mc.sessionMu.Lock()
++	if mc.sessionsClosing || !mc.IsConnected() {
++		mc.sessionMu.Unlock()
++		return nil, nil, fmt.Errorf("server disconnected before session admission")
++	}
++	if mc.sessions == nil {
++		mc.sessions = make(map[string]*sessionClient)
++	}
++	entry := mc.sessions[key]
++	if entry == nil {
++		lifetime, cancel := context.WithCancel(context.Background())
++		entry = &sessionClient{ready: make(chan struct{}), cancel: cancel}
++		mc.sessions[key] = entry
++		digest := sha256.Sum256([]byte(key))
++		id := mc.id + "-session-" + hex.EncodeToString(digest[:8])
++		go mc.connectSession(lifetime, id, entry)
++	}
++	if entry.timer != nil {
++		entry.timer.Stop()
++	}
++	entry.active++
++	mc.sessionMu.Unlock()
++	release := func() { mc.releaseSession(key, entry) }
++	select {
++	case <-ctx.Done():
++		release()
++		mc.expireSession(key, entry)
++		return nil, nil, ctx.Err()
++	case <-entry.ready:
++		if entry.err != nil {
++			release()
++			mc.expireSession(key, entry)
++			return nil, nil, entry.err
++		}
++		return entry.client, release, nil
++	}
++}
++
++func (mc *Client) connectSession(ctx context.Context, id string, entry *sessionClient) {
++	defer close(entry.ready)
++	entry.client, entry.err = mc.coreClient.NewSessionClient(id)
++	if entry.err != nil {
++		return
++	}
++	deadline := 30 * time.Second
++	if cfg := mc.GetConfig(); cfg.InitTimeout != nil && cfg.InitTimeout.Duration() > 0 {
++		deadline = cfg.InitTimeout.Duration()
++	}
++	connectCtx, cancel := context.WithTimeout(ctx, deadline)
++	defer cancel()
++	entry.err = entry.client.Connect(connectCtx)
++}
++
++func (mc *Client) releaseSession(key string, entry *sessionClient) {
++	mc.sessionMu.Lock()
++	defer mc.sessionMu.Unlock()
++	entry.active--
++	if mc.sessions[key] == entry && entry.active == 0 {
++		entry.timer = time.AfterFunc(sessionIdleTimeout, func() { mc.expireSession(key, entry) })
++	}
++}
++
++func (mc *Client) expireSession(key string, entry *sessionClient) {
++	mc.sessionMu.Lock()
++	if mc.sessions[key] != entry || entry.active > 0 {
++		mc.sessionMu.Unlock()
++		return
++	}
++	delete(mc.sessions, key)
++	mc.sessionMu.Unlock()
++	closeSessionClient(entry)
++}
++
++func closeSessionClient(entry *sessionClient) {
++	entry.cancel()
++	if entry.timer != nil {
++		entry.timer.Stop()
++	}
++	<-entry.ready
++	if entry.client != nil {
++		_ = entry.client.Disconnect()
++	}
++}
++
++func (mc *Client) CloseSession(key string) {
++	mc.sessionMu.Lock()
++	entry := mc.sessions[key]
++	delete(mc.sessions, key)
++	mc.sessionMu.Unlock()
++	if entry != nil {
++		closeSessionClient(entry)
++	}
++}
++
++func (mc *Client) closeSessions() {
++	mc.sessionMu.Lock()
++	entries := mc.sessions
++	mc.sessions = nil
++	mc.sessionMu.Unlock()
++	var wg sync.WaitGroup
++	for _, entry := range entries {
++		wg.Go(func() { closeSessionClient(entry) })
++	}
++	wg.Wait()
++}
++
++func (mc *Client) IsolatedSessionCount() int {
++	mc.sessionMu.Lock()
++	defer mc.sessionMu.Unlock()
++	return len(mc.sessions)
++}
++
++func (mc *Client) CloseMCPSession(sessionID string) {
++	mc.sessionMu.Lock()
++	var keys []string
++	for key := range mc.sessions {
++		if strings.HasSuffix(key, ":mcp:"+sessionID) {
++			keys = append(keys, key)
++		}
++	}
++	mc.sessionMu.Unlock()
++	for _, key := range keys {
++		mc.CloseSession(key)
++	}
++}
++
++func (mc *Client) CancelOAuthFlow(ctx context.Context) (bool, error) {
++	mc.oauthLoginMu.Lock()
++	login := mc.oauthLogin
++	mc.oauthLoginMu.Unlock()
++	if login == nil {
++		return mc.coreClient.CancelOAuthFlow(ctx)
++	}
++	pending, err := login.CancelOAuthFlow(ctx)
++	if err == nil {
++		mc.ClearManualOAuthClient(login)
++	}
++	return pending, err
++}
++
++func (mc *Client) SetManualOAuthClient(client *core.Client) error {
++	mc.oauthLoginMu.Lock()
++	defer mc.oauthLoginMu.Unlock()
++	if mc.oauthLogin != nil {
++		return fmt.Errorf("OAuth authorization already in progress")
++	}
++	mc.oauthLogin = client
++	return nil
++}
++
++func (mc *Client) ClearManualOAuthClient(client *core.Client) {
++	mc.oauthLoginMu.Lock()
++	if mc.oauthLogin == client {
++		mc.oauthLogin = nil
++	}
++	mc.oauthLoginMu.Unlock()
++}
++
++// A failed isolated transport must not evict the directory connection or peers.
++func (mc *Client) discardSessionClient(client *core.Client) {
++	mc.sessionMu.Lock()
++	var discarded *sessionClient
++	for key, entry := range mc.sessions {
++		select {
++		case <-entry.ready:
++		default:
++			continue
++		}
++		if entry.client == client {
++			delete(mc.sessions, key)
++			discarded = entry
++			break
++		}
++	}
++	mc.sessionMu.Unlock()
++	if discarded != nil {
++		closeSessionClient(discarded)
++	}
++}

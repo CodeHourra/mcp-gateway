@@ -1,0 +1,24 @@
+{
+  "evidence_directory": "/private/tmp/mcp-gateway-idle-probe-3otnmr6z",
+  "core": "/private/tmp/mcp-gateway-mcpproxy-clean-patched",
+  "configured_idle_seconds": 900,
+  "passed": true,
+  "session_pid": 95625,
+  "state_before": {
+    "paused": false,
+    "in_flight": 0,
+    "isolated_sessions": 1
+  },
+  "started_at": "2026-09-07T00:05:20+0800",
+  "elapsed_seconds": 901.786,
+  "state_after": {
+    "paused": false,
+    "in_flight": 0,
+    "isolated_sessions": 0
+  },
+  "session_process_alive": false,
+  "core_exit": 0,
+  "core_sha256": "ab8a6ec78c8bf986daa5ec64d18dd4c62bc51f00b9ed67ebf37e942a52caa58e",
+  "tested_patch_sha256": "bc28eeda6c36f0a2b9a51b51b43b4a2fce1cc9018541324e738a884219dd7623",
+  "provenance_note": "This running binary preceded the later full-schema/origin-guard patch additions; the session idle timer and cleanup code were unchanged by those additions."
+}

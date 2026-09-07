@@ -1,0 +1,129 @@
+{
+  "status": "native_qa_completed_fixtures_stopped",
+  "date": "2026-09-07",
+  "static": {
+    "pid": 50784,
+    "port": 63832,
+    "endpoints": {
+      "/bearer/mcp": {
+        "url": "http://127.0.0.1:63832/bearer/mcp",
+        "expected": {
+          "Authorization": "Bearer gateway-native-bearer-fixture"
+        }
+      },
+      "/api-key/mcp": {
+        "url": "http://127.0.0.1:63832/api-key/mcp",
+        "expected": {
+          "X-API-Key": "gateway-native-api-fixture"
+        }
+      },
+      "/headers/mcp": {
+        "url": "http://127.0.0.1:63832/headers/mcp",
+        "expected": {
+          "X-API-Key": "gateway-native-api-fixture",
+          "X-Tenant": "native-fixture-team",
+          "X-Trace-Label": "native-form-proof"
+        }
+      }
+    },
+    "evidence": "/private/tmp/mcp-gateway-native-auth-fixtures-20260907/headers.jsonl"
+  },
+  "oauth": {
+    "pid": 79576,
+    "port": 63949,
+    "url": "http://127.0.0.1:63949/mcp",
+    "discovery": "http://127.0.0.1:63949/.well-known/oauth-authorization-server",
+    "username": "testuser",
+    "password": "testpass",
+    "client_id": "",
+    "scopes": "",
+    "log": "/private/tmp/mcp-gateway-native-auth-fixtures-20260907/oauth-server.log"
+  },
+  "readiness": {
+    "results": [
+      {
+        "endpoint": "/bearer/mcp",
+        "authorized": false,
+        "status": 401
+      },
+      {
+        "endpoint": "/bearer/mcp",
+        "authorized": true,
+        "status": 200
+      },
+      {
+        "endpoint": "/api-key/mcp",
+        "authorized": false,
+        "status": 401
+      },
+      {
+        "endpoint": "/api-key/mcp",
+        "authorized": true,
+        "status": 200
+      },
+      {
+        "endpoint": "/headers/mcp",
+        "authorized": false,
+        "status": 401
+      },
+      {
+        "endpoint": "/headers/mcp",
+        "authorized": true,
+        "status": 200
+      }
+    ],
+    "preflight_event_count": 6
+  },
+  "boundary": "Readiness is direct fixture probing only. Native form wiring is validated separately by QA. All credential values here are public controlled-test markers; no real account is used.",
+  "cleanup": "After QA confirms completion, send SIGTERM only to the recorded static and OAuth PIDs, wait for both processes, then archive the redacted header-match events.",
+  "oauth_browser_steps": "Native app: save OAuth service with blank Client ID/Scopes, then open browser login. The official fixture login page pre-fills testuser/testpass and checked consent, then automatically submits Approve after 5 seconds unless cancelled. It also accepts the equivalent controlled form POST. This automation is test-provider behavior, not a claim of explicit user consent.",
+  "fixture_restart": {
+    "previous_static_pid": 78058,
+    "previous_static_exit_code": 0,
+    "new_static_pid": 50784,
+    "unchanged_port": 63832,
+    "reason": "Add only Authorization presence/length/reference/prefix booleans for QA diagnosis"
+  },
+  "native_environment_finding": {
+    "confirmed_by_root": true,
+    "cause": "Native test app was launched with CI=true; static KeyringProvider.IsAvailable intentionally returns false in CI so secret placeholders remain unresolved.",
+    "action": "Root removes CI from the native app and production probe; HEADLESS may remain. No core patch change.",
+    "native_retest_pending": false,
+    "transport_retest": {
+      "confirmed": true,
+      "paths": [
+        "/bearer/mcp",
+        "/api-key/mcp",
+        "/headers/mcp"
+      ],
+      "observation": "All expected headers matched after CI was removed; tool invocation and native UI acceptance are recorded independently by QA."
+    }
+  },
+  "oauth_fixture_auto_submit": {
+    "confirmed": true,
+    "delay_seconds": 5,
+    "source": ".cache/mcpproxy-src/tests/oauthserver/templates/login.html:307-365",
+    "native_behavior": "main.go opens the returned URL in the system browser and removes authURL/browserOpened before returning to the WebView. QA observed connected=true/authenticated=true and tokenExpiry without a manual consent POST.",
+    "correction": "The initial helper inspection checked only the GET handler and missed template JavaScript. That incomplete no-auto-approval statement is superseded by this verified behavior."
+  },
+  "environment_fixture": {
+    "path": "patches/mcpproxy/probes/native_env_fixture.py",
+    "tool": "check_env",
+    "evidence": "/private/tmp/mcp-gateway-native-auth-fixtures-20260907/native-env.jsonl",
+    "scope": "Three public controlled markers including spaces/equals signs and Chinese; results contain match booleans only. Direct missing/matching readiness cases passed without writing QA evidence."
+  },
+  "cleanup_result": {
+    "completed_at": "2026-09-07T06:51:58+0800",
+    "static_pid": 50784,
+    "oauth_pid": 79576,
+    "static_exit_code": 0,
+    "oauth_exit_code": 0,
+    "verified_fixture_pids_absent": true,
+    "verified_ports_free": [
+      63832,
+      63949
+    ],
+    "native_app_profile_and_keychain": "Owned and cleaned by root; not touched by this fixture cleanup."
+  },
+  "archived_fixture_evidence": "tests/acceptance/native-auth-fixture-observations-2026-09-07.json"
+}
