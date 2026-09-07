@@ -23,7 +23,7 @@ import (
 	"github.com/zalando/go-keyring"
 )
 
-const Version = "0.1.7-dev"
+const Version = "0.1.8-dev"
 
 type Settings struct {
 	Theme            string `json:"theme"`

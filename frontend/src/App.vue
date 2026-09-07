@@ -4,6 +4,7 @@ import ServiceForm from './ServiceForm.vue'
 import ToolsList from './ToolsList.vue'
 import ChoiceGroup from './ChoiceGroup.vue'
 import FullConfigEditor from './FullConfigEditor.vue'
+import AgentConnections from './AgentConnections.vue'
 import { emptyService, errorMessage, request, type Activity, type Agent, type AgentPreview, type Backup, type ImportItem, type ImportPreview, type ImportResult, type ScannedImportSource, type OAuthResult, type Service, type ServiceConfig, type Settings, type Snapshot, type Theme, type Tool } from './api'
 
 type Page = 'services' | 'tools' | 'import' | 'agents' | 'activity' | 'settings' | 'editor'
@@ -20,10 +21,11 @@ const busy = ref(false)
 const feedback = ref('')
 const actionError = ref('')
 const selectedId = ref('')
+const expandedServices = reactive(new Set<string>())
 const inspector = ref<HTMLElement>()
 let selectedTrigger: HTMLElement | undefined
 const serviceMode = ref<'visual' | 'json'>('visual')
-const serviceModeOptions = [{ value: 'visual', label: '工具列表' }, { value: 'json', label: 'JSON 配置' }] as const
+const serviceModeOptions = [{ value: 'visual', label: '服务列表' }, { value: 'json', label: 'JSON 配置' }] as const
 const tab = ref<'tools' | 'connection' | 'activity'>('tools')
 const serviceSearch = ref('')
 const toolSearch = ref('')
@@ -89,11 +91,15 @@ watch(page, () => {
   if (page.value === 'agents') void loadAgents()
   if (page.value === 'import') void scanImportSources()
 })
-watch(selectedId, () => { toolSearch.value = ''; tab.value = 'tools' })
+watch(selectedId, () => { toolSearch.value = ''; tab.value = 'connection' })
 watch(serviceSearch, () => { if (!filteredServices.value.some(server => server.id === selectedId.value)) selectedId.value = '' })
 watch(activityDetail, async value => { if (value) { await nextTick(); activityDialog.value?.showModal() } else activityDialog.value?.close() })
 
 function groupTools(id: string) { return allTools.value.filter(tool => tool.serviceId === id) }
+function toggleServiceTools(id: string) {
+  if (expandedServices.has(id)) expandedServices.delete(id)
+  else expandedServices.add(id)
+}
 async function selectService(id: string, event: Event) {
   if (selectedId.value === id) { closeService(); return }
   selectedTrigger = event.currentTarget as HTMLElement
@@ -250,7 +256,25 @@ onUnmounted(() => { unmounted = true; window.removeEventListener('gateway:naviga
           <div v-if="loading && !snapshot" class="empty-state" aria-live="polite"><span class="spinner" /><strong>正在读取服务</strong></div>
           <div v-else-if="!services.length && snapshot?.gateway.status === 'starting'" class="empty-state" aria-live="polite"><span class="spinner" /><strong>网关正在启动</strong><p>正在读取服务状态，请稍候。</p></div>
           <div v-else-if="!services.length" class="empty-state"><span class="empty-symbol" aria-hidden="true">▤</span><h2>{{ connectionError ? '服务列表暂不可用' : '从第一个 MCP 服务开始' }}</h2><p>{{ connectionError ? '连接管理接口后，这里将显示已配置的服务与真实状态。' : '添加本地命令或远程地址，也可以从已有 agent 配置导入。' }}</p><div class="actions"><button class="control" @click="page = 'import'">导入配置</button><button class="control primary" @click="beginEdit()">添加服务</button></div></div>
-          <div v-else class="master-detail" :class="{ 'has-selection': selected }"><div class="service-list"><div class="list-caption">{{ filteredServices.length }} 个服务 · 点击服务名称展开详情</div><p v-if="!filteredServices.length" class="empty-state compact">没有匹配的服务</p><section v-for="server in filteredServices" :key="server.id" class="service-group"><button class="service-row" :aria-expanded="selectedId === server.id" @click="selectService(server.id, $event)"><span class="service-symbol" aria-hidden="true">{{ server.name.slice(0, 1).toUpperCase() }}</span><span class="grow"><strong>{{ server.name }}</strong><small>{{ server.transport === 'http' ? 'HTTP' : server.transport }} · {{ server.catalogStatus === 'loading' ? '工具目录待更新' : `${server.toolCount} 个工具` }}</small><span class="state-line" :class="stateClass(server.status)"><span class="status-dot" />{{ stateLabel(server.status) }}</span></span><span class="chevron" aria-hidden="true">{{ selectedId === server.id ? '⌄' : '›' }}</span></button><p v-if="server.catalogStatus === 'loading'" class="callout" role="status">正在等待工具目录，连接后自动更新。</p><template v-else><p v-if="server.catalogStatus === 'cached' || server.catalogStatus === 'unavailable'" class="callout">{{ stateLabel(server.catalogStatus) }} · 连接恢复后可重新读取。</p><ToolsList :tools="groupTools(server.id)" :busy="busy || !connected" @toggle="toggleTool" /></template></section></div>
+          <div v-else class="master-detail" :class="{ 'has-selection': selected }"><div class="service-list">
+            <div class="list-caption">{{ filteredServices.length }} 个服务 · 展开查看工具，配置单独管理</div>
+            <p v-if="!filteredServices.length" class="empty-state compact">没有匹配的服务</p>
+            <section v-for="server in filteredServices" :key="server.id" class="service-group">
+              <div class="service-group-header">
+                <button class="service-row" :aria-expanded="expandedServices.has(server.id)" :aria-controls="`service-tools-${server.id}`" @click="toggleServiceTools(server.id)">
+                  <span class="service-symbol" aria-hidden="true">{{ server.name.slice(0, 1).toUpperCase() }}</span>
+                  <span class="grow"><strong>{{ server.name }}</strong><small>{{ server.transport === 'http' ? 'HTTP' : server.transport }} · {{ server.catalogStatus === 'loading' ? '工具目录待更新' : `${server.toolCount} 个工具` }}</small><span class="state-line" :class="stateClass(server.status)"><span class="status-dot" />{{ stateLabel(server.status) }}</span></span>
+                  <span class="service-expand-label">{{ expandedServices.has(server.id) ? '收起工具' : '展开工具' }}<span class="chevron" aria-hidden="true">{{ expandedServices.has(server.id) ? '⌄' : '›' }}</span></span>
+                </button>
+                <button class="control service-config-button" :aria-expanded="selectedId === server.id" :aria-label="`${server.name} 配置详情`" @click="selectService(server.id, $event)">配置详情</button>
+              </div>
+              <div v-show="expandedServices.has(server.id)" :id="`service-tools-${server.id}`" class="service-tools-panel">
+                <div class="service-tools-heading"><h3>{{ server.name }} 提供的工具</h3><span>点击工具查看参数与调用</span></div>
+                <p v-if="server.catalogStatus === 'loading'" class="callout" role="status">正在等待工具目录，连接后自动更新。</p>
+                <template v-else><p v-if="server.catalogStatus === 'cached' || server.catalogStatus === 'unavailable'" class="callout">{{ stateLabel(server.catalogStatus) }} · 连接恢复后可重新读取。</p><ToolsList :tools="groupTools(server.id)" :busy="busy || !connected" grouped @toggle="toggleTool" /></template>
+              </div>
+            </section>
+          </div>
             <aside v-if="selected" ref="inspector" tabindex="-1" class="inspector" aria-label="选中服务详情"><div class="inspect-header"><div class="inspect-top"><div class="inspect-name"><span class="service-symbol large" aria-hidden="true">{{ selected.name.slice(0, 1).toUpperCase() }}</span><div><h2>{{ selected.name }}</h2><span class="badge" :class="stateClass(selected.status)">{{ stateLabel(selected.status) }}</span></div></div><label class="check-row"><input type="checkbox" :checked="selected.enabled" :disabled="busy || !connected" @change="mutate('setServiceEnabled', { serviceId: selected.id, enabled: ($event.target as HTMLInputElement).checked }, '服务启用状态已更新。')">启用</label></div><div class="meta-line"><code>{{ endpoint(selected) }}</code><span>{{ selected.catalogStatus === 'loading' ? '工具目录待更新' : `${selected.toolCount} 个工具` }}</span></div><p v-if="selected.statusMessage" class="note" :class="{ 'error-text': selected.status === 'error' }">{{ selected.statusMessage }}</p><details v-if="selected.statusDetail" class="connection-detail"><summary>错误详情</summary><pre>{{ selected.statusDetail }}</pre></details><div class="actions service-actions"><button class="control" @click="closeService">收起详情</button><button class="control" @click="beginEdit(selected)">编辑配置</button><button class="control danger" :disabled="busy || !connected" @click="deleteService(selected)">删除服务</button></div></div>
               <div class="tab-bar" role="tablist" aria-label="服务详情"><button v-for="item in [{ id: 'tools', label: '工具' }, { id: 'connection', label: '连接与认证' }, { id: 'activity', label: '活动' }] as const" :key="item.id" role="tab" :aria-selected="tab === item.id" @click="tab = item.id">{{ item.label }}</button></div>
               <div class="panel-body" role="tabpanel">
@@ -297,7 +321,7 @@ onUnmounted(() => { unmounted = true; window.removeEventListener('gateway:naviga
           <div v-else-if="importResult" class="empty-state"><span class="success-symbol" aria-hidden="true">✓</span><h2>导入已完成</h2><p>新增 {{ importResult.added }} 项，合并 {{ importResult.merged }} 项，跳过 {{ importResult.skipped }} 项。</p><p v-if="importResult.backupId" class="note">备份编号：{{ importResult.backupId }}。可在设置中恢复。</p><div class="actions"><button class="control" @click="resetImport">继续导入</button><button class="control primary" @click="page = 'services'">查看服务</button></div></div>
         </section>
 
-        <section v-else-if="page === 'agents'" class="page"><div class="page-head"><div><h1>Agent 接入</h1><p>让每个 agent 通过一个本机网关使用工具。</p></div><button class="control" :disabled="busy" @click="loadAgents">刷新</button></div><div class="endpoint-card"><div><span class="muted">网关入口</span><code>{{ snapshot?.gateway.address || '等待网关启动' }}</code></div><button class="control" :disabled="!snapshot?.gateway.address" @click="copyAddress">复制地址</button></div><p class="note">状态来自当前客户端配置，表示是否已配置接入，不表示当前在线。更新和解除前均提供预览与备份。</p><div v-if="!agents.length" class="empty-state compact">{{ busy ? '正在读取客户端…' : '尚未读取到客户端适配信息。' }}</div><div v-for="agent in agents" :key="agent.id" class="wide-row"><span class="service-symbol" aria-hidden="true">{{ agent.name.slice(0, 1) }}</span><div class="grow"><strong>{{ agent.name }}</strong><small class="address">{{ agent.configPath || '未提供配置位置' }}</small><small>{{ agent.message }}</small></div><span class="badge" :class="stateClass(agent.status)">{{ stateLabel(agent.status) }}<template v-if="agent.disabled"> · 客户端已禁用</template></span><div class="actions"><button class="control" :disabled="busy || !connected || !agent.canConfigure" @click="previewAgent(agent)">{{ agent.status === 'configured' ? '查看 / 更新配置' : agent.status === 'needs_update' ? '更新接入配置' : '配置接入' }}</button><button v-if="agent.canDisconnect" class="control danger" :disabled="busy" @click="previewAgent(agent, true)">解除接入</button></div></div><section v-if="agentPreview" class="preview-panel"><div class="page-head"><div><h2>{{ agentPreview.disconnect ? '解除接入预览' : '配置变更预览' }}</h2><p class="address">{{ agentPreview.path }}</p></div><button class="control" @click="agentPreview = undefined">关闭</button></div><p v-for="warning in agentPreview.warnings" :key="warning" class="warning-text">{{ warning }}</p><div class="diff-grid"><div><h3>当前配置</h3><pre>{{ agentPreview.before || '文件尚不存在' }}</pre></div><div><h3>应用后</h3><pre>{{ agentPreview.after }}</pre></div></div><div class="actions form-actions"><button class="control" :class="agentPreview.disconnect ? 'danger' : 'primary'" :disabled="busy" @click="applyAgent">{{ agentPreview.disconnect ? '备份并解除接入' : '备份并应用配置' }}</button></div></section></section>
+        <section v-else-if="page === 'agents'" class="page"><div class="page-head"><div><h1>Agent 接入</h1><p>让每个 agent 通过一个本机网关使用工具。</p></div><button class="control" :disabled="busy" @click="loadAgents">刷新</button></div><div class="endpoint-card"><div><span class="muted">网关入口</span><code>{{ snapshot?.gateway.address || '等待网关启动' }}</code></div><button class="control" :disabled="!snapshot?.gateway.address" @click="copyAddress">复制地址</button></div><p class="note">状态来自当前客户端配置，表示是否已配置接入，不表示当前在线。更新和解除前均提供预览与备份。</p><div v-if="!agents.length" class="empty-state compact">{{ busy ? '正在读取客户端…' : '尚未读取到客户端适配信息。' }}</div><AgentConnections v-if="agents.length" :agents="agents" :busy="busy" :connected="connected" @preview="previewAgent" /><section v-if="agentPreview" class="preview-panel"><div class="page-head"><div><h2>{{ agentPreview.disconnect ? '解除接入预览' : '配置变更预览' }}</h2><p class="address">{{ agentPreview.path }}</p></div><button class="control" @click="agentPreview = undefined">关闭</button></div><p v-for="warning in agentPreview.warnings" :key="warning" class="warning-text">{{ warning }}</p><div class="diff-grid"><div><h3>当前配置</h3><pre>{{ agentPreview.before || '文件尚不存在' }}</pre></div><div><h3>应用后</h3><pre>{{ agentPreview.after }}</pre></div></div><div class="actions form-actions"><button class="control" :class="agentPreview.disconnect ? 'danger' : 'primary'" :disabled="busy" @click="applyAgent">{{ agentPreview.disconnect ? '备份并解除接入' : '备份并应用配置' }}</button></div></section></section>
 
         <section v-else-if="page === 'activity'" class="page"><div class="page-head"><div><h1>活动</h1><p>查看真实目标、耗时与错误，定位需要处理的问题。</p></div><button class="control" :disabled="busy || !connected" @click="exportDiagnostics">↓ 导出诊断</button></div><label class="search-box"><span aria-hidden="true">⌕</span><input v-model="activitySearch" aria-label="搜索活动" placeholder="搜索服务、工具或错误"></label><p v-if="!visibleActivity.length" class="empty-state">{{ activity.length ? '没有匹配的活动。' : '还没有活动记录。连接或调用服务后，记录会显示在这里。' }}</p><button v-for="item in visibleActivity" :key="item.id" class="activity-row" @click="activityDetail = item"><span class="status-dot" :class="stateClass(item.status)" /><span class="grow"><strong>{{ item.serviceName || '网关' }}<template v-if="item.toolName"> · {{ item.toolName }}</template></strong><small>{{ item.message }}</small></span><span class="activity-meta"><span :class="stateClass(item.status)">{{ stateLabel(item.status) }}</span><small v-if="item.durationMs !== undefined">{{ item.durationMs }} ms</small><small>{{ date(item.time) }}</small></span></button></section>
 

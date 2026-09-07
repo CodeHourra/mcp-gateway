@@ -5,8 +5,8 @@
   <key>CFBundleName</key><string>MCP Gateway</string>
   <key>CFBundleExecutable</key><string>mcp-gateway</string>
   <key>CFBundleIdentifier</key><string>com.mcp-gateway.desktop</string>
-  <key>CFBundleVersion</key><string>8</string>
-  <key>CFBundleShortVersionString</key><string>0.1.7</string>
+  <key>CFBundleVersion</key><string>9</string>
+  <key>CFBundleShortVersionString</key><string>0.1.8</string>
   <key>CFBundleIconFile</key><string>Gateway</string>
   <key>LSMinimumSystemVersion</key><string>15.0</string>
   <key>NSHighResolutionCapable</key><true/>

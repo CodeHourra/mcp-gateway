@@ -6,7 +6,7 @@
 
 ## DMG 安装与实机测试
 
-本地安装包为 `bin/MCP-Gateway-0.1.7-arm64.dmg`，适用于 Apple Silicon / macOS 15 或以上。双击挂载，将 `MCP Gateway.app` 拖入同窗口的 `Applications`，弹出磁盘映像后从「应用程序」打开。
+本地安装包为 `bin/MCP-Gateway-0.1.8-arm64.dmg`，适用于 Apple Silicon / macOS 15 或以上。双击挂载，将 `MCP Gateway.app` 拖入同窗口的 `Applications`，弹出磁盘映像后从「应用程序」打开。
 
 DMG 不做开发者签名或公证，应用保留无需证书的本机 ad-hoc 签名。若 macOS 提示无法验证开发者，按[安装与测试说明](docs/install-and-verify.md)在系统设置中允许这一个应用。安装包内也附有纯文本说明。
 
@@ -19,7 +19,7 @@ DMG 不做开发者签名或公证，应用保留无需证书的本机 ad-hoc �
 ```sh
 ./scripts/build.sh
 ./scripts/package-dmg.sh
-open 'bin/MCP-Gateway-0.1.7-arm64.dmg'
+open 'bin/MCP-Gateway-0.1.8-arm64.dmg'
 ```
 
 脚本固定 Wails `v3.0.0-beta.16`、MCPProxy `v0.65.0`（commit `308a81272844df896b616b886295305d97f90f8d`），应用 [核心补丁](patches/mcpproxy/)，生成前端绑定，执行检查，打包并做本机 ad-hoc 签名。该签名不等于开发者签名或 Apple 公证。应用不会替换 `/Applications` 中任何内容。
@@ -31,7 +31,7 @@ open 'bin/MCP-Gateway-0.1.7-arm64.dmg'
 ## 使用
 
 1. 打开应用，在服务页添加 stdio、HTTP 或 SSE 服务，填写连接信息及认证。命令与工作目录建议使用绝对路径，避免 Finder 启动与终端 PATH 不同。
-2. 在 Tools 页检查真实目录、参数 schema，按需启用或停用工具，并查看完整调用结果。离线服务的目录标记为缓存或不可用。
+2. 服务页默认收起工具，“展开工具”查看分层目录，“配置详情”管理连接与认证；也可在工具页检查真实目录、参数 schema，按需启用或停用工具，并查看完整调用结果。离线服务的目录标记为缓存或不可用。
 3. 打开导入页时，应用会只读扫描 OMP、Claude Code、Cursor、CodeBuddy 和 Codex 的已知用户配置路径；选择检测到的来源后仍需预览、选择并确认，应用不会自动导入。也可手动选择或粘贴 JSON、JSONC、TOML。不同凭证、参数、环境变量和工作目录视为不同连接；应用自己生成的 `mcp-gateway connect` 客户端条目会被阻止，避免把网关接回自身。
 4. 在 Agent 接入页选择 OMP、Claude Code、Cursor、CodeBuddy 或 Codex，预览目标配置变更后再写入。应用保留已有连接及无关配置，不会自动迁移全部客户端。
 

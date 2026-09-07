@@ -1,0 +1,106 @@
+{
+  "passed": true,
+  "scope": "Actual isolated WKWebView, unchanged frontend/backend except test app identity and admin key. Real bundled core, local stdio fixture and temporary agent configs. No real providers, client handshake, OS file-dialog or pixel verification.",
+  "appSHA256": "95f9c1cd0c69e88d165ab6eb8127483803a451246c10d0421181eb14ef05096b",
+  "coreSHA256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
+  "collapsedDefault": {
+    "buttons": [
+      "false",
+      "false"
+    ],
+    "groups": 2,
+    "inspector": false,
+    "visibleTools": 0
+  },
+  "expandedTools": {
+    "grouped": true,
+    "heading": "saved-service 提供的工具",
+    "inspector": false,
+    "visible": true
+  },
+  "toolDraftPreserved": true,
+  "desktopDetail": {
+    "exists": true,
+    "focused": true,
+    "overflow": false,
+    "tab": "连接与认证"
+  },
+  "expandedDetail": {
+    "exists": true,
+    "focused": true
+  },
+  "maskedJSON": {
+    "noRawRef": true,
+    "stored": true
+  },
+  "invalidDraftRetained": true,
+  "narrowLayout": {
+    "agentNameWidths": [
+      557,
+      557,
+      557,
+      557,
+      557
+    ],
+    "clientWidth": 746,
+    "scrollWidth": 746,
+    "width": 761
+  },
+  "agentStatus": [
+    {
+      "name": "Cursor",
+      "status": "已配置接入"
+    },
+    {
+      "name": "Claude Code",
+      "status": "已接入 · 客户端已禁用"
+    },
+    {
+      "name": "CodeBuddy CLI",
+      "status": "配置冲突"
+    },
+    {
+      "name": "Codex",
+      "status": "已接入 · 需更新"
+    },
+    {
+      "name": "OMP",
+      "status": "未接入"
+    }
+  ],
+  "agentGroups": [
+    {
+      "agents": [
+        "cursor"
+      ],
+      "title": "已配置接入 1"
+    },
+    {
+      "agents": [
+        "claude-code",
+        "codebuddy",
+        "codex"
+      ],
+      "title": "需处理 3"
+    },
+    {
+      "agents": [
+        "omp"
+      ],
+      "title": "待接入 1"
+    }
+  ],
+  "agentDisconnectPreservedOtherConfig": true,
+  "draftSurvivedNavigation": true,
+  "removalGuard": true,
+  "fullConfigSavedWithReferenceAndSettings": true,
+  "fileControl": {
+    "chinese": true,
+    "clipped": true,
+    "focused": true
+  },
+  "fileSelection": true,
+  "darkTheme": true,
+  "exitCode": 0,
+  "ownedChildrenGone": true
+}
