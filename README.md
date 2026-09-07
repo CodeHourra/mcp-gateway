@@ -6,7 +6,7 @@
 
 ## DMG 安装与实机测试
 
-本地安装包为 `bin/MCP-Gateway-0.1.5-arm64.dmg`，适用于 Apple Silicon / macOS 15 或以上。双击挂载，将 `MCP Gateway.app` 拖入同窗口的 `Applications`，弹出磁盘映像后从「应用程序」打开。
+本地安装包为 `bin/MCP-Gateway-0.1.6-arm64.dmg`，适用于 Apple Silicon / macOS 15 或以上。双击挂载，将 `MCP Gateway.app` 拖入同窗口的 `Applications`，弹出磁盘映像后从「应用程序」打开。
 
 DMG 不做开发者签名或公证，应用保留无需证书的本机 ad-hoc 签名。若 macOS 提示无法验证开发者，按[安装与测试说明](docs/install-and-verify.md)在系统设置中允许这一个应用。安装包内也附有纯文本说明。
 
@@ -19,7 +19,7 @@ DMG 不做开发者签名或公证，应用保留无需证书的本机 ad-hoc �
 ```sh
 ./scripts/build.sh
 ./scripts/package-dmg.sh
-open 'bin/MCP-Gateway-0.1.5-arm64.dmg'
+open 'bin/MCP-Gateway-0.1.6-arm64.dmg'
 ```
 
 脚本固定 Wails `v3.0.0-beta.16`、MCPProxy `v0.65.0`（commit `308a81272844df896b616b886295305d97f90f8d`），应用 [核心补丁](patches/mcpproxy/)，生成前端绑定，执行检查，打包并做本机 ad-hoc 签名。该签名不等于开发者签名或 Apple 公证。应用不会替换 `/Applications` 中任何内容。
@@ -71,3 +71,5 @@ npm --prefix frontend run check
 选择 MCP 服务后，可直接在详情顶部点击「删除服务」。确认后会先备份网关配置，再删除服务；原始导入文件不受影响。
 
 命令查找会在保留现有 PATH 顺序的基础上补齐已发现的用户工具目录（如 `~/.local/bin`）。连接失败时显示中文提示，可展开「错误详情」查看未截断的脱敏错误。
+
+首页先读取本地已保存的服务，连接状态和工具目录在后台更新；启动时不会先显示成空服务列表。状态为「等待连接状态」时不表示连接成功。

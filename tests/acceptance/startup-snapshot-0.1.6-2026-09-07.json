@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "scope": "Actual isolated WKWebView using unchanged frontend and InitialSnapshot/Snapshot implementations. Test-only overlay changes app identity/admin key and blocks cmd.Start until a gate file exists. No real client configs, credentials, providers or OS pixel claims.",
+  "appSHA256": "476caae0157ab7a455d9e844aa79006d6fadb2ec657cddbe7cc106ad243364fa",
+  "coreSHA256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
+  "rowsObservedAfterLaunchMs": 2646.7,
+  "beforeCoreStart": {
+    "empty": false,
+    "rows": [
+      "Ssaved-servicestdio · 工具目录待更新等待连接状态",
+      "Ddisabled-servicestdio · 工具目录待更新已禁用"
+    ],
+    "text": "MCP 服务主题浅色深色跟随系统网关启动中"
+  },
+  "corePortStillClosed": true,
+  "localRequest": {
+    "durationMs": 1,
+    "gatewayStatus": "starting",
+    "source": "config",
+    "states": [
+      {
+        "name": "saved-service",
+        "status": "loading"
+      },
+      {
+        "name": "disabled-service",
+        "status": "disabled"
+      }
+    ]
+  },
+  "runtimeUIAfterReleaseMs": 5923.8,
+  "afterCoreStart": {
+    "banner": false,
+    "rows": [
+      "Ddisabled-servicestdio · 0 toolsidle",
+      "Ssaved-servicestdio · 0 tools可用"
+    ],
+    "text": "MCP 服务主题浅色深色跟随系统网关运行中"
+  },
+  "exitCode": 0,
+  "ownedChildrenGone": true
+}

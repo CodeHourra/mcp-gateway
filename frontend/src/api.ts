@@ -25,7 +25,7 @@ export interface GatewayState {
   status: string; address: string; version: string; error?: string; activeCalls: number
   paused: boolean; credentialStorage?: string
 }
-export interface Snapshot { gateway: GatewayState; services: Service[]; tools: Tool[]; activity: Activity[]; settings: Settings }
+export interface Snapshot { servicesSource?: 'config' | 'runtime'; gateway: GatewayState; services: Service[]; tools: Tool[]; activity: Activity[]; settings: Settings }
 export interface ImportItem {
   id: string; name: string; transport: Transport; endpoint: string; status: 'new' | 'duplicate' | 'conflict'
   reason: string; differences: string[]; action: 'add' | 'merge' | 'keep_both' | 'skip'; blockedReason?: string; source?: string

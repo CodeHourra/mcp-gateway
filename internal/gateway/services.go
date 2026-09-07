@@ -372,16 +372,47 @@ func decodeToolID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func (m *Manager) Snapshot(ctx context.Context) (any, error) {
+// InitialSnapshot reads only local configuration so first paint never waits for the core.
+func (m *Manager) InitialSnapshot() (Object, error) {
 	m.mu.Lock()
 	status, lastError, settings := m.status, m.lastError, m.settings
 	m.mu.Unlock()
 	gateway := Object{"status": status, "address": m.Address(), "version": Version, "error": lastError, "activeCalls": 0, "paused": false, "credentialStorage": "macOS 钥匙串"}
-	services, toolsList, activities := []any{}, []any{}, []any{}
-	snapshot := Object{"gateway": gateway, "settings": settings, "services": services, "tools": toolsList, "activity": activities}
-	if status != "running" {
+	cfg, err := m.config()
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
+	meta, err := m.metadata()
+	if err != nil {
+		return nil, err
+	}
+	services := []any{}
+	for _, value := range array(cfg["mcpServers"]) {
+		config := object(value)
+		service := serviceFromConfig(config, meta[stringValue(config["name"])])
+		data, _ := json.Marshal(service)
+		out := Object{}
+		_ = json.Unmarshal(data, &out)
+		out["status"], out["catalogStatus"], out["toolCount"] = "loading", "loading", 0
+		out["statusMessage"] = "已读取本地配置，连接状态尚未获取。"
+		if !service.Enabled {
+			out["status"], out["statusMessage"] = "disabled", "服务已禁用。"
+		}
+		services = append(services, out)
+	}
+	return Object{"gateway": gateway, "settings": settings, "services": services, "tools": []any{}, "activity": []any{}, "servicesSource": "config"}, nil
+}
+
+func (m *Manager) Snapshot(ctx context.Context) (any, error) {
+	snapshot, err := m.InitialSnapshot()
+	if err != nil {
+		return nil, err
+	}
+	gateway := object(snapshot["gateway"])
+	if gateway["status"] != "running" {
 		return snapshot, nil
 	}
+	services, toolsList, activities := []any{}, []any{}, []any{}
 	runtime, err := m.API(ctx, http.MethodGet, "/api/v1/servers", nil)
 	if err != nil {
 		return nil, err
@@ -399,9 +430,11 @@ func (m *Manager) Snapshot(ctx context.Context) (any, error) {
 		c := object(v)
 		configs[stringValue(c["name"])] = c
 	}
+	seen := map[string]bool{}
 	for _, v := range array(object(runtime)["servers"]) {
 		r := object(v)
 		name := stringValue(r["name"])
+		seen[name] = true
 		c := configs[name]
 		if c == nil {
 			c = r
@@ -441,6 +474,12 @@ func (m *Manager) Snapshot(ctx context.Context) (any, error) {
 			toolsList = append(toolsList, Object{"id": toolID(name, toolName), "name": toolName, "serviceId": name, "serviceName": name, "description": tool["description"], "enabled": !boolean(tool["disabled"]) && !boolean(tool["config_denied"]), "inputSchema": schema, "catalogStatus": out["catalogStatus"]})
 		}
 	}
+	// Core registration can lag behind saved configuration during startup.
+	for _, local := range array(snapshot["services"]) {
+		if !seen[stringValue(object(local)["id"])] {
+			services = append(services, local)
+		}
+	}
 	state, err := m.API(ctx, http.MethodGet, "/api/v1/gateway", nil)
 	if err != nil {
 		return nil, err
@@ -462,5 +501,6 @@ func (m *Manager) Snapshot(ctx context.Context) (any, error) {
 		activities = append(activities, Object{"id": a["id"], "time": a["timestamp"], "serviceId": a["server_name"], "serviceName": a["server_name"], "toolName": a["tool_name"], "kind": a["type"], "status": a["status"], "durationMs": a["duration_ms"], "message": m.RedactText(message)})
 	}
 	snapshot["services"], snapshot["tools"], snapshot["activity"] = services, toolsList, activities
+	snapshot["servicesSource"] = "runtime"
 	return snapshot, nil
 }
