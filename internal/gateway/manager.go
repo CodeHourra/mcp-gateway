@@ -18,9 +18,11 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/mark3labs/mcp-go/client"
 )
 
-const Version = "0.1.9-dev"
+const Version = "0.1.10-dev"
 
 type Settings struct {
 	Theme            string `json:"theme"`
@@ -31,21 +33,24 @@ type Settings struct {
 }
 
 type Manager struct {
-	mu        sync.Mutex
-	configMu  sync.Mutex
-	stopMu    sync.Mutex
-	Dir       string
-	Binary    string
-	settings  Settings
-	cmd       *exec.Cmd
-	done      chan struct{}
-	status    string
-	lastError string
-	adminKey  string
-	baseURL   string
-	stopping  bool
-	http      *http.Client
-	previews  map[string]*ImportPlan
+	debugMu      sync.Mutex
+	debugClient  *client.Client
+	debugAddress string
+	mu           sync.Mutex
+	configMu     sync.Mutex
+	stopMu       sync.Mutex
+	Dir          string
+	Binary       string
+	settings     Settings
+	cmd          *exec.Cmd
+	done         chan struct{}
+	status       string
+	lastError    string
+	adminKey     string
+	baseURL      string
+	stopping     bool
+	http         *http.Client
+	previews     map[string]*ImportPlan
 }
 
 func New(dir, binary string) (*Manager, error) {
@@ -191,6 +196,7 @@ func (m *Manager) Start(ctx context.Context) error {
 func (m *Manager) Stop(ctx context.Context, force bool) error {
 	m.stopMu.Lock()
 	defer m.stopMu.Unlock()
+	defer m.closeGatewayDebug()
 	m.mu.Lock()
 	cmd, done := m.cmd, m.done
 	m.stopping = true

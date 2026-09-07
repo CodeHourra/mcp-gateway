@@ -20,6 +20,8 @@ func (m *Manager) Request(ctx context.Context, method string, params string) (an
 	id := stringValue(p["serviceId"])
 	serverPath := "/api/v1/servers/" + url.PathEscape(id)
 	switch method {
+	case "listGatewayTools", "callGatewayTool":
+		return m.GatewayDebug(ctx, method, p)
 	case "initialSnapshot":
 		return m.InitialSnapshot()
 	case "snapshot":

@@ -14,16 +14,16 @@
     "directToolResponseMode": "full"
   },
   "overallAcceptance": "pending real providers, real clients and remaining native checks; see docs/acceptance.md",
-  "buildCommand": "Frontend production build and checks; go test ./...; go build -tags production -trimpath -buildvcs=false -ldflags=\"-w -s\"; copy Info.plist and codesign. Core/patches/icon SHA-verified and reused unchanged from 0.1.9.",
+  "buildCommand": "env GOMODCACHE=/private/tmp/mcp-gateway-gomod GOCACHE=/private/tmp/mcp-gateway-go-build ./scripts/build.sh",
   "packageCommand": "./scripts/package-dmg.sh",
-  "version": "0.1.10-dev",
-  "bundleVersion": "0.1.10",
-  "bundleBuild": "11",
-  "previousBuildManifest": "tests/acceptance/build-manifest-0.1.9.json",
+  "version": "0.1.9-dev",
+  "bundleVersion": "0.1.9",
+  "bundleBuild": "10",
+  "previousBuildManifest": "tests/acceptance/build-manifest-0.1.8.json",
   "files": {
     "bin/MCP Gateway.app/Contents/MacOS/mcp-gateway": {
-      "sha256": "c924da00db9ad69dae7bdaf0ff53e4b2da6a8e328eebe1235d359b470e2a81f4",
-      "bytes": 12589232
+      "sha256": "a17de2520c64f12743b3f939fe4f45e129b5a7773cff16e6fcf9851e33c05684",
+      "bytes": 12539568
     },
     "bin/MCP Gateway.app/Contents/MacOS/mcpproxy": {
       "sha256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
@@ -44,48 +44,35 @@
   },
   "goBuildInfo": "bin/MCP Gateway.app/Contents/MacOS/mcp-gateway: go1.25.5\n\tpath\tmcp-gateway\n\tmod\tmcp-gateway\t(devel)\t\n\tdep\tgithub.com/adrg/xdg\tv0.5.3\th1:xRnxJXne7+oWDatRhR1JLnvuccuIeCoBu2rtuLqQB78=\n\tdep\tgithub.com/google/jsonschema-go\tv0.4.3\th1:/DBOLZTfDow7pe2GmaJNhltueGTtDKICi8V8p+DQPd0=\n\tdep\tgithub.com/google/uuid\tv1.6.0\th1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=\n\tdep\tgithub.com/mark3labs/mcp-go\tv1.0.0\th1:CZqCzXwUiTOstkIdW1MyOZGuM+LaKMEJSu+ZYluN4DU=\n\tdep\tgithub.com/pelletier/go-toml/v2\tv2.2.4\th1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=\n\tdep\tgithub.com/santhosh-tekuri/jsonschema/v6\tv6.0.2\th1:KRzFb2m7YtdldCEkzs6KqmJw4nqEVZGK7IN2kJkjTuQ=\n\tdep\tgithub.com/spf13/cast\tv1.10.0\th1:h2x0u2shc1QuLHfxi+cTJvs30+ZAHOGRic8uyGTDWxY=\n\tdep\tgithub.com/tidwall/jsonc\tv0.3.3\th1:RVQqL3xFfDkKKXIDsrBiVQiEpBtxoKbmMXONb2H/y2w=\n\tdep\tgithub.com/wailsapp/wails/v3\tv3.0.0-beta.16\th1:ud3YMzTbPPae4EP3Wls4qBVsESZwwAkEny1P/zzw6Tk=\n\tdep\tgithub.com/yosida95/uritemplate/v3\tv3.0.2\th1:Ed3Oyj9yrmi9087+NczuL5BwkIc4wvTb5zIM+UJPGz4=\n\tdep\tgithub.com/zalando/go-keyring\tv0.2.8\th1:6sD/Ucpl7jNq10rM2pgqTs0sZ9V3qMrqfIIy5YPccHs=\n\tdep\tgolang.org/x/text\tv0.39.0\th1:UbZz4pLOvn600D6Oh6GGEI6VAmndrEBLv8/6BEXzyus=\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\t-tags=production\n\tbuild\t-trimpath=true\n\tbuild\tCGO_ENABLED=1\n\tbuild\tGOARCH=arm64\n\tbuild\tGOOS=darwin\n\tbuild\tGOARM64=v8.0\n",
   "changes": [
-    "Add a collapsed Agent-page debugger for the actual MCP entrypoint tool catalog, complete schemas/arguments/results, retained connection and reset.",
-    "Use a dedicated local client token, verify requested endpoint/current tool membership, preserve complete MCP results and never automatically retry calls.",
-    "Increase typography sizes and weights across the UI and improve light/dark secondary text contrast.",
-    "Remove the superseded in-process token lock to avoid lock inversion with settings/backup Stop and the debug connection; retain the cross-process token file lock."
+    "Store management and client tokens as 0600 local files in a 0700 directory, with no gateway-access Keychain reads or writes.",
+    "Automatically provision/reuse/renew client tokens from the existing connect command, protected by an inter-process file lock.",
+    "Keep loopback authentication and distinct management/client privileges; preserve upstream credential storage."
   ],
   "verification": {
-    "frontend": "vue-tsc/Vite and 9 frontend checks passed",
+    "frontend": "vue-tsc/Vite and 7 frontend checks passed",
     "tests": "Full go test ./... and go test -race ./internal/gateway ./tests/acceptance passed",
     "bundle": "codesign --verify --deep --strict passed; arm64",
-    "nativeUI": "Final actual isolated WKWebView passed: six progressive tools, invalid arguments, retrieve/describe/read-call fixture chain, draft/result preservation and connection reset. Both themes at 1180/760 widths had no horizontal overflow. Existing management regressions passed.",
-    "productionConnection": "Final production connect binary passed TestProductionLocalTokenConnection (1.40 seconds); temporary HOME/profile, real fixed core, no upstream calls.",
-    "coreReuse": "Core, patches and icon match archived 0.1.9 SHA exactly; unchanged dependency licenses reused. No core rebuild performed.",
-    "boundaries": "No real provider, actual CodeBuddy UI, OS keyboard/file-dialog/pixel screenshot acceptance. No /Applications replacement or real user configuration/Keychain changes."
+    "productionConnection": "TestProductionLocalTokenConnection passed against the final signed production connect binary and fixed core: initialize/tools, first-use creation, reconnect/core restart reuse, missing-file repair, unauthenticated 401 and client management 403. Temporary HOME and profile; no external tool calls.",
+    "buildLimitation": "Standard build completed frontend, all Go tests and production application compile, then GitHub core clone failed with TLS protocol error. Reused exact SHA-verified 0.1.8 core, patches, icon and existing dependency licenses; copied new Info.plist and re-signed bundle. No core rebuild claimed.",
+    "nativeUI": "No 0.1.9 WKWebView or OS-interaction rerun; prior 0.1.8 evidence is historical.",
+    "installedClient": "CodeBuddy itself has not reconnected to 0.1.9 yet; /Applications was not replaced."
   },
   "dmg": {
-    "path": "bin/MCP-Gateway-0.1.10-arm64.dmg",
-    "sha256": "f37aa0657f0acdca2b47d4c7ab8222fdf1e9124984d68cc38f98a914cbff1ca0",
-    "bytes": 25290448,
-    "checksumFile": "bin/MCP-Gateway-0.1.10-arm64.dmg.sha256",
+    "path": "bin/MCP-Gateway-0.1.9-arm64.dmg",
+    "sha256": "62a095e8d6e1217dfcdef16b0ac42be0d541656d99f327e4cb97c9b84af96590",
+    "bytes": 25259312,
+    "checksumFile": "bin/MCP-Gateway-0.1.9-arm64.dmg.sha256",
     "verificationStatus": "hdiutil verify passed",
     "developerSigned": false,
     "notarized": false,
     "guide": "docs/install-and-verify.md"
   },
   "productionUIAssets": [
-    "frontend/dist/assets/index-RKS3XisL.css",
-    "frontend/dist/assets/index-ijr7XHW_.js"
+    "frontend/dist/assets/index-BJjhX56L.css",
+    "frontend/dist/assets/index-ChMaWHjU.js"
   ],
   "iconProbe": "tests/acceptance/icon-padding-0.1.5-2026-09-07.json",
   "gitHistory": "docs/git-history.md",
   "previousNativeUXProbe": "tests/acceptance/hierarchy-ui-0.1.8-2026-09-07.json",
-  "localTokenProbe": "tests/acceptance/local-token-0.1.10-2026-09-07.json",
-  "nativeUXProbe": "tests/acceptance/gateway-debug-ui-0.1.10-2026-09-07.json",
-  "nativeOverlayVerification": {
-    "exactComparisonPassed": true,
-    "changes": [
-      "application name",
-      "single-instance identity and activation key label",
-      "window title"
-    ],
-    "backendOrCredentialOverride": false,
-    "overlaySHA256": "95ca764e7c33f9ba9a4b19d557834ee60994ea71460bc42c78bd46cb89c009c9",
-    "testAppSHA256": "ae31a532a9450d97c00e8888909d796488851de0bb17f642234a29a80ebd4dca"
-  }
+  "localTokenProbe": "tests/acceptance/local-token-0.1.9-2026-09-07.json"
 }

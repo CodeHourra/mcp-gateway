@@ -642,8 +642,8 @@ func (m *Manager) ApplyAgentConfig(ctx context.Context, previewID string) (any, 
 }
 
 func (m *Manager) applyAgentPlan(ctx context.Context, previewID, kind string) (any, error) {
-	// EnsureAgentToken also serializes on configMu; release it during token setup,
-	// then recheck both preview identity and exact file bytes before writing.
+	// Release configMu during token setup, then recheck both preview identity
+	// and exact file bytes before writing.
 	m.configMu.Lock()
 	plan, ok := m.previews[previewID]
 	if !ok || plan.Kind != kind || time.Since(plan.Created) > 15*time.Minute {

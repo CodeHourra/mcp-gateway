@@ -1,0 +1,204 @@
+{
+  "passed": true,
+  "scope": "Actual isolated WKWebView and unchanged production business/UI source; only app identity differs. Local token storage, real bundled core and temporary stdio fixture. No user client config, provider, OS file-dialog or keyboard acceptance.",
+  "appSHA256": "ae31a532a9450d97c00e8888909d796488851de0bb17f642234a29a80ebd4dca",
+  "coreSHA256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
+  "collapsedDefault": {
+    "buttons": [
+      "false",
+      "false"
+    ],
+    "groups": 2,
+    "inspector": false,
+    "visibleTools": 0
+  },
+  "expandedTools": {
+    "grouped": true,
+    "heading": "saved-service 提供的工具",
+    "inspector": false,
+    "visible": true
+  },
+  "toolDraftPreserved": true,
+  "desktopDetail": {
+    "exists": true,
+    "focused": true,
+    "overflow": false,
+    "tab": "连接与认证"
+  },
+  "expandedDetail": {
+    "exists": true,
+    "focused": true
+  },
+  "maskedJSON": {
+    "noRawRef": true,
+    "stored": true
+  },
+  "invalidDraftRetained": true,
+  "gatewayInitiallyCollapsed": true,
+  "gatewayToolNames": [
+    "call_tool_destructive",
+    "call_tool_read",
+    "call_tool_write",
+    "describe_tool",
+    "read_cache",
+    "retrieve_tools"
+  ],
+  "gatewayInvalidArgumentsRejected": true,
+  "gatewayRetrieveResult": {
+    "content": [
+      {
+        "text": "{\"query\":\"echo fixture\",\"session_risk\":{\"has_destructive_tools\":true,\"has_open_world_tools\":true,\"has_write_tools\":true,\"lethal_trifecta\":true,\"level\":\"high\"},\"tools\":[{\"call_with\":\"call_tool_read\",\"description\":\"Echo fixture for management acceptance\",\"inputSchema\":{\"properties\":{},\"required\":[],\"type\":\"object\"},\"name\":\"saved-service:echo\",\"score\":0.011324400738927556,\"server\":\"saved-service\"}],\"total\":1,\"usage_instructions\":\"TOOL SELECTION GUIDE: Check the 'call_with' field for each tool, then use the matching tool variant. DECISION RULES BY TOOL NAME: (1) READ (call_tool_read): search, query, list, get, fetch, find, check, view, read, show, describe, lookup, retrieve, browse, explore, discover, scan, inspect, analyze, examine, validate, verify. DEFAULT choice when unsure. (2) WRITE (call_tool_write): create, update, modify, add, set, send, edit, change, write, post, put, patch, insert, upload, submit, assign, configure, enable, register, subscribe, publish, move, copy, rename, merge. (3) DESTRUCTIVE (call_tool_destructive): delete, remove, drop, revoke, disable, destroy, purge, reset, clear, unsubscribe, cancel, terminate, close, archive, ban, block, disconnect, kill, wipe, truncate, force, hard. INTENT TRACKING: Always provide intent_reason (why you're calling this tool) and intent_data_sensitivity (public/internal/private/unknown) to enable activity auditing.\"}",
+        "type": "text"
+      }
+    ]
+  },
+  "gatewayDraftAndResultPreserved": true,
+  "gateway_describe_tool": {
+    "content": [
+      {
+        "text": "{\"definitions\":[{\"call_with\":\"call_tool_read\",\"description\":\"Echo fixture for management acceptance\",\"inputSchema\":{\"properties\":{},\"required\":[],\"type\":\"object\"},\"name\":\"saved-service:echo\",\"server\":\"saved-service\"}],\"errors\":[]}",
+        "type": "text"
+      }
+    ]
+  },
+  "gateway_call_tool_read": {
+    "content": [
+      {
+        "text": "ok",
+        "type": "text"
+      }
+    ]
+  },
+  "typography": {
+    "body": {
+      "color": "rgb(230, 232, 237)",
+      "size": "15px",
+      "weight": "450"
+    },
+    "button": {
+      "color": "rgb(230, 232, 237)",
+      "size": "14px",
+      "weight": "500"
+    },
+    "heading": {
+      "color": "rgb(230, 232, 237)",
+      "size": "26px",
+      "weight": "600"
+    },
+    "message": {
+      "color": "rgb(177, 186, 200)",
+      "size": "14px",
+      "weight": "450"
+    },
+    "overflow": false,
+    "path": {
+      "color": "rgb(177, 186, 200)",
+      "size": "12px",
+      "weight": "450"
+    }
+  },
+  "themeLayouts": [
+    {
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(88, 100, 119)",
+      "fontSize": "14px",
+      "overflow": false,
+      "theme": "light",
+      "width": 1181
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(88, 100, 119)",
+      "fontSize": "14px",
+      "overflow": false,
+      "theme": "light",
+      "width": 761
+    },
+    {
+      "background": "rgb(32, 33, 36)",
+      "color": "rgb(177, 186, 200)",
+      "fontSize": "14px",
+      "overflow": false,
+      "theme": "dark",
+      "width": 1181
+    },
+    {
+      "background": "rgb(32, 33, 36)",
+      "color": "rgb(177, 186, 200)",
+      "fontSize": "14px",
+      "overflow": false,
+      "theme": "dark",
+      "width": 761
+    }
+  ],
+  "gatewayReset": true,
+  "narrowLayout": {
+    "agentNameWidths": [
+      557,
+      557,
+      557,
+      557,
+      557
+    ],
+    "clientWidth": 746,
+    "scrollWidth": 746,
+    "width": 761
+  },
+  "agentStatus": [
+    {
+      "name": "Cursor",
+      "status": "已配置接入"
+    },
+    {
+      "name": "Claude Code",
+      "status": "已接入 · 客户端已禁用"
+    },
+    {
+      "name": "CodeBuddy CLI",
+      "status": "配置冲突"
+    },
+    {
+      "name": "Codex",
+      "status": "已接入 · 需更新"
+    },
+    {
+      "name": "OMP",
+      "status": "未接入"
+    }
+  ],
+  "agentGroups": [
+    {
+      "agents": [
+        "cursor"
+      ],
+      "title": "已配置接入 1"
+    },
+    {
+      "agents": [
+        "claude-code",
+        "codebuddy",
+        "codex"
+      ],
+      "title": "需处理 3"
+    },
+    {
+      "agents": [
+        "omp"
+      ],
+      "title": "待接入 1"
+    }
+  ],
+  "agentDisconnectPreservedOtherConfig": true,
+  "draftSurvivedNavigation": true,
+  "removalGuard": true,
+  "fullConfigSavedWithReferenceAndSettings": true,
+  "fileControl": {
+    "chinese": true,
+    "clipped": true,
+    "focused": true
+  },
+  "fileSelection": true,
+  "darkTheme": true,
+  "exitCode": 0,
+  "ownedChildrenGone": true
+}

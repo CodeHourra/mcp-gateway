@@ -22,8 +22,8 @@ func (m *Manager) EnsureAgentToken(ctx context.Context, clientID string) error {
 	if !serviceNamePattern.MatchString(clientID) {
 		return errors.New("客户端标识无效")
 	}
-	m.configMu.Lock()
-	defer m.configMu.Unlock()
+	// The profile file lock serializes token setup across processes; taking
+	// configMu here would invert the settings/Stop/debug-connection lock order.
 	unlock, err := m.lockCredentials(ctx)
 	if err != nil {
 		return err
@@ -94,22 +94,11 @@ func (m *Manager) Connect(ctx context.Context, clientID string, input io.Reader,
 // Bridge owns one HTTP session for one client process; SDKs retain complete MCP
 // tool results and close the session when stdin closes or the process exits.
 func Bridge(ctx context.Context, address, token, clientID string, input io.Reader, output io.Writer) error {
-	upstream, err := client.NewStreamableHttpClient(address, transport.WithHTTPHeaders(map[string]string{"Authorization": "Bearer " + token}))
+	upstream, err := openGatewayClient(ctx, address, token, clientID)
 	if err != nil {
 		return err
 	}
-	if err := upstream.Start(ctx); err != nil {
-		return errors.New("无法连接本机网关，请先打开 MCP Gateway")
-	}
 	defer upstream.Close()
-	initCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-	request := mcp.InitializeRequest{}
-	request.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
-	request.Params.ClientInfo = mcp.Implementation{Name: "mcp-gateway-" + clientID, Version: Version}
-	if _, err := upstream.Initialize(initCtx, request); err != nil {
-		return errors.New("网关握手失败，请检查网关状态及客户端接入凭证")
-	}
 	downstream := server.NewMCPServer("MCP Gateway", Version, server.WithToolCapabilities(true))
 	var refreshMu sync.Mutex
 	refresh := func() error {
@@ -137,4 +126,25 @@ func Bridge(ctx context.Context, address, token, clientID string, input io.Reade
 		}
 	})
 	return server.NewStdioServer(downstream).Listen(ctx, input, output)
+}
+
+func openGatewayClient(ctx context.Context, address, token, clientID string) (*client.Client, error) {
+	upstream, err := client.NewStreamableHttpClient(address, transport.WithHTTPHeaders(map[string]string{"Authorization": "Bearer " + token}))
+	if err != nil {
+		return nil, err
+	}
+	if err := upstream.Start(ctx); err != nil {
+		_ = upstream.Close()
+		return nil, errors.New("无法连接本机网关，请先打开 MCP Gateway")
+	}
+	initCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	request := mcp.InitializeRequest{}
+	request.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
+	request.Params.ClientInfo = mcp.Implementation{Name: "mcp-gateway-" + clientID, Version: Version}
+	if _, err := upstream.Initialize(initCtx, request); err != nil {
+		_ = upstream.Close()
+		return nil, errors.New("网关握手失败，请检查网关状态及客户端接入凭证")
+	}
+	return upstream, nil
 }

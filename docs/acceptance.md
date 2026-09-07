@@ -354,3 +354,16 @@ OAuth fixture 使用官方 `tests/oauthserver/templates/login.html`，页面预�
 生产应用的真实 `connect` 子进程与固定核心在临时 HOME/独立数据目录完成握手、工具列表、重连、核心重启复用和丢失 token 修复；无认证访问 MCP 返回 401，客户端 token 访问令牌管理返回 403。没有调用上游工具、改写用户客户端配置或用户钥匙串，也没有替换 /Applications。复现：设置 MCP_GATEWAY_TEST_BUNDLE 为构建应用绝对路径，执行 `go test ./tests/acceptance -run '^TestProductionLocalTokenConnection$' -v -count=1`。这证明生产连接命令与核心协议，不代替 CodeBuddy 自身界面的最终重连验收。
 
 本次标准构建在重新克隆核心时遇到 GitHub TLS 错误；应用编译与前置检查已经完成。核对上一版核心二进制、补丁及图标的 SHA-256 全部一致后复用，更新 Info.plist 并重新完成应用签名。没有宣称重新构建核心成功。报告与产物见当前构建清单。
+
+
+## 0.1.10 网关工具调试与字体（2026-09-07）
+
+Agent 接入页默认收起调试区，展开才读取当前 MCP 入口的真实工具目录。复用已有 ToolsList 展示参数、schema、JSON 输入和完整调用结果。后端通过客户端 token 建立独立调试连接，复用连接、提供刷新/重置，调用前校验参数对象、入口地址与当前目录；不以管理凭证执行工具，不自动重试失败调用。字号整体提升：根字号 13→15 px、按钮 12→14 px、Agent 说明 12→14 px、路径 10→12 px、页面标题 22→26 px；提高常规与按钮字重、加深浅色辅助文字并提高深色辅助文字亮度。
+
+`go test -race ./internal/gateway ./tests/acceptance`、全量 `go test ./...`、Vue 类型检查/Vite 构建与 9 项前端检查通过。新增检查覆盖客户端认证边界、真实工具 schema/完整错误结果、连接复用和重置、未知工具/非对象参数/旧入口拒绝、前端迟到目录响应丢弃及调用路由。
+
+[最终原生报告](../tests/acceptance/gateway-debug-ui-0.1.10-2026-09-07.json)使用仅修改应用名称、单实例标识与窗口标题的隔离测试构建，其余业务源码、前端与最终生产版本相同，无管理钥匙串或测试 key 覆盖。真实 WKWebView 完成：六个渐进工具读取、无权限修改控件、非法数组参数拒绝、真实 retrieve_tools → describe_tool → call_tool_read 受控 echo 链路、收起保留参数/结果、重置调试连接；1180/760 宽度 × 浅/深主题无横向溢出，实际字号与字重符合预期。原有服务折叠/详情、Agent 状态与解除备份、完整 JSON 保存/防误删/草稿保留、中文文件输入与主题回归通过。初次探针误选第一个工具输入框造成断言失败，修正为按 retrieve_tools 定位后通过；产品未因此绕过检查。此报告不冒充 OS 像素截图、真实键盘/文件对话框或真实提供方验收。
+
+最终签名生产 `connect` 命令再次通过 TestProductionLocalTokenConnection：自动建 token、握手/工具列表、重连/核心重启复用、缺失文件修复、匿名 401 与客户端管理 403（1.40 秒）。只使用临时 HOME/数据目录；真实用户配置和钥匙串未改，/Applications 未替换。核心、补丁、图标与 0.1.9 清单 SHA 一致，复用固定核心二进制；仅重建应用并重新签名，不宣称重新构建核心。
+
+收尾锁顺序复查移除了 EnsureAgentToken 中已被跨进程文件锁替代的 configMu，避免配置保存/恢复持有 configMu、停止调试等待 debugMu 时，与调试首次准备 token 形成反向等待。回归测试在持有 configMu 的情况下验证 token 准备仍可完成，并复跑并发检查、生产连接与最终原生验收。

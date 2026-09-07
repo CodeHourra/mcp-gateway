@@ -1,0 +1,32 @@
+{
+  "executedAt": "2026-09-07T17:02:15.332646+08:00",
+  "passed": true,
+  "test": "TestProductionLocalTokenConnection",
+  "command": "MCP_GATEWAY_TEST_BUNDLE=\"/Users/steve/Codes/myspace/toolkits/tools/mcp-gateway/bin/MCP Gateway.app\" go test ./tests/acceptance -run '^TestProductionLocalTokenConnection$' -v -count=1",
+  "durationSeconds": 1.4,
+  "app": {
+    "sha256": "c924da00db9ad69dae7bdaf0ff53e4b2da6a8e328eebe1235d359b470e2a81f4",
+    "bytes": 12589232
+  },
+  "core": {
+    "sha256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
+    "bytes": 46120784
+  },
+  "checks": [
+    "real production stdio initialize and nonempty progressive tool list",
+    "automatic first-use client token creation without Agent-page setup",
+    "reconnect preserves token",
+    "core restart preserves token",
+    "missing client token file repairs on reconnect",
+    "unauthenticated MCP request returns 401",
+    "client token cannot access token management (403)",
+    "diagnostic does not contain the original client token"
+  ],
+  "boundaries": [
+    "Temporary HOME and data directory",
+    "Core CI mode disables upstream Keychain lookup",
+    "No user client config or Keychain changes",
+    "No upstream tool calls",
+    "No /Applications replacement or CodeBuddy app acceptance"
+  ]
+}

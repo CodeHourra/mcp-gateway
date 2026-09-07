@@ -7,7 +7,9 @@ root = Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('stage', type=Path)
 parser.add_argument('--hierarchy', action='store_true', help='Check the 0.1.8 collapsed hierarchy and grouped agents')
+parser.add_argument('--gateway-debug', action='store_true', help='Check 0.1.10 gateway tools and larger typography')
 args = parser.parse_args()
+if args.gateway_debug: args.hierarchy = True
 stage = args.stage.resolve()
 assert stage.parent == root / '.cache' and stage.name.startswith('management-check.')
 profile, home = stage / 'profile', stage / 'home'
@@ -52,6 +54,8 @@ env = dict(os.environ, HOME=str(home), CODEX_HOME=str(home/'.codex'), CI='true',
 for name in ['PI_CODING_AGENT_DIR','OMP_PROFILE','PI_PROFILE','PI_CONFIG_DIR','CODEBUDDY_CONFIG_DIR']:
  env.pop(name, None)
 report = {'passed':False, 'scope':'Actual isolated WKWebView, unchanged frontend/backend except test app identity and admin key. Real bundled core, local stdio fixture and temporary agent configs. No real providers, client handshake, OS file-dialog or pixel verification.', 'appSHA256':hashlib.sha256(Path(exe).read_bytes()).hexdigest(), 'coreSHA256':hashlib.sha256((bundle/'Contents/MacOS/mcpproxy').read_bytes()).hexdigest()}
+if args.gateway_debug:
+ report['scope'] = 'Actual isolated WKWebView and unchanged production business/UI source; only app identity differs. Local token storage, real bundled core and temporary stdio fixture. No user client config, provider, OS file-dialog or keyboard acceptance.'
 app = None
 endpoint = 'http://127.0.0.1:19199/mcp'
 def js(source): return call(endpoint,'js_eval',{'window':'manager','js':source,'timeout_ms':15000})
@@ -106,6 +110,44 @@ try:
   button('校验并预览变更');until("return !!document.querySelector('.full-config-editor .error-text')?.textContent")
   report['invalidDraftRetained']=js("return document.querySelector('.full-json').value==='{' ");assert report['invalidDraftRetained']
   nav('Agent 接入');until("return [...document.querySelectorAll('.wide-row, .agent-card')].some(e=>e.textContent.includes('Cursor'))")
+  if args.gateway_debug:
+   report['gatewayInitiallyCollapsed']=js("return !document.querySelector('.gateway-debug').open && !document.querySelector('.gateway-debug .tool-entry')")
+   assert report['gatewayInitiallyCollapsed']
+   js("document.querySelector('.gateway-debug>summary').click();return true")
+   until("return document.querySelectorAll('.gateway-debug .tool-entry').length>0")
+   report['gatewayToolNames']=js("return [...document.querySelectorAll('.gateway-debug .tool-summary strong')].map(e=>e.textContent)")
+   assert all(name in report['gatewayToolNames'] for name in ['retrieve_tools','describe_tool','call_tool_read','call_tool_write','call_tool_destructive'])
+   assert js("return !document.querySelector('.gateway-debug .tool-access')")
+   js("const e=[...document.querySelectorAll('.gateway-debug .tool-entry')].find(e=>e.querySelector('strong').textContent==='retrieve_tools');e.querySelector('summary').click();e.querySelector('textarea').value='[]';e.querySelector('textarea').dispatchEvent(new Event('input',{bubbles:true}));e.querySelector('form button').click();return true")
+   until("return document.querySelector('.gateway-debug .error-text')?.textContent.includes('JSON 对象')")
+   report['gatewayInvalidArgumentsRejected']=True
+   js("const e=[...document.querySelectorAll('.gateway-debug .tool-entry')].find(e=>e.querySelector('strong').textContent==='retrieve_tools');e.querySelector('textarea').value=JSON.stringify({query:'echo fixture',limit:5});e.querySelector('textarea').dispatchEvent(new Event('input',{bubbles:true}));e.querySelector('form button').click();return true")
+   report['gatewayRetrieveResult']=until("const e=document.querySelector('.gateway-debug .result-box pre');return e?JSON.parse(e.textContent):null", lambda v:isinstance(v,dict))
+   assert report['gatewayRetrieveResult'].get('isError') is not True
+   assert 'echo' in json.dumps(report['gatewayRetrieveResult'])
+   js("document.querySelector('.gateway-debug>summary').click();return true")
+   js("document.querySelector('.gateway-debug>summary').click();return true")
+   report['gatewayDraftAndResultPreserved']=js("return [...document.querySelectorAll('.gateway-debug .tool-entry')].find(e=>e.querySelector('strong').textContent==='retrieve_tools').querySelector('textarea').value.includes('echo fixture') && !!document.querySelector('.gateway-debug .result-box')")
+   assert report['gatewayDraftAndResultPreserved']
+   for name, arguments in [('describe_tool', {'tool_ids':['saved-service:echo']}), ('call_tool_read', {'name':'saved-service:echo','args':{},'intent_reason':'isolated UI acceptance','intent_data_sensitivity':'public'})]:
+    js("const e=[...document.querySelectorAll('.gateway-debug .tool-entry')].find(e=>e.querySelector('strong').textContent==="+json.dumps(name)+");if(!e.open)e.querySelector('summary').click();const t=e.querySelector('textarea');t.value="+json.dumps(json.dumps(arguments))+";t.dispatchEvent(new Event('input',{bubbles:true}));e.querySelector('form button').click();return true")
+    result=until("const e=[...document.querySelectorAll('.gateway-debug .tool-entry')].find(e=>e.querySelector('strong').textContent==="+json.dumps(name)+").querySelector('.result-box pre');return e?JSON.parse(e.textContent):null",lambda v:isinstance(v,dict))
+    assert result.get('isError') is not True
+    report['gateway_'+name]=result
+   assert 'ok' in json.dumps(report['gateway_call_tool_read'])
+   report['typography']=js("const css=s=>{const e=document.querySelector(s),c=getComputedStyle(e);return {size:c.fontSize,weight:c.fontWeight,color:c.color}};return {body:css('body'),heading:css('.page-head h1'),message:css('.agent-message'),path:css('.agent-config-path code'),button:css('.gateway-debug button'),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth}")
+   assert report['typography']['message']['size']=='14px' and report['typography']['path']['size']=='12px' and not report['typography']['overflow']
+   report['themeLayouts']=[]
+   for theme in ['浅色','深色']:
+    button(theme)
+    for width in [1180,760]:
+     call(endpoint,'window_control',{'window':'manager','action':'set_size','width':width,'height':780 if width==1180 else 560})
+     state=js("const c=getComputedStyle(document.querySelector('.agent-message'));return {width:innerWidth,theme:document.documentElement.dataset.theme,fontSize:c.fontSize,color:c.color,background:getComputedStyle(document.querySelector('.agent-card')).backgroundColor,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth}")
+     assert not state['overflow'] and state['fontSize']=='14px'
+     report['themeLayouts'].append(state)
+   button('重置调试连接');until("return !document.querySelector('.gateway-debug button').disabled")
+   report['gatewayReset']=True
+   js("document.querySelector('.gateway-debug>summary').click();return true")
   report['narrowLayout']=js("return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,clientWidth:document.documentElement.clientWidth,agentNameWidths:[...document.querySelectorAll('.wide-row .grow, .agent-card')].map(e=>e.getBoundingClientRect().width)}")
   assert report['narrowLayout']['scrollWidth']<=report['narrowLayout']['clientWidth']
   report['agentStatus']=js("return [...document.querySelectorAll('.wide-row, .agent-card')].map(e=>({name:e.querySelector('strong, h3')?.textContent,status:e.querySelector('.badge')?.textContent}))")
@@ -144,5 +186,5 @@ finally:
   children=subprocess.run(['pgrep','-P',str(app.pid)],capture_output=True,text=True).stdout.split()
   app.terminate();report['exitCode']=app.wait(timeout=55)
   report['ownedChildrenGone']=all(subprocess.run(['kill','-0',p],capture_output=True).returncode!=0 for p in children)
- (root/('tests/acceptance/hierarchy-ui-0.1.8-2026-09-07.json' if args.hierarchy else 'tests/acceptance/management-ui-0.1.7-2026-09-07.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+ (root/('tests/acceptance/gateway-debug-ui-0.1.10-2026-09-07.json' if args.gateway_debug else 'tests/acceptance/hierarchy-ui-0.1.8-2026-09-07.json' if args.hierarchy else 'tests/acceptance/management-ui-0.1.7-2026-09-07.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
  print(json.dumps(report,ensure_ascii=False,indent=2))
