@@ -143,13 +143,7 @@ func (m *Manager) ListAgentAdapters() (any, error) {
 	}
 	result := []any{}
 	for _, adapter := range adapters {
-		status, message := "not_configured", adapter.Message
-		if info, err := os.Stat(adapter.Path); err == nil && info.Mode().IsRegular() {
-			status = "config_present"
-		} else if err != nil && !errors.Is(err, os.ErrNotExist) {
-			status, message = "unavailable", "无法读取配置位置："+err.Error()
-		}
-		result = append(result, Object{"id": adapter.ID, "name": adapter.Name, "status": status, "configPath": adapter.Path, "message": message})
+		result = append(result, m.agentAdapterStatus(adapter))
 	}
 	return result, nil
 }
@@ -181,6 +175,9 @@ func clientRoot(raw []byte, format string) (Object, error) {
 
 func gatewayClientEntry(existing Object, executable, dir, clientID, format string) Object {
 	entry := maps.Clone(existing)
+	if entry == nil {
+		entry = Object{}
+	}
 	for _, key := range []string{"type", "protocol", "transportType", "url", "command", "args", "env", "cwd", "working_dir", "headers", "http_headers", "env_http_headers", "bearer_token_env_var", "env_vars", "envFile", "headersHelper", "oauth", "auth"} {
 		delete(entry, key)
 	}
@@ -466,8 +463,23 @@ func setTOMLGateway(raw []byte, entry Object) ([]byte, error) {
 	patch := Object{"mcp_servers": Object{gatewayEntry: entry}}
 	if replaceRoot {
 		servers := maps.Clone(object(root["mcp_servers"]))
-		servers[gatewayEntry] = entry
+		if entry == nil {
+			delete(servers, gatewayEntry)
+		} else {
+			servers[gatewayEntry] = entry
+		}
 		patch["mcp_servers"] = servers
+	}
+	if entry == nil && !replaceRoot {
+		result = append(result, retainedComments...)
+		remaining, err := clientRoot(result, "toml")
+		if err != nil {
+			return nil, err
+		}
+		if _, exists := remaining["mcp_servers"]; !exists {
+			result = append(result, []byte("\n[mcp_servers]\n")...)
+		}
+		return result, nil
 	}
 	encoded, err := toml.Marshal(patch)
 	if err != nil {
@@ -499,6 +511,8 @@ func patchClientConfig(raw []byte, format string, entry Object) ([]byte, error) 
 	var after []byte
 	if format == "toml" {
 		after, err = setTOMLGateway(raw, entry)
+	} else if entry == nil {
+		after, err = removeJSONGateway(raw, format == "jsonc")
 	} else {
 		after, err = setJSONPath(raw, []string{key, gatewayEntry}, entry, format == "jsonc")
 	}
@@ -512,7 +526,11 @@ func patchClientConfig(raw []byte, format string, entry Object) ([]byte, error) 
 	// This checks the whole file semantically, including unknown nested fields.
 	want := maps.Clone(before)
 	wantServers := maps.Clone(object(before[key]))
-	wantServers[gatewayEntry] = entry
+	if entry == nil {
+		delete(wantServers, gatewayEntry)
+	} else {
+		wantServers[gatewayEntry] = entry
+	}
 	want[key] = wantServers
 	if !reflect.DeepEqual(want, actual) {
 		return nil, errors.New("生成配置改变了无关字段，未写入")
@@ -593,7 +611,13 @@ func (m *Manager) PreviewAgentConfig(_ context.Context, clientID string) (any, e
 	if adapter.Format == "toml" {
 		key = "mcp_servers"
 	}
-	existing := object(object(root[key])[gatewayEntry])
+	existing, exists, err := agentEntry(root, adapter.Format)
+	if err != nil {
+		return nil, err
+	}
+	if exists && !m.ownsAgentEntry(existing, executable, clientID) {
+		return nil, errors.New("同名条目不是当前网关的接入配置，请先核对配置文件")
+	}
 	entry := gatewayClientEntry(existing, executable, m.Dir, clientID, adapter.Format)
 	after, err := patchClientConfig(before, adapter.Format, entry)
 	if err != nil {
@@ -614,11 +638,15 @@ func (m *Manager) PreviewAgentConfig(_ context.Context, clientID string) (any, e
 }
 
 func (m *Manager) ApplyAgentConfig(ctx context.Context, previewID string) (any, error) {
+	return m.applyAgentPlan(ctx, previewID, "agent")
+}
+
+func (m *Manager) applyAgentPlan(ctx context.Context, previewID, kind string) (any, error) {
 	// EnsureAgentToken also serializes on configMu; release it during token setup,
 	// then recheck both preview identity and exact file bytes before writing.
 	m.configMu.Lock()
 	plan, ok := m.previews[previewID]
-	if !ok || plan.Kind != "agent" || time.Since(plan.Created) > 15*time.Minute {
+	if !ok || plan.Kind != kind || time.Since(plan.Created) > 15*time.Minute {
 		delete(m.previews, previewID)
 		m.configMu.Unlock()
 		return nil, errors.New("接入预览已失效，请重新生成")
@@ -634,8 +662,10 @@ func (m *Manager) ApplyAgentConfig(ctx context.Context, previewID string) (any, 
 	}
 	clientID := plan.AgentID
 	m.configMu.Unlock()
-	if err := m.EnsureAgentToken(ctx, clientID); err != nil {
-		return nil, err
+	if kind == "agent" {
+		if err := m.EnsureAgentToken(ctx, clientID); err != nil {
+			return nil, err
+		}
 	}
 	m.configMu.Lock()
 	defer m.configMu.Unlock()
@@ -653,7 +683,11 @@ func (m *Manager) ApplyAgentConfig(ctx context.Context, previewID string) (any, 
 		delete(m.previews, previewID)
 		return Object{"changed": false, "message": "接入配置已一致"}, nil
 	}
-	backupID, err := m.backupPaths("接入 "+clientID, []string{plan.Path})
+	reason := "接入 " + clientID
+	if kind == "agent-disconnect" {
+		reason = "解除接入 " + clientID
+	}
+	backupID, err := m.backupPaths(reason, []string{plan.Path})
 	if err != nil {
 		return nil, err
 	}

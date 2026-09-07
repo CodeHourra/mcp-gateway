@@ -1,0 +1,13 @@
+{
+  "serverSchemaFieldsMatch": true,
+  "fieldCount": 34,
+  "goGatewayTests": "passed",
+  "realCoreChecks": [
+    "validate full config",
+    "patch add disabled MCP",
+    "validate empty MCP array",
+    "patch empty MCP array removes service",
+    "non-MCP listen preserved"
+  ],
+  "isolatedDataDir": "/private/tmp/mcp-full-check-nkp028vg"
+}

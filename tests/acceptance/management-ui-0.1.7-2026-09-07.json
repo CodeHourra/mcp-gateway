@@ -1,0 +1,68 @@
+{
+  "passed": true,
+  "scope": "Actual isolated WKWebView, unchanged frontend/backend except test app identity and admin key. Real bundled core, local stdio fixture and temporary agent configs. No real providers, client handshake, OS file-dialog or pixel verification.",
+  "appSHA256": "dd7a9242589c7dea32b58528380109cc1f07c61dfba3c5f0a1917357650380d0",
+  "coreSHA256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
+  "defaultTools": {
+    "groups": 2,
+    "inspector": false,
+    "text": "mMCP Gateway个人工作区工作区▤MCP 服务2⌘工具↓导入配置⇄Agent 接入≡活动⚙设置仅在本机运行MCP 服务主题浅色深色跟随系统网关运行中MCP 服务所有工具来源，在这里统一管理。↓ 导入＋ 添加服务展示方式工具列表JSON 配置编辑全部 MCP 服务配置。保留已有的 ${stored:…} 标记可保留原值，替换标记可更新，删除字段可清除对应配置。网关运行设置不在此处修改。完整 JSON 配置 重新读取校验并预览变更⌕2 个服务 · 点击服务名称展开详情Ddisabled-servicestdio · 0 个工具已禁用›缓存目录 · 连接恢复后可重新读取。没有匹配的工具调整搜索条件，或检查服务是否连接并完成工具发现。Ssaved-servicestdio · 1 个工具可用››echoEcho fixture for management acceptancesaved-service允许调用最终调用受此权限控制允许调用没有命名参数；请以完整 schema 为准。查看完整 JSON Schema{\n  \"properties\": {},\n  \"required\": [],\n  \"type\": \"object\"\n}调用参数 JSON 对象调用会实际执行此上游工具，请先核对参数与操作影响。执行调用1 / 2 个服务可用1 个工具本机 · macOS\n",
+    "tools": 1
+  },
+  "expandedDetail": {
+    "exists": true,
+    "focused": true
+  },
+  "maskedJSON": {
+    "noRawRef": true,
+    "stored": true
+  },
+  "invalidDraftRetained": true,
+  "narrowLayout": {
+    "agentNameWidths": [
+      366.515625,
+      176.8125,
+      245.40625,
+      366.515625,
+      255.8125
+    ],
+    "clientWidth": 746,
+    "scrollWidth": 746,
+    "width": 761
+  },
+  "agentStatus": [
+    {
+      "name": "OMP",
+      "status": "尚未配置"
+    },
+    {
+      "name": "Claude Code",
+      "status": "已配置接入 · 客户端已禁用"
+    },
+    {
+      "name": "Cursor",
+      "status": "已配置接入"
+    },
+    {
+      "name": "CodeBuddy CLI",
+      "status": "配置冲突"
+    },
+    {
+      "name": "Codex",
+      "status": "需更新配置"
+    }
+  ],
+  "agentDisconnectPreservedOtherConfig": true,
+  "draftSurvivedNavigation": true,
+  "removalGuard": true,
+  "fullConfigSavedWithReferenceAndSettings": true,
+  "fileControl": {
+    "chinese": true,
+    "clipped": true,
+    "focused": true
+  },
+  "fileSelection": true,
+  "darkTheme": true,
+  "exitCode": 0,
+  "ownedChildrenGone": true
+}

@@ -62,4 +62,11 @@ func TestInitialSnapshotReadsConfigWithoutCoreAndRetainsPendingServices(t *testi
 	if len(array(object(value)["services"])) != 2 || calls != 3 {
 		t.Fatalf("pending core registration erased saved services: %v, calls %d", value, calls)
 	}
+	m.http = &http.Client{Transport: snapshotTransport(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"success":true,"data":{"servers":[{"name":"disabled","status":"idle","connected":false,"tool_count":0}],"tools":[]}}`)), Header: make(http.Header)}, nil
+	})}
+	value, err = m.Snapshot(t.Context())
+	if err != nil || object(array(object(value)["services"])[0])["status"] != "disabled" {
+		t.Fatalf("runtime idle state must not hide disabled configuration: %v, %v", value, err)
+	}
 }

@@ -37,6 +37,12 @@ func (m *Manager) Request(ctx context.Context, method string, params string) (an
 			return nil, err
 		}
 		return nil, m.Start(ctx)
+	case "getFullMCPConfig":
+		return m.GetFullMCPConfig()
+	case "previewFullMCPConfig":
+		return m.PreviewFullMCPConfig(ctx, p)
+	case "saveFullMCPConfig":
+		return m.SaveFullMCPConfig(ctx, p)
 	case "saveService":
 		var s Service
 		if err := json.Unmarshal([]byte(params), &s); err != nil {
@@ -160,6 +166,10 @@ func (m *Manager) Request(ctx context.Context, method string, params string) (an
 		return m.PreviewAgentConfig(ctx, stringValue(p["agentId"]))
 	case "applyAgentConfig":
 		return m.ApplyAgentConfig(ctx, stringValue(p["previewId"]))
+	case "previewAgentDisconnect":
+		return m.PreviewAgentDisconnect(ctx, stringValue(p["agentId"]))
+	case "applyAgentDisconnect":
+		return m.ApplyAgentDisconnect(ctx, stringValue(p["previewId"]))
 	case "saveSettings":
 		var s Settings
 		if err := json.Unmarshal([]byte(params), &s); err != nil {

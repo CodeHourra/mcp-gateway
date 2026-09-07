@@ -34,8 +34,22 @@ func TestAgentConfigApplyAndExactRestore(t *testing.T) {
 					t.Setenv(key, "")
 				}
 			}
+			executable, err := os.Executable()
+			if err != nil {
+				t.Fatal(err)
+			}
+			bridge, err := json.Marshal(gateway.Object{
+				"command": filepath.Join("/previous-install", filepath.Base(executable)),
+				"args":    []string{"connect", "--client", scenario.client, "--data-dir", appDir},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			// An owned bridge with stale connection fields must update in place;
+			// an unrelated same-name remote service is a conflict, not an update.
+			original := strings.Replace(scenario.original, `"url":`, string(bridge[1:len(bridge)-1])+`,"url":`, 1)
 			path := filepath.Join(clientDir, "mcp.json")
-			if err := os.WriteFile(path, []byte(scenario.original), 0600); err != nil {
+			if err := os.WriteFile(path, []byte(original), 0600); err != nil {
 				t.Fatal(err)
 			}
 			api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +124,7 @@ func TestAgentConfigApplyAndExactRestore(t *testing.T) {
 				t.Fatal(err)
 			}
 			restored, err := os.ReadFile(path)
-			if err != nil || string(restored) != scenario.original {
+			if err != nil || string(restored) != original {
 				t.Fatal("restoration did not recover exact original bytes:", err)
 			}
 		})

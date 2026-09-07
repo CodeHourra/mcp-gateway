@@ -16,14 +16,14 @@
   "overallAcceptance": "pending real providers, real clients and remaining native checks; see docs/acceptance.md",
   "buildCommand": "env GOMODCACHE=/private/tmp/mcp-gateway-gomod GOCACHE=/private/tmp/mcp-gateway-go-build ./scripts/build.sh",
   "packageCommand": "./scripts/package-dmg.sh",
-  "version": "0.1.7-dev",
-  "bundleVersion": "0.1.7",
-  "bundleBuild": "8",
-  "previousBuildManifest": "tests/acceptance/build-manifest-0.1.6.json",
+  "version": "0.1.6-dev",
+  "bundleVersion": "0.1.6",
+  "bundleBuild": "7",
+  "previousBuildManifest": "tests/acceptance/build-manifest-0.1.5.json",
   "files": {
     "bin/MCP Gateway.app/Contents/MacOS/mcp-gateway": {
-      "sha256": "f74f0ab058d45b1847968ebc44639984d00f031a36aacac13cfd4a978d6d5534",
-      "bytes": 12506544
+      "sha256": "ebb332f43a3643f12dc62a330240137fe2b81fb46ec303b4d76d0044f696e01a",
+      "bytes": 12456960
     },
     "bin/MCP Gateway.app/Contents/MacOS/mcpproxy": {
       "sha256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
@@ -44,35 +44,33 @@
   },
   "goBuildInfo": "bin/MCP Gateway.app/Contents/MacOS/mcp-gateway: go1.25.5\n\tpath\tmcp-gateway\n\tmod\tmcp-gateway\t(devel)\t\n\tdep\tgithub.com/adrg/xdg\tv0.5.3\th1:xRnxJXne7+oWDatRhR1JLnvuccuIeCoBu2rtuLqQB78=\n\tdep\tgithub.com/google/jsonschema-go\tv0.4.3\th1:/DBOLZTfDow7pe2GmaJNhltueGTtDKICi8V8p+DQPd0=\n\tdep\tgithub.com/google/uuid\tv1.6.0\th1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=\n\tdep\tgithub.com/mark3labs/mcp-go\tv1.0.0\th1:CZqCzXwUiTOstkIdW1MyOZGuM+LaKMEJSu+ZYluN4DU=\n\tdep\tgithub.com/pelletier/go-toml/v2\tv2.2.4\th1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=\n\tdep\tgithub.com/santhosh-tekuri/jsonschema/v6\tv6.0.2\th1:KRzFb2m7YtdldCEkzs6KqmJw4nqEVZGK7IN2kJkjTuQ=\n\tdep\tgithub.com/spf13/cast\tv1.10.0\th1:h2x0u2shc1QuLHfxi+cTJvs30+ZAHOGRic8uyGTDWxY=\n\tdep\tgithub.com/tidwall/jsonc\tv0.3.3\th1:RVQqL3xFfDkKKXIDsrBiVQiEpBtxoKbmMXONb2H/y2w=\n\tdep\tgithub.com/wailsapp/wails/v3\tv3.0.0-beta.16\th1:ud3YMzTbPPae4EP3Wls4qBVsESZwwAkEny1P/zzw6Tk=\n\tdep\tgithub.com/yosida95/uritemplate/v3\tv3.0.2\th1:Ed3Oyj9yrmi9087+NczuL5BwkIc4wvTb5zIM+UJPGz4=\n\tdep\tgithub.com/zalando/go-keyring\tv0.2.8\th1:6sD/Ucpl7jNq10rM2pgqTs0sZ9V3qMrqfIIy5YPccHs=\n\tdep\tgolang.org/x/text\tv0.39.0\th1:UbZz4pLOvn600D6Oh6GGEI6VAmndrEBLv8/6BEXzyus=\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\t-tags=production\n\tbuild\t-trimpath=true\n\tbuild\tCGO_ENABLED=1\n\tbuild\tGOARCH=arm64\n\tbuild\tGOOS=darwin\n\tbuild\tGOARM64=v8.0\n",
   "changes": [
-    "Audit all UI controls and replace the sole raw file selector with styled Chinese labels and keyboard-accessible input.",
-    "Show tools grouped by MCP by default; select a service for details; preserve disabled service status over core idle.",
-    "Edit all native MCP JSON with credential handles, validation, diff counts, removal confirmation, stale-write checks and backups.",
-    "Read actual agent configuration status; preview updates or disconnect only owned gateway entries, preserving other client configuration."
+    "Load saved local services before waiting for core or tool catalogs; preserve pending entries during registration.",
+    "Render honest waiting states instead of first-use empty UI during startup.",
+    "Serialize polling with a 500 ms startup interval, 5 s running interval, and unmount cancellation."
   ],
   "verification": {
-    "frontend": "vue-tsc and Vite production build passed; frontend check 5 tests passed",
-    "tests": "Full go test ./... passed after latest changes; agent/full JSON and disabled-state regression checks passed",
+    "frontend": "vue-tsc and Vite production build passed",
+    "tests": "Full go test ./... and frontend check (3 tests) passed; initial snapshot regression checks zero HTTP calls, credential values absent, and pending services retained.",
     "bundle": "codesign --verify --deep --strict passed; arm64",
-    "nativeUI": "Final isolated actual WKWebView probe passed, including 760x560 window: default grouped tools, focused details, JSON validation/removal/save/reference preservation, cross-page draft, agent statuses/disconnect preservation, Chinese file control and dark theme.",
-    "copiedAppStartup": "No 0.1.7 DMG copied-production startup rerun; native probe uses dedicated identity/admin overlay. Historical copied-production proof remains at 0.1.2."
+    "nativeUI": "Isolated real WKWebView showed both saved services while a test-only gate held core cmd.Start and the core port remained closed. UI updated automatically after release; clean app/core exit.",
+    "copiedAppStartup": "No 0.1.6 DMG copied-production startup rerun; native probe uses dedicated identity/admin overlay and startup gate."
   },
   "dmg": {
-    "path": "bin/MCP-Gateway-0.1.7-arm64.dmg",
-    "sha256": "4e5d67cd9730329674687a53b292975a3812b7b02c96b5ccf125cabcae6698c1",
-    "bytes": 25285308,
-    "checksumFile": "bin/MCP-Gateway-0.1.7-arm64.dmg.sha256",
+    "path": "bin/MCP-Gateway-0.1.6-arm64.dmg",
+    "sha256": "4e9146f7184e9a1ecbf9bd807b16ea05669a0d2566b950b5fcf94dbc4f4f307f",
+    "bytes": 25234367,
+    "checksumFile": "bin/MCP-Gateway-0.1.6-arm64.dmg.sha256",
     "verificationStatus": "hdiutil verify passed",
     "developerSigned": false,
     "notarized": false,
     "guide": "docs/install-and-verify.md"
   },
   "productionUIAssets": [
-    "frontend/dist/assets/index-BMDbLlCB.js",
-    "frontend/dist/assets/index-CI_VTod6.css"
+    "frontend/dist/assets/index-DAkfKz2Q.js",
+    "frontend/dist/assets/index-DiKNpFO1.css"
   ],
-  "nativeUXProbe": "tests/acceptance/management-ui-0.1.7-2026-09-07.json",
+  "nativeUXProbe": "tests/acceptance/startup-snapshot-0.1.6-2026-09-07.json",
   "iconProbe": "tests/acceptance/icon-padding-0.1.5-2026-09-07.json",
   "gitHistory": "docs/git-history.md",
-  "previousNativeUXProbe": "tests/acceptance/startup-snapshot-0.1.6-2026-09-07.json",
-  "nativeOverlayVerification": "Exact source comparison passed: app identity strings and admin-only QA key override; production business/UI code unchanged."
+  "previousNativeUXProbe": "tests/acceptance/dock-icon-0.1.5-2026-09-07.json"
 }

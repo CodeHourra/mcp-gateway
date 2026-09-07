@@ -448,6 +448,9 @@ func (m *Manager) Snapshot(ctx context.Context) (any, error) {
 			out["statusDetail"] = detail
 			out["statusMessage"] = connectionErrorSummary(s.Command, detail)
 		}
+		if !s.Enabled {
+			out["status"], out["statusMessage"] = "disabled", "服务已禁用。"
+		}
 		out["catalogStatus"] = "live"
 		if !boolean(r["connected"]) {
 			out["catalogStatus"] = "cached"

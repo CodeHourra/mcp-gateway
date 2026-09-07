@@ -37,8 +37,8 @@ export interface ScannedImportSource {
   serviceCount: number; blockedCount: number; message: string
 }
 export interface Backup { id: string; time: string; reason: string }
-export interface Agent { id: string; name: string; status: string; configPath?: string; message?: string }
-export interface AgentPreview { id: string; agentId: string; path: string; before: string; after: string; warnings: string[] }
+export interface Agent { id: string; name: string; status: string; configPath?: string; message?: string; disabled?: boolean; canConfigure: boolean; canDisconnect: boolean }
+export interface AgentPreview { id: string; agentId: string; path: string; before: string; after: string; warnings: string[]; disconnect?: boolean }
 export interface OAuthResult { status: string; message: string }
 
 declare global { interface Window { gateway?: { request<T>(method: string, params?: unknown): Promise<T> } } }
