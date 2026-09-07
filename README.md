@@ -6,7 +6,7 @@
 
 ## DMG 安装与实机测试
 
-本地安装包为 `bin/MCP-Gateway-0.1.4-arm64.dmg`，适用于 Apple Silicon / macOS 15 或以上。双击挂载，将 `MCP Gateway.app` 拖入同窗口的 `Applications`，弹出磁盘映像后从「应用程序」打开。
+本地安装包为 `bin/MCP-Gateway-0.1.5-arm64.dmg`，适用于 Apple Silicon / macOS 15 或以上。双击挂载，将 `MCP Gateway.app` 拖入同窗口的 `Applications`，弹出磁盘映像后从「应用程序」打开。
 
 DMG 不做开发者签名或公证，应用保留无需证书的本机 ad-hoc 签名。若 macOS 提示无法验证开发者，按[安装与测试说明](docs/install-and-verify.md)在系统设置中允许这一个应用。安装包内也附有纯文本说明。
 
@@ -19,7 +19,7 @@ DMG 不做开发者签名或公证，应用保留无需证书的本机 ad-hoc �
 ```sh
 ./scripts/build.sh
 ./scripts/package-dmg.sh
-open 'bin/MCP-Gateway-0.1.4-arm64.dmg'
+open 'bin/MCP-Gateway-0.1.5-arm64.dmg'
 ```
 
 脚本固定 Wails `v3.0.0-beta.16`、MCPProxy `v0.65.0`（commit `308a81272844df896b616b886295305d97f90f8d`），应用 [核心补丁](patches/mcpproxy/)，生成前端绑定，执行检查，打包并做本机 ad-hoc 签名。该签名不等于开发者签名或 Apple 公证。应用不会替换 `/Applications` 中任何内容。
@@ -35,7 +35,7 @@ open 'bin/MCP-Gateway-0.1.4-arm64.dmg'
 3. 打开导入页时，应用会只读扫描 OMP、Claude Code、Cursor、CodeBuddy 和 Codex 的已知用户配置路径；选择检测到的来源后仍需预览、选择并确认，应用不会自动导入。也可手动选择或粘贴 JSON、JSONC、TOML。不同凭证、参数、环境变量和工作目录视为不同连接；应用自己生成的 `mcp-gateway connect` 客户端条目会被阻止，避免把网关接回自身。
 4. 在 Agent 接入页选择 OMP、Claude Code、Cursor、CodeBuddy 或 Codex，预览目标配置变更后再写入。应用保留已有连接及无关配置，不会自动迁移全部客户端。
 
-应用采用菜单栏模式，不常驻 Dock；关闭主窗口后网关继续运行。使用菜单栏重新打开；退出会先暂停新调用并等待已开始的调用结束，也可以选择立即停止。只管理本应用启动的核心和上游进程。
+启动时显示管理窗口和 Dock 图标；关闭主窗口后隐藏 Dock 图标，网关继续在菜单栏运行。使用菜单栏重新打开；退出会先暂停新调用并等待已开始的调用结束，也可以选择立即停止。只管理本应用启动的核心和上游进程。
 
 默认监听 `127.0.0.1:17840`。渐进模式使用 `/mcp/call`，普通聚合使用 `/mcp/all`。两者都要求独立客户端凭证；管理接口使用另一套凭证。接入适配器写入随应用附带的 `connect` 命令，从钥匙串读取客户端凭证，每个连接进程持有独立的网关会话。
 

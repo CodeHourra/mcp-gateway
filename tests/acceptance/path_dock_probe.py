@@ -1,9 +1,15 @@
 """0.1.4 isolated WKWebView and AppKit activation-policy check; no user service/config access."""
-import json,os,secrets,subprocess,sys,time,hashlib,shutil,plistlib
+import argparse,json,os,secrets,subprocess,sys,time,hashlib,shutil,plistlib
 from pathlib import Path
 from wails_mcp import call
 root=Path(__file__).resolve().parents[2]
-stage=Path(sys.argv[1]).resolve()
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('stage', type=Path)
+parser.add_argument('--dock-with-window', action='store_true')
+parser.add_argument('--report', type=Path, default=root/'tests/acceptance/path-dock-0.1.4-2026-09-07.json')
+args=parser.parse_args()
+stage=args.stage.resolve()
+visible_policy=0 if args.dock_with_window else 1
 assert stage.parent==root/'.cache' and stage.name.startswith('path-dock-check.')
 bundle=stage/'MCP Gateway UX Check.app'
 shutil.copytree(root/'bin/MCP Gateway.app',bundle,dirs_exist_ok=True)
@@ -43,6 +49,8 @@ try:
   app=subprocess.Popen([str(bundle/'Contents/MacOS/mcp-gateway')],env=env,stdout=log,stderr=log)
   until(lambda:js('return !!window.gateway'),lambda v:v is True)
   snapshot=until(lambda:js("return await window.gateway.request('snapshot')"),lambda v:any(s['name']=='path-fixture' and s['status']=='ready' for s in v.get('services',[])) and any(s.get('statusDetail') for s in v.get('services',[]) if s['name']=='missing-fixture'))
+  report['initialWindow']=call(endpoint,'windows_list',{})
+  assert len(report['initialWindow'])==1 and report['initialWindow'][0]['visible']
   report['services']=[{k:s.get(k) for k in ('name','status','statusMessage','statusDetail')} for s in snapshot['services']]
   bad=next(s for s in snapshot['services'] if s['name']=='missing-fixture')
   assert '找不到启动命令' in bad['statusMessage'] and 'gateway-missing-test' in bad['statusDetail'] and len(bad['statusDetail'])>50
@@ -51,22 +59,24 @@ try:
   report['detail']=js("const d=document.querySelector('.connection-detail');d.querySelector('summary').click();return {open:d.open,text:d.querySelector('pre').textContent}")
   assert report['detail']['open'] and report['detail']['text']==bad['statusDetail']
   def policy():return int(subprocess.check_output([str(stage/'policy'),str(app.pid)],text=True))
-  report['activationPolicyOpen']=policy();assert report['activationPolicyOpen']==1
+  report['activationPolicyOpen']=policy();assert report['activationPolicyOpen']==visible_policy
   report['closeResult']=call(endpoint,'window_control',{'window':'manager','action':'close'})
   time.sleep(.5)
-  assert app.poll() is None
+  assert app.poll() is None and report['closeResult']['visible'] is False
   report['activationPolicyClosed']=policy();assert report['activationPolicyClosed']==1
   report['backendAfterClose']=js("const s=await window.gateway.request('snapshot');return s.services.find(s=>s.name==='path-fixture').status")
   assert report['backendAfterClose']=='ready'
   second=subprocess.run([str(bundle/'Contents/MacOS/mcp-gateway')],env=env,stdout=log,stderr=log,timeout=15);assert second.returncode==0
   report['secondInstanceExit']=second.returncode
+  time.sleep(.3)
   report['reopenWindow']=call(endpoint,'windows_list',{})
   assert len(report['reopenWindow'])==1 and report['reopenWindow'][0]['visible'] and report['reopenWindow'][0]['focused']
+  report['activationPolicyReopened']=policy();assert report['activationPolicyReopened']==visible_policy
   report['passed']=True
 finally:
  if app is not None and app.poll() is None:
   children=subprocess.run(['pgrep','-P',str(app.pid)],capture_output=True,text=True).stdout.split()
   app.terminate();report['exitCode']=app.wait(timeout=55)
   report['ownedChildrenGone']=all(subprocess.run(['kill','-0',p],capture_output=True).returncode!=0 for p in children)
- (root/'tests/acceptance/path-dock-0.1.4-2026-09-07.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+ args.report.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
  print(json.dumps(report,ensure_ascii=False,indent=2))

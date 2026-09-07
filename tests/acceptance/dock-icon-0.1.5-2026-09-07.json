@@ -1,0 +1,77 @@
+{
+  "scope": "Isolated actual WKWebView and AppKit activation policy. Test-only app identity/admin overlay; no real credentials, providers, OS pixel or menu clicks.",
+  "passed": true,
+  "appSHA256": "8ca30ca3c185c781b94b4da6dec12b4e1c6ea220bc70991b2177fda98c8f6016",
+  "coreSHA256": "39d790b95a1ab3a54acc0951db161e294b9768f2a270e211116cce7e44b0252b",
+  "initialWindow": [
+    {
+      "focused": true,
+      "fullscreen": false,
+      "height": 807,
+      "id": 1,
+      "maximised": false,
+      "minimised": false,
+      "name": "manager",
+      "visible": true,
+      "width": 1179,
+      "x": 274,
+      "y": 143,
+      "zoom": 1
+    }
+  ],
+  "services": [
+    {
+      "name": "missing-fixture",
+      "status": "error",
+      "statusMessage": "找不到启动命令 \"gateway-missing-test\"。请安装对应工具，或在编辑配置中填写可执行文件的绝对路径，然后重新连接。",
+      "statusDetail": "failed to connect: stdio transport (command=\"/bin/zsh\", docker_isolation=false): server process exited before completing the MCP initialize handshake; recent stderr:\nCommand \"gateway-missing-test\" not found on the spawn PATH. Ensure it is installed and on PATH, then restart the affected servers.\n  | zsh:1: command not found: gateway-missing-test: transport error: transport closed"
+    },
+    {
+      "name": "path-fixture",
+      "status": "ready",
+      "statusMessage": "Quarantined for review",
+      "statusDetail": null
+    }
+  ],
+  "detail": {
+    "open": true,
+    "text": "failed to connect: stdio transport (command=\"/bin/zsh\", docker_isolation=false): server process exited before completing the MCP initialize handshake; recent stderr:\nCommand \"gateway-missing-test\" not found on the spawn PATH. Ensure it is installed and on PATH, then restart the affected servers.\n  | zsh:1: command not found: gateway-missing-test: transport error: transport closed"
+  },
+  "activationPolicyOpen": 0,
+  "closeResult": {
+    "focused": false,
+    "fullscreen": false,
+    "height": 807,
+    "id": 1,
+    "maximised": false,
+    "minimised": false,
+    "name": "manager",
+    "visible": false,
+    "width": 1179,
+    "x": 274,
+    "y": 143,
+    "zoom": 1
+  },
+  "activationPolicyClosed": 1,
+  "backendAfterClose": "ready",
+  "secondInstanceExit": 0,
+  "reopenWindow": [
+    {
+      "focused": true,
+      "fullscreen": false,
+      "height": 807,
+      "id": 1,
+      "maximised": false,
+      "minimised": false,
+      "name": "manager",
+      "visible": true,
+      "width": 1179,
+      "x": 274,
+      "y": 143,
+      "zoom": 1
+    }
+  ],
+  "activationPolicyReopened": 0,
+  "exitCode": 0,
+  "ownedChildrenGone": true
+}

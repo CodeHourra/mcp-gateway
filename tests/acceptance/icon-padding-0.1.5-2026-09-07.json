@@ -1,0 +1,130 @@
+{
+  "passed": true,
+  "sizeRatio": 0.8491735537190083,
+  "before": {
+    "imageSize": [
+      1024,
+      1024
+    ],
+    "bounds": [
+      28,
+      28,
+      996,
+      996
+    ]
+  },
+  "after": {
+    "imageSize": [
+      1024,
+      1024
+    ],
+    "bounds": [
+      101,
+      101,
+      923,
+      923
+    ]
+  },
+  "representations": [
+    {
+      "file": "icon_128x128.png",
+      "pixels": 128,
+      "bounds": [
+        13,
+        13,
+        115,
+        115
+      ]
+    },
+    {
+      "file": "icon_128x128@2x.png",
+      "pixels": 256,
+      "bounds": [
+        25,
+        25,
+        231,
+        231
+      ]
+    },
+    {
+      "file": "icon_16x16.png",
+      "pixels": 16,
+      "bounds": [
+        2,
+        2,
+        14,
+        14
+      ]
+    },
+    {
+      "file": "icon_16x16@2x.png",
+      "pixels": 32,
+      "bounds": [
+        3,
+        3,
+        29,
+        29
+      ]
+    },
+    {
+      "file": "icon_256x256.png",
+      "pixels": 256,
+      "bounds": [
+        25,
+        25,
+        231,
+        231
+      ]
+    },
+    {
+      "file": "icon_256x256@2x.png",
+      "pixels": 512,
+      "bounds": [
+        50,
+        50,
+        462,
+        462
+      ]
+    },
+    {
+      "file": "icon_32x32.png",
+      "pixels": 32,
+      "bounds": [
+        3,
+        3,
+        29,
+        29
+      ]
+    },
+    {
+      "file": "icon_32x32@2x.png",
+      "pixels": 64,
+      "bounds": [
+        6,
+        6,
+        58,
+        58
+      ]
+    },
+    {
+      "file": "icon_512x512.png",
+      "pixels": 512,
+      "bounds": [
+        50,
+        50,
+        462,
+        462
+      ]
+    },
+    {
+      "file": "icon_512x512@2x.png",
+      "pixels": 1024,
+      "bounds": [
+        101,
+        101,
+        923,
+        923
+      ]
+    }
+  ]
+}

@@ -151,6 +151,7 @@ func main() {
 	var quitAllowed, quitting, forceQuit atomic.Bool
 	show := func() {
 		if window != nil {
+			setDockVisible(true)
 			window.Show()
 			window.Restore()
 			window.Focus()
@@ -203,7 +204,7 @@ func main() {
 		Name: "MCP Gateway", Description: "个人 MCP 服务与本机网关管理器", LogLevel: slog.LevelWarn,
 		Services:       []application.Service{application.NewService(service)},
 		Assets:         application.AssetOptions{Handler: application.BundledAssetFileServer(assets)},
-		Mac:            application.MacOptions{ActivationPolicy: application.ActivationPolicyAccessory, ApplicationShouldTerminateAfterLastWindowClosed: false},
+		Mac:            application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: false},
 		SingleInstance: &application.SingleInstanceOptions{UniqueID: "com.mcp-gateway.desktop", EncryptionKey: sha256.Sum256([]byte("com.mcp-gateway.desktop.activation")), OnSecondInstanceLaunch: func(application.SecondInstanceData) { show() }},
 		ShouldQuit: func() bool {
 			if quitAllowed.Load() {
@@ -222,7 +223,11 @@ func main() {
 	})
 	service.app = app
 	window = app.Window.NewWithOptions(application.WebviewWindowOptions{Name: "manager", Title: "MCP Gateway", Width: 1180, Height: 780, MinWidth: 760, MinHeight: 560, URL: "/"})
-	window.RegisterHook(events.Common.WindowClosing, func(event *application.WindowEvent) { window.Hide(); event.Cancel() })
+	window.RegisterHook(events.Common.WindowClosing, func(event *application.WindowEvent) {
+		event.Cancel()
+		window.Hide()
+		setDockVisible(false)
+	})
 	app.Event.OnApplicationEvent(events.Mac.ApplicationShouldHandleReopen, func(*application.ApplicationEvent) { show() })
 	appMenu := app.NewMenu()
 	appSub := appMenu.AddSubmenu("MCP Gateway")

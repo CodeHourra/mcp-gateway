@@ -112,3 +112,12 @@ OAuth 状态显示检查发现核心管理接口漏传 runtime 已知的状态�
 桌面保留上游脱敏 last_error，显示中文常见错误提示，并提供可展开完整详情。Wails 使用 Accessory 激活策略及 LSUIElement，窗口关闭钩子继续隐藏而非退出，菜单栏与第二实例共用原 show 路径。
 
 完整构建、Go 测试、前端检查、签名及 DMG 完整性验证通过。隔离 WKWebView / AppKit 测试见 tests/acceptance/path-dock-0.1.4-2026-09-07.json；该测试只替换应用身份和测试管理 key，使用假上游，没有使用真实 TAPD 凭证。测试准备遗漏 core 目录和窗口工具拼写错误的尝试独立保留，未视作产品通过证据。OS 菜单点击和屏幕像素仍需用户实机确认。
+
+
+## 0.1.5 图标、Dock 生命周期与 Git
+
+应用图标完整图形围绕中心缩放至 85%，透明留白增大。绘制使用指定像素的 bitmap context，避免 NSImage.lockFocus 按构建机器 Retina 倍率生成非预期尺寸。10 档 PNG 尺寸与 alpha 边界检查通过，ICNS 已重新生成。
+
+启动使用 Regular 激活策略，显示管理窗口和 Dock。窗口关闭钩子仅隐藏窗口，并在 macOS 主线程切换到 Accessory；菜单栏/第二实例打开管理器时先恢复 Regular，再 Show/Restore/Focus。后台网关不受影响。复用隔离原生探针，新增 --dock-with-window 与 --report 参数；实际检查策略 0→1→0、窗口关闭/可见/焦点、后台 ready、单实例重开、正常退出和子进程清理。原生菜单的人工点击和 Finder 图标视觉对比仍以用户实机反馈为准。
+
+历史按 [Git 历史说明](git-history.md) 分批补录。本轮源码、构建与验收材料另作 0.1.5 提交，没有远端推送。
