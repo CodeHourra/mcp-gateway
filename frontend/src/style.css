@@ -14,3 +14,5 @@
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}@media(pointer:coarse){.control,.nav-button,.icon-button,.tab-bar button{min-height:40px}input:not([type=checkbox],[type=radio]),textarea{font-size:16px}}
 
 .scan-import-sources{margin-top:24px}.scan-sources{list-style:none;margin:16px 0 0;padding:0}.scan-source{display:flex;align-items:flex-start;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}.scan-source-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.scan-source p{margin-top:5px}.scan-source>.control{align-self:center;flex-shrink:0}
+
+.service-actions{margin-top:12px}
