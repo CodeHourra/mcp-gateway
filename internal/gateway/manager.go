@@ -3,7 +3,6 @@ package gateway
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -19,11 +18,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
-	"github.com/zalando/go-keyring"
 )
 
-const Version = "0.1.8-dev"
+const Version = "0.1.9-dev"
 
 type Settings struct {
 	Theme            string `json:"theme"`
@@ -94,22 +91,6 @@ func (m *Manager) Preferences() Settings { m.mu.Lock(); defer m.mu.Unlock(); ret
 func (m *Manager) SecretAccount(name string) string {
 	h := sha256.Sum256([]byte(m.Dir))
 	return hex.EncodeToString(h[:8]) + "-" + name
-}
-
-func (m *Manager) Key(name string) (string, error) {
-	account := m.SecretAccount(name)
-	value, err := keyring.Get("MCP Gateway", account)
-	if err == nil {
-		return value, nil
-	}
-	if !errors.Is(err, keyring.ErrNotFound) {
-		return "", fmt.Errorf("读取 macOS 钥匙串失败: %w", err)
-	}
-	value = rand.Text() + rand.Text()
-	if err := keyring.Set("MCP Gateway", account, value); err != nil {
-		return "", fmt.Errorf("安全保存凭证失败: %w", err)
-	}
-	return value, nil
 }
 
 func (m *Manager) Start(ctx context.Context) error {
@@ -252,6 +233,15 @@ func (m *Manager) Stop(ctx context.Context, force bool) error {
 	}
 }
 
+type apiError struct {
+	status  int
+	message string
+}
+
+func (e *apiError) Error() string {
+	return fmt.Sprintf("网关操作失败 (HTTP %d): %s", e.status, e.message)
+}
+
 func (m *Manager) API(ctx context.Context, method, path string, data any) (any, error) {
 	m.mu.Lock()
 	base, key := m.baseURL, m.adminKey
@@ -287,7 +277,7 @@ func (m *Manager) API(ctx context.Context, method, path string, data any) (any, 
 		return nil, fmt.Errorf("网关响应无法解析 (HTTP %d)", resp.StatusCode)
 	}
 	if resp.StatusCode >= 400 || !result.Success {
-		return nil, fmt.Errorf("网关操作失败 (HTTP %d): %s", resp.StatusCode, m.RedactText(result.Error))
+		return nil, &apiError{status: resp.StatusCode, message: m.RedactText(result.Error)}
 	}
 	return result.Data, nil
 }

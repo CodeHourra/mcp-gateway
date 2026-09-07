@@ -343,3 +343,14 @@ OAuth fixture 使用官方 `tests/oauthserver/templates/login.html`，页面预�
 - 原生 1040 宽窗口打开详情无横向溢出；760×560 下 WebView innerWidth 为 761、clientWidth/scrollWidth 都为 746。Agent 卡片宽 557，按已配置 1 / 需处理 3 / 待接入 1 分组，禁用及旧路径状态分别标识。
 - 继续通过 JSON 无效留稿、跨页面草稿、删除确认、保存后原生环境引用/网关设置保留，Agent 解除后其他配置保留，文件中文选择和深色主题检查。仅使用临时文件和本地 stdio fixture，未配置真实客户端、未进行真实握手。
 - 调试构建仅变更专用应用标识/标题和临时 admin key，UI 和业务源码相同。应用退出 0，受管子进程均结束。OS 键盘、文件对话框、像素及真实客户端/提供方仍保留待验证边界。
+
+
+## 0.1.9 本机 token 简化（2026-09-07）
+
+管理与客户端接入不再调用钥匙串。管理 token 在应用启动时生成；`connect` 自动准备并复用本地客户端 token，缺失或接近到期/撤销时重建，已有客户端配置无需改写。`credentials/` 目录权限 0700、文件权限 0600；跨进程文件锁避免并发覆盖，管理接口异常不会误轮换令牌。客户端 token 保持原有工具权限，不能管理令牌；上游服务的静态凭证与 OAuth 存储不变。升级需要先退出旧版，打开新版后让客户端重新连接。
+
+通过 `go test -race ./internal/gateway ./tests/acceptance`、构建中的全量 `go test ./...`、Vue 类型检查/生产构建与 7 项前端检查。新增测试覆盖并发复用、撤销轮换、丢失文件自动修复、API 失败不轮换、权限及锁取消。
+
+生产应用的真实 `connect` 子进程与固定核心在临时 HOME/独立数据目录完成握手、工具列表、重连、核心重启复用和丢失 token 修复；无认证访问 MCP 返回 401，客户端 token 访问令牌管理返回 403。没有调用上游工具、改写用户客户端配置或用户钥匙串，也没有替换 /Applications。复现：设置 MCP_GATEWAY_TEST_BUNDLE 为构建应用绝对路径，执行 `go test ./tests/acceptance -run '^TestProductionLocalTokenConnection$' -v -count=1`。这证明生产连接命令与核心协议，不代替 CodeBuddy 自身界面的最终重连验收。
+
+本次标准构建在重新克隆核心时遇到 GitHub TLS 错误；应用编译与前置检查已经完成。核对上一版核心二进制、补丁及图标的 SHA-256 全部一致后复用，更新 Info.plist 并重新完成应用签名。没有宣称重新构建核心成功。报告与产物见当前构建清单。

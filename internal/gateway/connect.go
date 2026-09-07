@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -14,7 +16,6 @@ import (
 	"github.com/mark3labs/mcp-go/client/transport"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/zalando/go-keyring"
 )
 
 func (m *Manager) EnsureAgentToken(ctx context.Context, clientID string) error {
@@ -23,10 +24,16 @@ func (m *Manager) EnsureAgentToken(ctx context.Context, clientID string) error {
 	}
 	m.configMu.Lock()
 	defer m.configMu.Unlock()
+	unlock, err := m.lockCredentials(ctx)
+	if err != nil {
+		return err
+	}
+	defer unlock()
 	name := m.SecretAccount("client-" + clientID)
-	value, secretErr := keyring.Get("MCP Gateway", name)
-	if secretErr != nil && !errors.Is(secretErr, keyring.ErrNotFound) {
-		return fmt.Errorf("读取客户端钥匙串凭证: %w", secretErr)
+	path := filepath.Join(m.Dir, "credentials", "client-"+clientID)
+	value, secretErr := readLocalToken(path)
+	if secretErr != nil && !errors.Is(secretErr, os.ErrNotExist) {
+		return fmt.Errorf("读取本地客户端 token: %w", secretErr)
 	}
 	info, err := m.API(ctx, http.MethodGet, "/api/v1/tokens/"+url.PathEscape(name), nil)
 	if err == nil {
@@ -38,6 +45,11 @@ func (m *Manager) EnsureAgentToken(ctx context.Context, clientID string) error {
 		if _, err := m.API(ctx, http.MethodDelete, "/api/v1/tokens/"+url.PathEscape(name)+"/permanent", nil); err != nil {
 			return err
 		}
+	} else {
+		var failure *apiError
+		if !errors.As(err, &failure) || failure.status != http.StatusNotFound {
+			return err
+		}
 	}
 	result, err := m.API(ctx, http.MethodPost, "/api/v1/tokens", Object{"name": name, "allowed_servers": []string{"*"}, "permissions": []string{"read", "write", "destructive"}, "expires_in": "365d"})
 	if err != nil {
@@ -47,7 +59,7 @@ func (m *Manager) EnsureAgentToken(ctx context.Context, clientID string) error {
 	if value == "" {
 		return errors.New("核心没有返回客户端接入凭证")
 	}
-	if err := keyring.Set("MCP Gateway", name, value); err != nil {
+	if err := AtomicWrite(path, []byte(value)); err != nil {
 		_, _ = m.API(ctx, http.MethodDelete, "/api/v1/tokens/"+url.PathEscape(name)+"/permanent", nil)
 		return fmt.Errorf("保存客户端凭证失败，已尝试清除新建接入令牌: %w", err)
 	}
@@ -58,9 +70,23 @@ func (m *Manager) Connect(ctx context.Context, clientID string, input io.Reader,
 	if !serviceNamePattern.MatchString(clientID) {
 		return errors.New("客户端标识无效")
 	}
-	token, err := keyring.Get("MCP Gateway", m.SecretAccount("client-"+clientID))
+	// Startup owns creation of the management token. A client must not create a
+	// new one while an older app is still running with its Keychain token.
+	key, err := readLocalToken(filepath.Join(m.Dir, "credentials", "admin"))
 	if err != nil {
-		return errors.New("客户端接入凭证不可用，请在 MCP Gateway 的 Agent 接入页面重新配置")
+		return errors.New("请先打开新版 MCP Gateway，应用会自动准备本地 token")
+	}
+	m.mu.Lock()
+	m.adminKey = key
+	m.mu.Unlock()
+	setupCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	if err := m.EnsureAgentToken(setupCtx, clientID); err != nil {
+		return fmt.Errorf("本机网关连接准备失败，请确认 MCP Gateway 已启动: %w", err)
+	}
+	token, err := readLocalToken(filepath.Join(m.Dir, "credentials", "client-"+clientID))
+	if err != nil {
+		return fmt.Errorf("读取本地客户端 token: %w", err)
 	}
 	return Bridge(ctx, m.Address(), token, clientID, input, output)
 }

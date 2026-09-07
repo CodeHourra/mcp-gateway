@@ -377,7 +377,7 @@ func (m *Manager) InitialSnapshot() (Object, error) {
 	m.mu.Lock()
 	status, lastError, settings := m.status, m.lastError, m.settings
 	m.mu.Unlock()
-	gateway := Object{"status": status, "address": m.Address(), "version": Version, "error": lastError, "activeCalls": 0, "paused": false, "credentialStorage": "macOS 钥匙串"}
+	gateway := Object{"status": status, "address": m.Address(), "version": Version, "error": lastError, "activeCalls": 0, "paused": false, "credentialStorage": "本机接入：本地 token（仅当前用户可读写）；上游服务：macOS 钥匙串 / OAuth 存储"}
 	cfg, err := m.config()
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, err

@@ -630,7 +630,7 @@ func (m *Manager) PreviewAgentConfig(_ context.Context, clientID string) (any, e
 	newEntry["args"] = entry["args"]
 	newEntry["command"] = entry["command"]
 	newPreview, _ := json.MarshalIndent(Object{key: Object{gatewayEntry: newEntry}}, "", "  ")
-	warnings := []string{adapter.Message, "仅展示本次修改的 MCP 条目；其余内容保留。应用会备份原文件，并为此客户端准备独立的钥匙串接入凭证。", "保留其他 MCP 连接；应用后请在客户端重新加载，实际接入需以握手和调用确认。"}
+	warnings := []string{adapter.Message, "仅展示本次修改的 MCP 条目；其余内容保留。应用会备份原文件，并为此客户端准备自动生成并复用的本地 token。", "保留其他 MCP 连接；应用后请在客户端重新加载，实际接入需以握手和调用确认。"}
 	if len(existing) > 0 {
 		warnings = append(warnings, "已存在 mcp-gateway 条目：将替换连接字段，保留其工具权限、禁用状态及其他设置。")
 	}

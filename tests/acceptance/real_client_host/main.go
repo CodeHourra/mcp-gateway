@@ -1,5 +1,5 @@
 // real_client_host starts only an isolated acceptance profile. It never edits
-// client configuration and removes its own Keychain entries when stdin closes.
+// client configuration. Tokens stay in its caller-owned temporary profile.
 package main
 
 import (
@@ -15,8 +15,6 @@ import (
 	"time"
 
 	"mcp-gateway/internal/gateway"
-
-	"github.com/zalando/go-keyring"
 )
 
 func run() (runErr error) {
@@ -38,11 +36,6 @@ func run() (runErr error) {
 		if err := manager.Stop(stopCtx, true); err != nil {
 			runErr = errors.Join(runErr, fmt.Errorf("controlled shutdown: %w", err))
 		}
-		for _, name := range []string{"admin", "client-acceptance-claude", "client-acceptance-codebuddy"} {
-			if err := keyring.Delete("MCP Gateway", manager.SecretAccount(name)); err != nil && !errors.Is(err, keyring.ErrNotFound) {
-				runErr = errors.Join(runErr, fmt.Errorf("controlled Keychain cleanup: %w", err))
-			}
-		}
 	}()
 	if err := manager.Start(ctx); err != nil {
 		return err
@@ -52,7 +45,7 @@ func run() (runErr error) {
 			return err
 		}
 	}
-	if err := json.NewEncoder(os.Stdout).Encode(map[string]any{"ready": true, "address": manager.Address(), "credentialStorage": "macOS Keychain"}); err != nil {
+	if err := json.NewEncoder(os.Stdout).Encode(map[string]any{"ready": true, "address": manager.Address(), "credentialStorage": "local files (0600)"}); err != nil {
 		return err
 	}
 	stdinDone := make(chan struct{})

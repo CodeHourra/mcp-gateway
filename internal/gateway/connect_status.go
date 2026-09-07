@@ -138,7 +138,7 @@ func (m *Manager) PreviewAgentDisconnect(_ context.Context, clientID string) (an
 		key = "mcp_servers"
 	}
 	preview, _ := json.MarshalIndent(Object{key: Object{gatewayEntry: redactConfig(entry)}}, "", "  ")
-	return Object{"id": id, "agentId": clientID, "path": path, "before": string(preview), "after": "{}", "warnings": []string{"仅移除该客户端的 mcp-gateway 条目；保留其他配置，写入前备份原文件。", "保留钥匙串凭证；已运行的客户端需重新加载，解除配置不会中断现有会话。"}}, nil
+	return Object{"id": id, "agentId": clientID, "path": path, "before": string(preview), "after": "{}", "warnings": []string{"仅移除该客户端的 mcp-gateway 条目；保留其他配置，写入前备份原文件。", "保留本地 token；已运行的客户端需重新加载，解除配置不会中断现有会话。"}}, nil
 }
 
 func (m *Manager) ApplyAgentDisconnect(ctx context.Context, previewID string) (any, error) {
