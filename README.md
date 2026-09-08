@@ -4,6 +4,22 @@
 
 当前为开发中的本地应用。受控协议和关键数据检查已取得结果，真实提供方、真实客户端和原生交互的完成情况以 [验收报告](docs/acceptance.md) 为准；未全部通过前不作为完成版本。
 
+## 运行截图
+
+以下为 0.1.10 开发版在 macOS 上的实际运行截图，使用独立数据目录和本地演示 MCP 服务。截图采集于 2026-09-08，构建与数据来源见[截图说明](docs/screenshots/README.md)。
+
+**服务管理**：查看服务状态，展开工具目录，并单独管理连接配置。
+
+![MCP 服务管理：demo-echo 可用并展示 echo 工具，optional-echo 已禁用](docs/screenshots/01-services.png)
+
+**工具参数与调用结果**：填写 JSON 参数并执行工具；图中本地 `echo` 服务实际返回了 `Hello, MCP Gateway!`。
+
+![工具调用：text 参数、调用输入和本地 echo 服务的实际返回结果](docs/screenshots/02-tool-call.png)
+
+**深色外观与运行设置**：提供浅色、深色与跟随系统外观，以及工具发现模式、本机监听地址和暂停新调用等设置。
+
+![深色设置页：外观、渐进发现与普通聚合、本机监听地址及暂停新调用](docs/screenshots/03-settings-dark.png)
+
 ## DMG 安装与实机测试
 
 本地安装包为 `bin/MCP-Gateway-0.1.10-arm64.dmg`，适用于 Apple Silicon / macOS 15 或以上。双击挂载，将 `MCP Gateway.app` 拖入同窗口的 `Applications`，弹出磁盘映像后从「应用程序」打开。
