@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/mark3labs/mcp-go/client"
@@ -99,7 +101,33 @@ func Bridge(ctx context.Context, address, token, clientID string, input io.Reade
 		return err
 	}
 	defer upstream.Close()
-	downstream := server.NewMCPServer("MCP Gateway", Version, server.WithToolCapabilities(true))
+	var catalog atomic.Pointer[[]string]
+	hooks := &server.Hooks{}
+	hooks.AddBeforeCallTool(func(_ context.Context, _ any, request *mcp.CallToolRequest) {
+		// A proxied tool is still the same tool whichever gateway surface the
+		// caller learned its name from: "server__tool" on the aggregate entry,
+		// "server:tool" on the progressive one, or just "tool" before this
+		// server was proxied at all. Rewrite such a name to the listed one
+		// before the stdio server looks it up, so the call reaches the tool it
+		// meant. An ambiguous or unknown name is left alone: the caller then
+		// gets the ordinary unknown-tool error instead of a wrong tool.
+		current := catalog.Load()
+		if current == nil {
+			return
+		}
+		resolved, ambiguous := resolveToolName(request.Params.Name, *current)
+		if resolved != "" {
+			if resolved != request.Params.Name {
+				slog.Warn("gateway bridged a proxied tool name", "client", clientID, "requested", request.Params.Name, "resolved", resolved)
+			}
+			request.Params.Name = resolved
+			return
+		}
+		if len(ambiguous) > 1 {
+			slog.Warn("gateway left an ambiguous tool name unresolved", "client", clientID, "requested", request.Params.Name, "candidates", ambiguous)
+		}
+	})
+	downstream := server.NewMCPServer("MCP Gateway", Version, server.WithToolCapabilities(true), server.WithHooks(hooks))
 	var refreshMu sync.Mutex
 	refresh := func() error {
 		refreshMu.Lock()
@@ -109,11 +137,14 @@ func Bridge(ctx context.Context, address, token, clientID string, input io.Reade
 			return err
 		}
 		tools := make([]server.ServerTool, 0, len(list.Tools))
+		names := make([]string, 0, len(list.Tools))
 		for _, tool := range list.Tools {
 			tools = append(tools, server.ServerTool{Tool: tool, Handler: func(callCtx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				return upstream.CallTool(callCtx, req)
 			}})
+			names = append(names, tool.Name)
 		}
+		catalog.Store(&names)
 		downstream.SetTools(tools...)
 		return nil
 	}
