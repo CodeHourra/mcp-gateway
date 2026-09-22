@@ -25,11 +25,12 @@ import (
 const Version = "0.1.10-dev"
 
 type Settings struct {
-	Theme            string `json:"theme"`
-	Mode             string `json:"mode"`
-	ListenAddress    string `json:"listenAddress"`
-	LaunchAtLogin    bool   `json:"launchAtLogin"`
-	LogRetentionDays int    `json:"logRetentionDays"`
+	Theme             string `json:"theme"`
+	Mode              string `json:"mode"`
+	ListenAddress     string `json:"listenAddress"`
+	LaunchAtLogin     bool   `json:"launchAtLogin"`
+	AllowAnonymousMCP bool   `json:"allowAnonymousMcp"`
+	LogRetentionDays  int    `json:"logRetentionDays"`
 }
 
 type Manager struct {
@@ -93,6 +94,14 @@ func validateSettings(s Settings) error {
 
 func (m *Manager) Preferences() Settings { m.mu.Lock(); defer m.mu.Unlock(); return m.settings }
 
+func coreServeArgs(configPath, dataDir string, s Settings) []string {
+	args := []string{"serve", "--config", configPath, "--data-dir", dataDir, "--listen", s.ListenAddress}
+	if !s.AllowAnonymousMCP {
+		args = append(args, "--require-mcp-auth")
+	}
+	return args
+}
+
 func (m *Manager) SecretAccount(name string) string {
 	h := sha256.Sum256([]byte(m.Dir))
 	return hex.EncodeToString(h[:8]) + "-" + name
@@ -126,7 +135,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	m.mu.Unlock()
 	configPath := filepath.Join(m.Dir, "core.json")
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		cfg := Object{"mcpServers": []any{}, "listen": settings.ListenAddress, "data_dir": filepath.Join(m.Dir, "core"), "enable_socket": false, "require_mcp_auth": true, "routing_mode": "retrieve_tools", "enable_code_execution": false, "tool_response_limit": 0, "tool_response_mode": "compact", "direct_tool_response_mode": "full", "tokenizer": Object{"enabled": false}, "telemetry": Object{"enabled": false}, "docker_isolation": Object{"enabled": false}, "activity_retention_days": settings.LogRetentionDays, "logging": Object{"level": "warn", "enable_console": false, "enable_file": true, "log_dir": filepath.Join(m.Dir, "logs"), "filename": "core.log", "max_size": 10, "max_backups": 3, "max_age": settings.LogRetentionDays, "compress": true, "json_format": true}}
+		cfg := Object{"mcpServers": []any{}, "listen": settings.ListenAddress, "data_dir": filepath.Join(m.Dir, "core"), "enable_socket": false, "require_mcp_auth": !settings.AllowAnonymousMCP, "routing_mode": "retrieve_tools", "enable_code_execution": false, "tool_response_limit": 0, "tool_response_mode": "compact", "direct_tool_response_mode": "full", "tokenizer": Object{"enabled": false}, "telemetry": Object{"enabled": false}, "docker_isolation": Object{"enabled": false}, "activity_retention_days": settings.LogRetentionDays, "logging": Object{"level": "warn", "enable_console": false, "enable_file": true, "log_dir": filepath.Join(m.Dir, "logs"), "filename": "core.log", "max_size": 10, "max_backups": 3, "max_age": settings.LogRetentionDays, "compress": true, "json_format": true}}
 		if err := writeJSON(configPath, cfg); err != nil {
 			return fail(err)
 		}
@@ -139,7 +148,7 @@ func (m *Manager) Start(ctx context.Context) error {
 		return fail(fmt.Errorf("端口 %s 无法监听，未连接或终止其他进程: %w", settings.ListenAddress, err))
 	}
 	listener.Close()
-	cmd := exec.Command(m.Binary, "serve", "--config", configPath, "--data-dir", filepath.Join(m.Dir, "core"), "--listen", settings.ListenAddress, "--require-mcp-auth")
+	cmd := exec.Command(m.Binary, coreServeArgs(configPath, filepath.Join(m.Dir, "core"), settings)...)
 	cmd.Env = append(os.Environ(), "MCPPROXY_API_KEY="+key, "MCPPROXY_KEYRING_WRITE=1")
 	// Core logging owns retention and redaction; do not create an unbounded second log.
 	cmd.Stdout, cmd.Stderr = io.Discard, io.Discard

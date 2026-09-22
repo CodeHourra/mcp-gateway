@@ -52,6 +52,18 @@ func TestManagementBoundary(t *testing.T) {
 			}
 		}
 	})
+	t.Run("stdio serve keeps MCP auth unless anonymous access is enabled", func(t *testing.T) {
+		s := Settings{ListenAddress: "127.0.0.1:17840"}
+		got := strings.Join(coreServeArgs("cfg.json", "data", s), " ")
+		if !strings.Contains(got, "--require-mcp-auth") {
+			t.Fatalf("missing auth flag: %s", got)
+		}
+		s.AllowAnonymousMCP = true
+		got = strings.Join(coreServeArgs("cfg.json", "data", s), " ")
+		if strings.Contains(got, "--require-mcp-auth") {
+			t.Fatalf("anonymous access still required auth: %s", got)
+		}
+	})
 	t.Run("preserve secret references and unknown service fields", func(t *testing.T) {
 		m := &Manager{}
 		old := Object{"name": "demo", "headers": Object{"Authorization": "Bearer ${keyring:prior}"}, "disabled_tools": []any{"danger"}, "oauth": Object{"client_id": "old"}}
