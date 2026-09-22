@@ -8,6 +8,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('stage', type=Path)
 parser.add_argument('--hierarchy', action='store_true', help='Check the 0.1.8 collapsed hierarchy and grouped agents')
 parser.add_argument('--gateway-debug', action='store_true', help='Check 0.1.10 gateway tools and larger typography')
+parser.add_argument('--report', type=Path, help='Write the report here instead of the versioned history file')
 args = parser.parse_args()
 if args.gateway_debug: args.hierarchy = True
 stage = args.stage.resolve()
@@ -80,28 +81,33 @@ try:
   until('return !!window.gateway')
   if args.hierarchy:
    until("return document.querySelectorAll('.service-group .tool-entry').length>0")
-   report['collapsedDefault']=js("return {groups:document.querySelectorAll('.service-group').length,visibleTools:[...document.querySelectorAll('.service-tools-panel')].filter(e=>e.offsetParent!==null).length,inspector:!!document.querySelector('.inspector'),buttons:[...document.querySelectorAll('.service-row')].map(e=>e.getAttribute('aria-expanded'))}")
-   assert report['collapsedDefault']=={'groups':2,'visibleTools':0,'inspector':False,'buttons':['false','false']}
+   report['collapsedDefault']=js("return {groups:document.querySelectorAll('.service-group').length,visibleTools:[...document.querySelectorAll('.service-tools-panel')].filter(e=>e.offsetParent!==null).length,visibleDetail:[...document.querySelectorAll('.service-config-panel')].filter(e=>e.offsetParent!==null).length,buttons:[...document.querySelectorAll('.service-row')].map(e=>e.getAttribute('aria-expanded'))}")
+   assert report['collapsedDefault']=={'groups':2,'visibleTools':0,'visibleDetail':0,'buttons':['false','false']}
    js("[...document.querySelectorAll('.service-row')].find(e=>e.textContent.includes('saved-service')).click();return true")
-   report['expandedTools']=until("const p=[...document.querySelectorAll('.service-tools-panel')].find(e=>e.offsetParent!==null);return {visible:!!p,heading:p?.querySelector('h3')?.textContent,grouped:!!p?.querySelector('.tools-list-grouped'),inspector:!!document.querySelector('.inspector')}",lambda v:v.get('visible') and v.get('grouped'))
-   assert 'saved-service' in report['expandedTools']['heading'] and not report['expandedTools']['inspector']
+   report['expandedTools']=until("const p=[...document.querySelectorAll('.service-tools-panel')].find(e=>e.offsetParent!==null);return {visible:!!p,heading:p?.querySelector('h3')?.textContent,grouped:!!p?.querySelector('.tools-list-grouped'),visibleDetail:[...document.querySelectorAll('.service-config-panel')].filter(e=>e.offsetParent!==null).length,inGroup:!!p?.closest('.service-group')?.querySelector('.service-row')}",lambda v:v.get('visible') and v.get('grouped'))
+   assert 'saved-service' in report['expandedTools']['heading'] and report['expandedTools']['visibleDetail']==0 and report['expandedTools']['inGroup']
    js("const p=document.querySelector('.service-tools-panel .tool-entry');p.querySelector('summary').click();const e=p.querySelector('textarea');e.value='{\"retained\":true}';e.dispatchEvent(new Event('input',{bubbles:true}));[...document.querySelectorAll('.service-row')].find(e=>e.textContent.includes('saved-service')).click();return true")
    js("[...document.querySelectorAll('.service-row')].find(e=>e.textContent.includes('saved-service')).click();return true")
    report['toolDraftPreserved']=js("return document.querySelector('.service-tools-panel .tool-entry textarea').value.includes('retained')")
    assert report['toolDraftPreserved']
    call(endpoint,'window_control',{'window':'manager','action':'set_size','width':1040,'height':780})
    js("[...document.querySelectorAll('.service-config-button')].find(e=>e.getAttribute('aria-label').includes('saved-service')).click();return true")
-   report['desktopDetail']=until("const e=document.querySelector('.inspector');return {exists:!!e,focused:document.activeElement===e,tab:document.querySelector('.tab-bar [aria-selected=true]')?.textContent,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth}",lambda v:v.get('exists') and v.get('focused'))
-   assert report['desktopDetail']['tab']=='连接与认证' and not report['desktopDetail']['overflow']
+   report['inlineDetail']=until("const e=[...document.querySelectorAll('.service-config-panel')].find(e=>e.offsetParent!==null);return {exists:!!e,focused:document.activeElement===e,tab:e?.querySelector('.tab-bar [aria-selected=true]')?.textContent,inGroup:!!e?.closest('.service-group')?.querySelector('.service-row'),toolsVisible:[...document.querySelectorAll('.service-tools-panel')].filter(e=>e.offsetParent!==null).length,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth}",lambda v:v.get('exists') and v.get('focused'))
+   # Configuration and tools stay mutually exclusive: opening the detail panel closed this service's tools panel.
+   assert report['inlineDetail']['tab']=='连接与认证' and report['inlineDetail']['toolsVisible']==0 and report['inlineDetail']['inGroup'] and not report['inlineDetail']['overflow']
+   js("[...document.querySelectorAll('.service-row')].find(e=>e.textContent.includes('saved-service')).click();return true")
+   report['mutualExclusion']=until("return {visibleDetail:[...document.querySelectorAll('.service-config-panel')].filter(e=>e.offsetParent!==null).length,visibleTools:[...document.querySelectorAll('.service-tools-panel')].filter(e=>e.offsetParent!==null).length}",lambda v:v.get('visibleTools')==1)
+   assert report['mutualExclusion']=={'visibleDetail':0,'visibleTools':1}
    call(endpoint,'window_control',{'window':'manager','action':'set_size','width':760,'height':560})
+   js("[...document.querySelectorAll('.service-config-button')].find(e=>e.getAttribute('aria-label').includes('saved-service')).click();return true")
   else:
-   report['defaultTools']=until("return {groups:document.querySelectorAll('.service-group').length,tools:document.querySelectorAll('.service-group .tool-entry').length,inspector:!!document.querySelector('.inspector'),text:document.body.textContent.slice(-2000)} ",lambda v:v.get('groups')==2 and v.get('tools',0)>0)
-   assert not report['defaultTools']['inspector']
+   report['defaultTools']=until("return {groups:document.querySelectorAll('.service-group').length,tools:document.querySelectorAll('.service-group .tool-entry').length,visibleDetail:[...document.querySelectorAll('.service-config-panel')].filter(e=>e.offsetParent!==null).length,text:document.body.textContent.slice(-2000)} ",lambda v:v.get('groups')==2 and v.get('tools',0)>0)
+   assert report['defaultTools']['visibleDetail']==0
    assert '已禁用' in report['defaultTools']['text'] and 'idle' not in report['defaultTools']['text']
    call(endpoint,'window_control',{'window':'manager','action':'set_size','width':760,'height':560})
-   js("document.querySelector('.service-row').click();return true")
-  report['expandedDetail']=until("return {exists:!!document.querySelector('.inspector'),focused:document.activeElement===document.querySelector('.inspector')} ",lambda v:v.get('exists') and v.get('focused'))
-  button('收起详情');until("return !document.querySelector('.inspector')")
+   js("document.querySelector('.service-config-button').click();return true")
+  report['expandedDetail']=until("return {exists:[...document.querySelectorAll('.service-config-panel')].some(e=>e.offsetParent!==null),focused:document.activeElement?.classList.contains('service-config-panel')} ",lambda v:v.get('exists') and v.get('focused'))
+  button('收起详情');until("return ![...document.querySelectorAll('.service-config-panel')].some(e=>e.offsetParent!==null)")
   button('JSON 配置')
   until("return document.querySelector('.full-json')?.value.includes('saved-service')")
   report['maskedJSON']=js("const s=document.querySelector('.full-json').value;return {stored:s.includes('${stored:'),noRawRef:!s.includes('${env:PATH}')} ")
@@ -158,7 +164,7 @@ try:
    assert [v['agents'] for v in report['agentGroups']]==[['cursor'],['claude-code','codebuddy','codex'],['omp']]
   js("const r=[...document.querySelectorAll('.wide-row, .agent-card')].find(e=>e.textContent.includes('Cursor'));[...r.querySelectorAll('button')].find(e=>e.textContent==='解除接入').click();return true")
   until("return document.body.textContent.includes('解除接入预览')")
-  button('备份并解除接入');until("return [...document.querySelectorAll('.wide-row, .agent-card')].find(e=>e.textContent.includes('Cursor'))?.querySelector('.badge')?.textContent==="+json.dumps('未接入' if args.hierarchy else '尚未配置'))
+  button('备份并解除接入');until("return [...document.querySelectorAll('.wide-row, .agent-card')].find(e=>e.textContent.includes('Cursor'))?.querySelector('.badge')?.textContent==="+json.dumps('未接入'))
   after=json.loads((home/'.cursor/mcp.json').read_text());assert after=={'mcpServers':{'unrelated':{'command':'unchanged'}},'keep':'preserved'}
   report['agentDisconnectPreservedOtherConfig']=True
   nav('MCP 服务');report['draftSurvivedNavigation']=until("return document.querySelector('.full-json').value==='{' ");assert report['draftSurvivedNavigation']
@@ -186,5 +192,6 @@ finally:
   children=subprocess.run(['pgrep','-P',str(app.pid)],capture_output=True,text=True).stdout.split()
   app.terminate();report['exitCode']=app.wait(timeout=55)
   report['ownedChildrenGone']=all(subprocess.run(['kill','-0',p],capture_output=True).returncode!=0 for p in children)
- (root/('tests/acceptance/gateway-debug-ui-0.1.10-2026-09-07.json' if args.gateway_debug else 'tests/acceptance/hierarchy-ui-0.1.8-2026-09-07.json' if args.hierarchy else 'tests/acceptance/management-ui-0.1.7-2026-09-07.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+ dest = args.report or root/('tests/acceptance/gateway-debug-ui-0.1.10-2026-09-07.json' if args.gateway_debug else 'tests/acceptance/hierarchy-ui-0.1.8-2026-09-07.json' if args.hierarchy else 'tests/acceptance/management-ui-0.1.7-2026-09-07.json')
+ dest.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
  print(json.dumps(report,ensure_ascii=False,indent=2))

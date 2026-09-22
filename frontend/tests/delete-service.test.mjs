@@ -27,5 +27,5 @@ test('delete waits for confirmation and keeps the original service ID', async ()
   assert.equal(calls[0][0], 'deleteService')
   assert.equal(calls[0][1].serviceId, 'first')
   const header = descriptor.template.content.split('<div class="inspect-header">')[1].split('<div class="tab-bar"')[0]
-  assert.match(header, /:disabled="busy \|\| !connected" @click="deleteService\(selected\)">删除服务/)
+  assert.match(header, /:disabled="busy \|\| !connected" @click="deleteService\(server\)">删除服务/)
 })

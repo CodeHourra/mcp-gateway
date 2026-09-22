@@ -23,8 +23,7 @@ const feedback = ref('')
 const actionError = ref('')
 const selectedId = ref('')
 const expandedServices = reactive(new Set<string>())
-const inspector = ref<HTMLElement>()
-let selectedTrigger: HTMLElement | undefined
+let detailTrigger: HTMLElement | undefined
 const serviceMode = ref<'visual' | 'json'>('visual')
 const serviceModeOptions = [{ value: 'visual', label: '服务列表' }, { value: 'json', label: 'JSON 配置' }] as const
 const tab = ref<'tools' | 'connection' | 'activity'>('tools')
@@ -69,10 +68,8 @@ const selected = computed(() => services.value.find(server => server.id === sele
 const toolSourceOptions = computed(() => [{ value: '', label: '全部服务' }, ...services.value.map(server => ({ value: server.id, label: server.name }))])
 const allTools = computed(() => snapshot.value?.tools ?? [])
 const visibleTools = computed(() => allTools.value.filter(tool => (!toolSource.value || tool.serviceId === toolSource.value) && `${tool.name} ${tool.description} ${tool.serviceName}`.toLowerCase().includes(toolSearch.value.toLowerCase())))
-const serviceTools = computed(() => allTools.value.filter(tool => tool.serviceId === selectedId.value && `${tool.name} ${tool.description}`.toLowerCase().includes(toolSearch.value.toLowerCase())))
 const activity = computed(() => snapshot.value?.activity ?? [])
 const visibleActivity = computed(() => activity.value.filter(item => `${item.serviceName} ${item.toolName} ${item.message}`.toLowerCase().includes(activitySearch.value.toLowerCase())))
-const serviceActivity = computed(() => activity.value.filter(item => item.serviceId === selectedId.value))
 const connected = computed(() => snapshot.value?.gateway.status === 'running' && snapshot.value.servicesSource !== 'config' && !connectionError.value)
 const importStep = computed(() => importResult.value ? 3 : importPreview.value ? 2 : 1)
 const importSelectionCount = computed(() => importPreview.value?.items.filter(item => item.action !== 'skip').length ?? 0)
@@ -97,17 +94,25 @@ watch(serviceSearch, () => { if (!filteredServices.value.some(server => server.i
 watch(activityDetail, async value => { if (value) { await nextTick(); activityDialog.value?.showModal() } else activityDialog.value?.close() })
 
 function groupTools(id: string) { return allTools.value.filter(tool => tool.serviceId === id) }
-function toggleServiceTools(id: string) {
+function serviceTools(id: string) { return groupTools(id).filter(tool => `${tool.name} ${tool.description}`.toLowerCase().includes(toolSearch.value.toLowerCase())) }
+function serviceActivity(id: string) { return activity.value.filter(item => item.serviceId === id) }
+// Tools and configuration expand in place and are mutually exclusive: opening one collapses the other for that service.
+function toggleTools(id: string) {
   if (expandedServices.has(id)) expandedServices.delete(id)
-  else expandedServices.add(id)
+  else { expandedServices.add(id); if (selectedId.value === id) selectedId.value = '' }
 }
-async function selectService(id: string, event: Event) {
-  if (selectedId.value === id) { closeService(); return }
-  selectedTrigger = event.currentTarget as HTMLElement
+async function toggleConfig(id: string, event: Event) {
+  if (selectedId.value === id) { closeConfig(); return }
+  const trigger = event.currentTarget as HTMLElement
+  detailTrigger = trigger
+  expandedServices.delete(id)
   selectedId.value = id
-  await nextTick(); inspector.value?.focus({ preventScroll: true }); inspector.value?.scrollIntoView({ block: 'start' })
+  await nextTick()
+  // The panel renders inside this service's group; focus and reveal it there.
+  const panel = trigger.closest('.service-group')?.querySelector<HTMLElement>('.service-config-panel')
+  panel?.focus({ preventScroll: true }); panel?.scrollIntoView({ block: 'nearest' })
 }
-function closeService() { selectedId.value = ''; selectedTrigger?.focus() }
+function closeConfig() { selectedId.value = ''; detailTrigger?.focus() }
 function authStateLabel(state?: string) {
   return state ? ({ authenticated: '已登录', expired: '已过期', error: '认证失败', none: '需要登录' } as Record<string, string>)[state] ?? state : '上游未提供状态'
 }
@@ -257,35 +262,34 @@ onUnmounted(() => { unmounted = true; window.removeEventListener('gateway:naviga
           <div v-if="loading && !snapshot" class="empty-state" aria-live="polite"><span class="spinner" /><strong>正在读取服务</strong></div>
           <div v-else-if="!services.length && snapshot?.gateway.status === 'starting'" class="empty-state" aria-live="polite"><span class="spinner" /><strong>网关正在启动</strong><p>正在读取服务状态，请稍候。</p></div>
           <div v-else-if="!services.length" class="empty-state"><span class="empty-symbol" aria-hidden="true">▤</span><h2>{{ connectionError ? '服务列表暂不可用' : '从第一个 MCP 服务开始' }}</h2><p>{{ connectionError ? '连接管理接口后，这里将显示已配置的服务与真实状态。' : '添加本地命令或远程地址，也可以从已有 agent 配置导入。' }}</p><div class="actions"><button class="control" @click="page = 'import'">导入配置</button><button class="control primary" @click="beginEdit()">添加服务</button></div></div>
-          <div v-else class="master-detail" :class="{ 'has-selection': selected }"><div class="service-list">
-            <div class="list-caption">{{ filteredServices.length }} 个服务 · 展开查看工具，配置单独管理</div>
+          <div v-else class="service-list">
+            <div class="list-caption">{{ filteredServices.length }} 个服务 · 就地展开工具或配置</div>
             <p v-if="!filteredServices.length" class="empty-state compact">没有匹配的服务</p>
             <section v-for="server in filteredServices" :key="server.id" class="service-group">
               <div class="service-group-header">
-                <button class="service-row" :aria-expanded="expandedServices.has(server.id)" :aria-controls="`service-tools-${server.id}`" @click="toggleServiceTools(server.id)">
+                <button class="service-row" :aria-expanded="expandedServices.has(server.id)" :aria-controls="`service-panel-${server.id}`" @click="toggleTools(server.id)">
                   <span class="service-symbol" aria-hidden="true">{{ server.name.slice(0, 1).toUpperCase() }}</span>
                   <span class="grow"><strong>{{ server.name }}</strong><small>{{ server.transport === 'http' ? 'HTTP' : server.transport }} · {{ server.catalogStatus === 'loading' ? '工具目录待更新' : `${server.toolCount} 个工具` }}</small><span class="state-line" :class="stateClass(server.status)"><span class="status-dot" />{{ stateLabel(server.status) }}</span></span>
                   <span class="service-expand-label">{{ expandedServices.has(server.id) ? '收起工具' : '展开工具' }}<span class="chevron" aria-hidden="true">{{ expandedServices.has(server.id) ? '⌄' : '›' }}</span></span>
                 </button>
-                <button class="control service-config-button" :aria-expanded="selectedId === server.id" :aria-label="`${server.name} 配置详情`" @click="selectService(server.id, $event)">配置详情</button>
+                <button class="control service-config-button" :aria-expanded="selectedId === server.id" :aria-controls="`service-detail-${server.id}`" :aria-label="`${server.name} 配置详情`" @click="toggleConfig(server.id, $event)">配置详情</button>
               </div>
-              <div v-show="expandedServices.has(server.id)" :id="`service-tools-${server.id}`" class="service-tools-panel">
+              <div v-show="expandedServices.has(server.id)" :id="`service-panel-${server.id}`" class="service-tools-panel">
                 <div class="service-tools-heading"><h3>{{ server.name }} 提供的工具</h3><span>点击工具查看参数与调用</span></div>
                 <p v-if="server.catalogStatus === 'loading'" class="callout" role="status">正在等待工具目录，连接后自动更新。</p>
                 <template v-else><p v-if="server.catalogStatus === 'cached' || server.catalogStatus === 'unavailable'" class="callout">{{ stateLabel(server.catalogStatus) }} · 连接恢复后可重新读取。</p><ToolsList :tools="groupTools(server.id)" :busy="busy || !connected" grouped @toggle="toggleTool" /></template>
               </div>
-            </section>
-          </div>
-            <aside v-if="selected" ref="inspector" tabindex="-1" class="inspector" aria-label="选中服务详情"><div class="inspect-header"><div class="inspect-top"><div class="inspect-name"><span class="service-symbol large" aria-hidden="true">{{ selected.name.slice(0, 1).toUpperCase() }}</span><div><h2>{{ selected.name }}</h2><span class="badge" :class="stateClass(selected.status)">{{ stateLabel(selected.status) }}</span></div></div><label class="check-row"><input type="checkbox" :checked="selected.enabled" :disabled="busy || !connected" @change="mutate('setServiceEnabled', { serviceId: selected.id, enabled: ($event.target as HTMLInputElement).checked }, '服务启用状态已更新。')">启用</label></div><div class="meta-line"><code>{{ endpoint(selected) }}</code><span>{{ selected.catalogStatus === 'loading' ? '工具目录待更新' : `${selected.toolCount} 个工具` }}</span></div><p v-if="selected.statusMessage" class="note" :class="{ 'error-text': selected.status === 'error' }">{{ selected.statusMessage }}</p><details v-if="selected.statusDetail" class="connection-detail"><summary>错误详情</summary><pre>{{ selected.statusDetail }}</pre></details><div class="actions service-actions"><button class="control" @click="closeService">收起详情</button><button class="control" @click="beginEdit(selected)">编辑配置</button><button class="control danger" :disabled="busy || !connected" @click="deleteService(selected)">删除服务</button></div></div>
-              <div class="tab-bar" role="tablist" aria-label="服务详情"><button v-for="item in [{ id: 'tools', label: '工具' }, { id: 'connection', label: '连接与认证' }, { id: 'activity', label: '活动' }] as const" :key="item.id" role="tab" :aria-selected="tab === item.id" @click="tab = item.id">{{ item.label }}</button></div>
-              <div class="panel-body" role="tabpanel">
-                <template v-if="tab === 'tools'"><p v-if="selected.catalogStatus === 'loading'" class="callout" role="status">正在等待工具目录，服务连接后自动更新。</p><p v-if="selected.catalogStatus === 'cached' || selected.catalogStatus === 'unavailable'" class="callout">工具目录：{{ stateLabel(selected.catalogStatus) }}。连接恢复后可重新读取。</p><label class="search-box"><span aria-hidden="true">⌕</span><input v-model="toolSearch" aria-label="搜索此服务的工具" placeholder="搜索工具名称或说明"></label><ToolsList v-if="selected.catalogStatus !== 'loading'" :tools="serviceTools" :busy="busy || !connected" @toggle="toggleTool" /></template>
-                <template v-else-if="tab === 'connection'"><dl class="detail-list"><div><dt>传输方式</dt><dd>{{ selected.transport === 'http' ? 'Streamable HTTP' : selected.transport }}</dd></div><div><dt>认证方式</dt><dd>{{ { none: '无认证', bearer: 'Bearer Token', api_key: 'API Key', headers: '自定义 Header', env: '环境变量', oauth: 'OAuth' }[selected.auth.type] }}</dd></div><div><dt>认证状态</dt><dd>{{ authStateLabel(selected.authStatus) }}</dd></div><div v-if="selected.sources?.length"><dt>配置来源</dt><dd>{{ selected.sources.join('、') }}</dd></div><div v-if="selected.lastConnected"><dt>最近连接</dt><dd>{{ date(selected.lastConnected) }}</dd></div></dl><div class="actions"><button class="control" :disabled="busy || !connected" @click="mutate('testService', { serviceId: selected.id }, '连接测试已执行，查看服务状态和活动以确认结果。')">测试连接</button><button class="control" :disabled="busy || !connected" @click="mutate('reconnectService', { serviceId: selected.id }, '已请求重新连接。')">重新连接</button><button class="control" @click="beginEdit(selected)">编辑配置</button></div>
-                  <section v-if="selected.auth.type === 'oauth'" class="form-section"><h3>OAuth 授权</h3><p class="muted">在浏览器中完成授权，凭证只提供给当前服务。</p><p v-if="oauthState[selected.id]" class="callout" role="status">{{ oauthState[selected.id]?.message }}</p><div class="actions"><button class="control primary" :disabled="busy || !connected" @click="oauth('startOAuth', selected)">在浏览器中登录</button><button class="control" :disabled="busy || !connected" @click="oauth('cancelOAuth', selected)">取消登录</button><button class="control" :disabled="busy || !connected" @click="oauth('refreshOAuth', selected)">刷新授权</button><button class="control danger" :disabled="busy || !connected" @click="askConfirmation('清除本地授权', '这会清除本机保存的授权凭证，服务将需要重新登录；不会撤销提供方账户中的授权。', '清除本地授权', () => oauth('clearOAuth', selected!))">清除本地授权</button></div></section>
-                </template>
-                <template v-else><p v-if="!serviceActivity.length" class="empty-state compact">此服务还没有活动记录。</p><button v-for="item in serviceActivity" :key="item.id" class="activity-row" @click="activityDetail = item"><span class="status-dot" :class="stateClass(item.status)" /><span class="grow"><strong>{{ item.toolName || item.kind }}</strong><small>{{ item.message }}</small></span><small>{{ date(item.time) }}</small></button></template>
+              <div v-if="selectedId === server.id" :id="`service-detail-${server.id}`" tabindex="-1" class="service-config-panel" aria-label="服务详情"><div class="inspect-header"><div class="inspect-top"><div class="inspect-name"><span class="service-symbol large" aria-hidden="true">{{ server.name.slice(0, 1).toUpperCase() }}</span><div><h2>{{ server.name }}</h2><span class="badge" :class="stateClass(server.status)">{{ stateLabel(server.status) }}</span></div></div><label class="check-row"><input type="checkbox" :checked="server.enabled" :disabled="busy || !connected" @change="mutate('setServiceEnabled', { serviceId: server.id, enabled: ($event.target as HTMLInputElement).checked }, '服务启用状态已更新。')">启用</label></div><div class="meta-line"><code>{{ endpoint(server) }}</code><span>{{ server.catalogStatus === 'loading' ? '工具目录待更新' : `${server.toolCount} 个工具` }}</span></div><p v-if="server.statusMessage" class="note" :class="{ 'error-text': server.status === 'error' }">{{ server.statusMessage }}</p><details v-if="server.statusDetail" class="connection-detail"><summary>错误详情</summary><pre>{{ server.statusDetail }}</pre></details><div class="actions service-actions"><button class="control" @click="closeConfig">收起详情</button><button class="control" @click="beginEdit(server)">编辑配置</button><button class="control danger" :disabled="busy || !connected" @click="deleteService(server)">删除服务</button></div></div>
+                <div class="tab-bar" role="tablist" aria-label="服务详情"><button v-for="item in [{ id: 'tools', label: '工具' }, { id: 'connection', label: '连接与认证' }, { id: 'activity', label: '活动' }] as const" :key="item.id" role="tab" :aria-selected="tab === item.id" @click="tab = item.id">{{ item.label }}</button></div>
+                <div class="panel-body" role="tabpanel">
+                  <template v-if="tab === 'tools'"><p v-if="server.catalogStatus === 'loading'" class="callout" role="status">正在等待工具目录，服务连接后自动更新。</p><p v-if="server.catalogStatus === 'cached' || server.catalogStatus === 'unavailable'" class="callout">工具目录：{{ stateLabel(server.catalogStatus) }}。连接恢复后可重新读取。</p><label class="search-box"><span aria-hidden="true">⌕</span><input v-model="toolSearch" aria-label="搜索此服务的工具" placeholder="搜索工具名称或说明"></label><ToolsList v-if="server.catalogStatus !== 'loading'" :tools="serviceTools(server.id)" :busy="busy || !connected" @toggle="toggleTool" /></template>
+                  <template v-else-if="tab === 'connection'"><dl class="detail-list"><div><dt>传输方式</dt><dd>{{ server.transport === 'http' ? 'Streamable HTTP' : server.transport }}</dd></div><div><dt>认证方式</dt><dd>{{ { none: '无认证', bearer: 'Bearer Token', api_key: 'API Key', headers: '自定义 Header', env: '环境变量', oauth: 'OAuth' }[server.auth.type] }}</dd></div><div><dt>认证状态</dt><dd>{{ authStateLabel(server.authStatus) }}</dd></div><div v-if="server.sources?.length"><dt>配置来源</dt><dd>{{ server.sources.join('、') }}</dd></div><div v-if="server.lastConnected"><dt>最近连接</dt><dd>{{ date(server.lastConnected) }}</dd></div></dl><div class="actions"><button class="control" :disabled="busy || !connected" @click="mutate('testService', { serviceId: server.id }, '连接测试已执行，查看服务状态和活动以确认结果。')">测试连接</button><button class="control" :disabled="busy || !connected" @click="mutate('reconnectService', { serviceId: server.id }, '已请求重新连接。')">重新连接</button><button class="control" @click="beginEdit(server)">编辑配置</button></div>
+                    <section v-if="server.auth.type === 'oauth'" class="form-section"><h3>OAuth 授权</h3><p class="muted">在浏览器中完成授权，凭证只提供给当前服务。</p><p v-if="oauthState[server.id]" class="callout" role="status">{{ oauthState[server.id]?.message }}</p><div class="actions"><button class="control primary" :disabled="busy || !connected" @click="oauth('startOAuth', server)">在浏览器中登录</button><button class="control" :disabled="busy || !connected" @click="oauth('cancelOAuth', server)">取消登录</button><button class="control" :disabled="busy || !connected" @click="oauth('refreshOAuth', server)">刷新授权</button><button class="control danger" :disabled="busy || !connected" @click="askConfirmation('清除本地授权', '这会清除本机保存的授权凭证，服务将需要重新登录；不会撤销提供方账户中的授权。', '清除本地授权', () => oauth('clearOAuth', server))">清除本地授权</button></div></section>
+                  </template>
+                  <template v-else><p v-if="!serviceActivity(server.id).length" class="empty-state compact">此服务还没有活动记录。</p><button v-for="item in serviceActivity(server.id)" :key="item.id" class="activity-row" @click="activityDetail = item"><span class="status-dot" :class="stateClass(item.status)" /><span class="grow"><strong>{{ item.toolName || item.kind }}</strong><small>{{ item.message }}</small></span><small>{{ date(item.time) }}</small></button></template>
+                </div>
               </div>
-            </aside>
+            </section>
           </div>
           </template>
         </section>

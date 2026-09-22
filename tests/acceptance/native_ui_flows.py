@@ -49,13 +49,18 @@ def click_text(text, scope="main"):
     return js("const e=[...document.querySelectorAll(" + json.dumps(scope + " button") + ")].find(e=>e.textContent.trim()===" + json.dumps(text) + ");if(!e||e.disabled)throw Error('Missing or disabled button');e.click();return true")
 
 
+def open_config(name):
+    """Open one service's configuration panel, which now expands in place under its row."""
+    return js("const b=[...document.querySelectorAll('.service-config-button')].find(e=>e.getAttribute('aria-label')===" + json.dumps(name + " 配置详情") + ");if(!b)throw Error('Missing config button for '+" + json.dumps(name) + ");if(b.getAttribute('aria-expanded')==='true')return true;b.click();return true")
+
+
 def snap():
     return js("const s=await window.gateway.request('snapshot');return {gateway:s.gateway,settings:s.settings,services:s.services,tools:s.tools}")
 
 
 def idle():
     for _ in range(80):
-        value = js("return {busy:!!document.querySelector('.section-heading .control:disabled,.inspector .inspect-top input:disabled,.tool-access input:disabled')||[...document.querySelectorAll('button')].some(e=>/正在保存|正在导入|正在检查|正在处理/.test(e.textContent)),errors:[...document.querySelectorAll('.error-feedback,.config-form .error-text')].map(e=>e.textContent),feedback:document.querySelector('.feedback:not(.error-feedback)')?.textContent||'',title:document.querySelector('h1')?.textContent}")
+        value = js("return {busy:!!document.querySelector('.section-heading .control:disabled,.service-config-panel .inspect-top input:disabled,.tool-access input:disabled')||[...document.querySelectorAll('button')].some(e=>/正在保存|正在导入|正在检查|正在处理/.test(e.textContent)),errors:[...document.querySelectorAll('.error-feedback,.config-form .error-text')].map(e=>e.textContent),feedback:document.querySelector('.feedback:not(.error-feedback)')?.textContent||'',title:document.querySelector('h1')?.textContent}")
         if not value["busy"]:
             if value["errors"]:
                 raise AssertionError(value)
@@ -170,7 +175,7 @@ def service_tools():
     source = next(s for s in baseline["services"] if s["id"] == "native-echo")
     click(".nav-button:nth-of-type(1)")
     if any(s["id"] == "native-crud" for s in baseline["services"]):
-        js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-crud').click();return true")
+        open_config('native-crud')
         click('.tab-bar [role=tab]:nth-of-type(2)')
         click_text("移除服务", ".panel-body")
         click("dialog[open] .control.danger")
@@ -183,7 +188,7 @@ def service_tools():
         fill(".config-form textarea", json.dumps(source["args"]))
         click(".config-form .form-actions .control.primary")
         idle()
-    js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-crud').click();return true")
+    open_config('native-crud')
     ready = wait_ready(["native-echo", "native-crud"])
     tool_id = next(t["id"] for t in ready["tools"] if t["serviceId"] == "native-crud")
     record("created_service", next(s for s in ready["services"] if s["id"] == "native-crud"))
@@ -202,13 +207,13 @@ def service_tools():
     edited = next(s for s in value["services"] if s["id"] == "native-crud")
     assert edited["args"] == source["args"] + ["edited-by-native-ui"] and edited["cwd"] == str(ROOT)
     record("edited_service", edited)
-    click(".inspect-top input[type=checkbox]")
+    click(".service-config-panel .inspect-top input[type=checkbox]")
     idle()
     disabled = next(s for s in snap()["services"] if s["id"] == "native-crud")
     denial = invoke(tool_id, "should-be-denied-service-disabled")
     record("service_disabled_cached_call", {"service": disabled, "call": denial})
     assert not disabled["enabled"] and (denial.get("error") or denial.get("result", {}).get("isError")), denial
-    click(".inspect-top input[type=checkbox]")
+    click(".service-config-panel .inspect-top input[type=checkbox]")
     idle()
     wait_ready(["native-crud"])
     click('.tab-bar [role=tab]:nth-of-type(1)')
@@ -235,7 +240,7 @@ def service_tools():
     no_services = record("service_search_empty", js("return {text:document.querySelector('main').textContent,serviceRows:document.querySelectorAll('.service-row').length}"))
     assert not no_services["serviceRows"] and "没有匹配的服务" in no_services["text"]
     fill('input[aria-label="搜索 MCP 服务"]', "")
-    js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-crud').click();return true")
+    open_config('native-crud')
     click('.tab-bar [role=tab]:nth-of-type(2)')
     click_text("移除服务", ".panel-body")
     click("dialog[open] .control.danger")
@@ -260,7 +265,7 @@ def auth_forms():
         existing = next((s for s in snap()["services"] if s["id"] == fixture["name"]), None)
         if existing:
             assert existing["url"] == "http://127.0.0.1:63832/" + fixture["path"] + "/mcp" and existing["auth"]["type"] == fixture["type"]
-            js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent===" + json.dumps(fixture["name"]) + ").click();return true")
+            open_config(fixture["name"])
             record(fixture["name"] + "_existing_saved_fixture", {"id": existing["id"], "authType": existing["auth"]["type"]})
         else:
             click(".page-head .control.primary")
@@ -302,7 +307,7 @@ def auth_forms():
 
 def big_diagnostics():
     click(".nav-button:nth-of-type(1)")
-    js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-echo').click();return true")
+    open_config('native-echo')
     click('.tab-bar [role=tab]:nth-of-type(1)')
     click(".tool-summary")
     js("const e=document.querySelector('.tool-content textarea');e.value=JSON.stringify({text:'A'.repeat(1048576)+'NATIVE_UI_END_20260907'});e.dispatchEvent(new Event('input',{bubbles:true}));return true")
@@ -353,7 +358,7 @@ def env_form():
     source = next(s for s in snap()["services"] if s["id"] == "native-echo")
     click(".nav-button:nth-of-type(1)")
     if any(s["id"] == "native-env" for s in snap()["services"]):
-        js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-env').click();return true")
+        open_config('native-env')
         click('.tab-bar [role=tab]:nth-of-type(2)')
         click_text("移除服务", ".panel-body")
         click("dialog[open] .control.danger")
@@ -391,7 +396,7 @@ def oauth_form():
     existing = next((s for s in snap()["services"] if s["id"] == "native-oauth"), None)
     if existing:
         assert existing["url"] == "http://127.0.0.1:63949/mcp" and existing["auth"]["type"] == "oauth"
-        js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-oauth').click();return true")
+        open_config('native-oauth')
     else:
         click(".page-head .control.primary")
         fill('input[placeholder="例如：work-docs"]', "native-oauth")
@@ -407,7 +412,7 @@ def oauth_form():
     click("dialog[open] .control.danger")
     idle()
     cleared = next(s for s in snap()["services"] if s["id"] == "native-oauth")
-    record("local_oauth_cleared", {"serviceStatus": cleared["status"], "message": js("return document.querySelector('.panel-body .callout')?.textContent")})
+    record("local_oauth_cleared", {"serviceStatus": cleared["status"], "message": js("return document.querySelector('.service-config-panel .panel-body .callout')?.textContent")})
     assert cleared["status"] != "ready"
     js("window.__qaOAuth={};window.__qaOriginalRequest=window.gateway.request;window.gateway.request=async function(method,params){const value=await window.__qaOriginalRequest(method,params);if(['startOAuth','cancelOAuth','refreshOAuth'].includes(method))window.__qaOAuth[method]=value;return value};return true")
     try:
@@ -553,25 +558,25 @@ def final_status_catalog():
     assert oauth["authStatus"] == "authenticated", oauth
     record("existing_oauth_restored_after_final_bundle_restart", {"ownership": owned_core(), "oauthStatus": oauth["authStatus"], "calls": echo_after_restart("native-final-bundle-restart")})
     click(".nav-button:nth-of-type(1)")
-    js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-oauth').click();return true")
+    open_config('native-oauth')
     click('.tab-bar [role=tab]:nth-of-type(2)')
     auth_text = wait_js("const d=[...document.querySelectorAll('.detail-list div')].find(e=>e.querySelector('dt')?.textContent==='认证状态');const text=d?.querySelector('dd')?.textContent;return text==='已登录'?text:null")
     record("oauth_authenticated_label", auth_text)
-    js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-echo').click();return true")
+    open_config('native-echo')
     click('.tab-bar [role=tab]:nth-of-type(1)')
-    live = js("return {inspector:document.querySelector('.inspect-name h2')?.textContent,offlineNotice:[...document.querySelectorAll('.panel-body .callout')].some(e=>e.textContent.includes('连接恢复后'))}")
+    live = js("return {inspector:document.querySelector('.service-config-panel .inspect-name h2')?.textContent,offlineNotice:[...document.querySelectorAll('.service-config-panel .panel-body .callout')].some(e=>e.textContent.includes('连接恢复后'))}")
     record("live_catalog_has_no_offline_notice", live)
     assert live["inspector"] == "native-echo" and not live["offlineNotice"]
-    click(".inspect-top input[type=checkbox]")
+    click(".service-config-panel .inspect-top input[type=checkbox]")
     idle()
-    cached = wait_js("const e=document.querySelector('.panel-body .callout');return e?.textContent.includes('缓存目录')?e.textContent:null")
+    cached = wait_js("const e=document.querySelector('.service-config-panel .panel-body .callout');return e?.textContent.includes('缓存目录')?e.textContent:null")
     record("disabled_service_keeps_cached_notice", cached)
-    click(".inspect-top input[type=checkbox]")
+    click(".service-config-panel .inspect-top input[type=checkbox]")
     idle()
     wait_ready(["native-echo"])
-    wait_js("return document.querySelector('.inspect-name h2')?.textContent==='native-echo'&&!document.querySelector('.panel-body .callout')")
+    wait_js("return document.querySelector('.service-config-panel .inspect-name h2')?.textContent==='native-echo'&&!document.querySelector('.service-config-panel .panel-body .callout')")
     record("reconnected_live_catalog_notice_removed", True)
-    js("[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong').textContent==='native-oauth').click();return true")
+    open_config('native-oauth')
     click('.tab-bar [role=tab]:nth-of-type(2)')
     click_text("清除本地授权", ".panel-body")
     click("dialog[open] .control.danger")
@@ -579,7 +584,7 @@ def final_status_catalog():
     cleared = next(s for s in snap()["services"] if s["id"] == "native-oauth")
     assert cleared["authStatus"] == "none" and cleared["status"] != "ready", cleared
     clear_label = wait_js("const d=[...document.querySelectorAll('.detail-list div')].find(e=>e.querySelector('dt')?.textContent==='认证状态');const text=d?.querySelector('dd')?.textContent;return text==='需要登录'?text:null")
-    record("oauth_cleared_label", {"authStatus": cleared["authStatus"], "label": clear_label, "message": js("return document.querySelector('.panel-body .callout')?.textContent")})
+    record("oauth_cleared_label", {"authStatus": cleared["authStatus"], "label": clear_label, "message": js("return document.querySelector('.service-config-panel .panel-body .callout')?.textContent")})
     click_text("在浏览器中登录", ".panel-body")
     idle()
     wait_ready(["native-oauth"])
