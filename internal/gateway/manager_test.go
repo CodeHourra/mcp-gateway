@@ -76,6 +76,27 @@ func TestManagementBoundary(t *testing.T) {
 			t.Fatalf("lost preserved data: %v", cfg)
 		}
 	})
+	t.Run("CI markers are dropped before the core resolves keyring credentials", func(t *testing.T) {
+		// The core treats CI/HEADLESS as "no keychain backend" and then refuses
+		// every ${keyring:…} reference. Launching the app from a CI shell must
+		// not silently disable upstream credential resolution. This asserts the
+		// exact environment handed to the served child process.
+		got := coreEnvironment([]string{"PATH=/usr/bin", "CI=true", "HEADLESS=1", "HOME=/Users/demo", "CI=false"}, "admin-key")
+		for _, entry := range got {
+			if strings.HasPrefix(entry, "CI=") || strings.HasPrefix(entry, "HEADLESS=") {
+				t.Fatalf("kept CI marker: %s", entry)
+			}
+		}
+		want := []string{"PATH=/usr/bin", "HOME=/Users/demo", "MCPPROXY_API_KEY=admin-key", "MCPPROXY_KEYRING_WRITE=1"}
+		if len(got) != len(want) {
+			t.Fatalf("unexpected environment: %v", got)
+		}
+		for i := range want {
+			if got[i] != want[i] {
+				t.Fatalf("environment[%d] = %q, want %q", i, got[i], want[i])
+			}
+		}
+	})
 	t.Run("atomic write retains content on invalid destination", func(t *testing.T) {
 		dir := t.TempDir()
 		path := filepath.Join(dir, "config.json")

@@ -94,6 +94,23 @@ func validateSettings(s Settings) error {
 
 func (m *Manager) Preferences() Settings { m.mu.Lock(); defer m.mu.Unlock(); return m.settings }
 
+// coreEnvironment builds the gateway core's environment. CI/HEADLESS markers are
+// deliberately dropped: the core treats them as "no keychain backend" and then
+// refuses to resolve every ${keyring:…} upstream credential, which surfaces as a
+// bogus OAuth error even though the stored token is valid. Launching the app from
+// a CI or headless shell must not change how credentials resolve.
+func coreEnvironment(environment []string, key string) []string {
+	result := make([]string, 0, len(environment)+2)
+	for _, entry := range environment {
+		name, _, _ := strings.Cut(entry, "=")
+		if name == "CI" || name == "HEADLESS" {
+			continue
+		}
+		result = append(result, entry)
+	}
+	return append(result, "MCPPROXY_API_KEY="+key, "MCPPROXY_KEYRING_WRITE=1")
+}
+
 func coreServeArgs(configPath, dataDir string, s Settings) []string {
 	args := []string{"serve", "--config", configPath, "--data-dir", dataDir, "--listen", s.ListenAddress}
 	if !s.AllowAnonymousMCP {
@@ -149,7 +166,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	}
 	listener.Close()
 	cmd := exec.Command(m.Binary, coreServeArgs(configPath, filepath.Join(m.Dir, "core"), settings)...)
-	cmd.Env = append(os.Environ(), "MCPPROXY_API_KEY="+key, "MCPPROXY_KEYRING_WRITE=1")
+	cmd.Env = coreEnvironment(os.Environ(), key)
 	// Core logging owns retention and redaction; do not create an unbounded second log.
 	cmd.Stdout, cmd.Stderr = io.Discard, io.Discard
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
