@@ -81,6 +81,13 @@ func (m *Manager) secret(value string) (string, error) {
 	return "${keyring:" + name + "}", nil
 }
 
+// trimBearerScheme removes a user-pasted "Bearer " prefix from a bearer
+// token. The header template always adds the scheme itself; keeping the
+// pasted copy would produce "Authorization: Bearer Bearer <token>".
+func trimBearerScheme(value string) string {
+	return strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(value), "Bearer "))
+}
+
 func (m *Manager) pairs(pairs []Pair, old Object) (Object, error) {
 	values := Object{}
 	for _, p := range pairs {
@@ -97,13 +104,21 @@ func (m *Manager) pairs(pairs []Pair, old Object) (Object, error) {
 				return nil, fmt.Errorf("字段 %s 的已存凭证不存在，请重新填写", key)
 			}
 			values[key] = value
-		} else {
-			value, err := m.secret(p.Value)
-			if err != nil {
-				return nil, err
-			}
-			values[key] = value
+			continue
 		}
+		// A pasted "Bearer <credential>" header keeps its scheme: the exported
+		// reference replaces only the credential, so Authorization still reads
+		// "Bearer ${keyring:…}". Dropping it strips the scheme the upstream
+		// requires and turns a valid token into an HTTP 401.
+		scheme, credential := "", p.Value
+		if head, rest, ok := strings.Cut(strings.TrimSpace(p.Value), " "); ok && strings.EqualFold(head, "bearer") {
+			scheme, credential = "Bearer ", strings.TrimSpace(rest)
+		}
+		value, err := m.secret(credential)
+		if err != nil {
+			return nil, err
+		}
+		values[key] = scheme + value
 	}
 	return values, nil
 }
@@ -230,7 +245,7 @@ func (m *Manager) serviceConfig(s Service, old Object) (Object, error) {
 			if s.Auth.Token == "" {
 				return nil, errors.New("请填写凭证")
 			}
-			value, err := m.secret(s.Auth.Token)
+			value, err := m.secret(trimBearerScheme(s.Auth.Token))
 			if err != nil {
 				return nil, err
 			}

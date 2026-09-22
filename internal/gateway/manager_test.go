@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/zalando/go-keyring"
 )
 
 func TestManagementBoundary(t *testing.T) {
@@ -76,6 +78,31 @@ func TestManagementBoundary(t *testing.T) {
 			t.Fatalf("lost preserved data: %v", cfg)
 		}
 	})
+	t.Run("bearer token with pasted scheme is stored without duplication", func(t *testing.T) {
+		m := &Manager{}
+		s := Service{Name: "demo", Transport: "http", URL: "https://example.test/mcp", Auth: Auth{Type: "bearer", Token: "  Bearer tai_pat_controlled-token "}}
+		// The stored reference path needs keyring; exercise the scheme strip
+		// directly and via the reference-preserving template branch.
+		if got := trimBearerScheme(s.Auth.Token); got != "tai_pat_controlled-token" {
+			t.Fatalf("scheme not stripped: %q", got)
+		}
+		if got := trimBearerScheme("tai_pat_controlled-token"); got != "tai_pat_controlled-token" {
+			t.Fatalf("bare token altered: %q", got)
+		}
+		// Reference input "Bearer ${keyring:...}" must survive unchanged so
+		// the template composes exactly one scheme.
+		ref := "Bearer ${keyring:prior}"
+		if got := trimBearerScheme(ref); got != "${keyring:prior}" {
+			t.Fatalf("reference input altered: %q", got)
+		}
+		cfg, err := m.serviceConfig(Service{Name: "demo", Transport: "http", URL: "https://example.test/mcp", Auth: Auth{Type: "bearer", Token: "Bearer ${keyring:prior}"}}, Object{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := object(cfg["headers"])["Authorization"]; got != "Bearer ${keyring:prior}" {
+			t.Fatalf("double scheme in header: %v", got)
+		}
+	})
 	t.Run("CI markers are dropped before the core resolves keyring credentials", func(t *testing.T) {
 		// The core treats CI/HEADLESS as "no keychain backend" and then refuses
 		// every ${keyring:…} reference. Launching the app from a CI shell must
@@ -95,6 +122,34 @@ func TestManagementBoundary(t *testing.T) {
 			if got[i] != want[i] {
 				t.Fatalf("environment[%d] = %q, want %q", i, got[i], want[i])
 			}
+		}
+	})
+	t.Run("imported Authorization header keeps its Bearer scheme", func(t *testing.T) {
+		// A "Bearer <credential>" header pair must export as
+		// "Bearer ${keyring:…}". Strip the scheme before storing the reference
+		// and the upstream sees a bare token, answering HTTP 401.
+		keyring.MockInit()
+		m := &Manager{Dir: t.TempDir()}
+		headers, err := m.pairs([]Pair{{Key: "Authorization", Value: "Bearer afxp_live_token"}}, Object{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		reference := stringValue(headers["Authorization"])
+		if !strings.HasPrefix(reference, "Bearer ${keyring:") {
+			t.Fatalf("scheme lost from Authorization: %q", reference)
+		}
+		account := strings.TrimSuffix(strings.TrimPrefix(reference, "Bearer ${keyring:"), "}")
+		stored, err := keyring.Get("com.mcp-gateway.upstream", account)
+		if err != nil || stored != "afxp_live_token" {
+			t.Fatalf("stored %q, expected the credential alone: %v", stored, err)
+		}
+		// A scheme-less custom header keeps its value untouched.
+		plain, err := m.pairs([]Pair{{Key: "X-Apifox-Api-Version", Value: "2025-09-01"}}, Object{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.HasPrefix(stringValue(plain["X-Apifox-Api-Version"]), "Bearer ") {
+			t.Fatalf("invented a scheme: %v", plain)
 		}
 	})
 	t.Run("atomic write retains content on invalid destination", func(t *testing.T) {
