@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -19,17 +18,19 @@ import (
 )
 
 const (
-	releaseAPI      = "https://api.github.com/repos/CodeHourra/mcp-gateway/releases/latest"
+	// releaseLatest redirects to .../releases/tag/<tag>. Unlike api.github.com it
+	// has no 60-requests-per-hour anonymous limit, which made checks fail with 403.
+	releaseLatest   = "https://github.com/CodeHourra/mcp-gateway/releases/latest"
 	releaseDownload = "https://github.com/CodeHourra/mcp-gateway/releases/download"
 	maxUpdateSize   = 512 << 20
 )
 
 var semver = regexp.MustCompile(`^(\d+)\.(\d+)\.(\d+)$`)
 
-// Updater finds and downloads the newest published release. It never installs:
-// replacing a running, unsigned app is left to the user, who gets a verified file.
+// Updater finds and downloads the newest published release. Installing is done
+// by PrepareInstall; the file returned by Download is already SHA-256 verified.
 type Updater struct {
-	API          string
+	LatestURL    string
 	DownloadBase string
 	// Suffix is the release asset ending for this platform, e.g. "arm64.dmg".
 	Suffix string
@@ -45,7 +46,7 @@ type UpdateInfo struct {
 }
 
 func newUpdater() Updater {
-	u := Updater{API: releaseAPI, DownloadBase: releaseDownload, Client: &http.Client{}}
+	u := Updater{LatestURL: releaseLatest, DownloadBase: releaseDownload, Client: &http.Client{}}
 	switch runtime.GOOS + "/" + runtime.GOARCH {
 	case "darwin/arm64":
 		u.Suffix = "arm64.dmg"
@@ -80,22 +81,69 @@ func lessVersion(a, b [3]int) bool {
 	return false
 }
 
-func (u Updater) get(ctx context.Context, url string) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+func (u Updater) do(ctx context.Context, method, url string, client *http.Client) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("User-Agent", "mcp-gateway-updater")
-	resp, err := u.Client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("无法连接发布源: %w", err)
+	}
+	return resp, nil
+}
+
+func (u Updater) get(ctx context.Context, url string) (*http.Response, error) {
+	resp, err := u.do(ctx, http.MethodGet, url, u.Client)
+	if err != nil {
+		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
 		resp.Body.Close()
 		return nil, fmt.Errorf("发布源返回 HTTP %d", resp.StatusCode)
 	}
 	return resp, nil
+}
+
+// latestTag reads the newest non-prerelease tag from the /releases/latest redirect.
+func (u Updater) latestTag(ctx context.Context) (string, error) {
+	noFollow := *u.Client
+	noFollow.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	resp, err := u.do(ctx, http.MethodHead, u.LatestURL, &noFollow)
+	if err != nil {
+		return "", err
+	}
+	resp.Body.Close()
+	if resp.StatusCode < 300 || resp.StatusCode > 399 {
+		return "", fmt.Errorf("发布源返回 HTTP %d", resp.StatusCode)
+	}
+	location, err := resp.Location()
+	if err != nil {
+		return "", fmt.Errorf("发布源没有给出最新版本: %w", err)
+	}
+	// A repository without releases redirects to .../releases instead of .../releases/tag/<tag>.
+	_, tag, ok := strings.Cut(location.Path, "/releases/tag/")
+	if !ok || tag == "" || strings.Contains(tag, "/") {
+		return "", errors.New("发布源还没有已发布的版本")
+	}
+	return tag, nil
+}
+
+// assetReady reports whether the release has published url.
+func (u Updater) assetReady(ctx context.Context, url string) (bool, error) {
+	resp, err := u.do(ctx, http.MethodHead, url, u.Client)
+	if err != nil {
+		return false, err
+	}
+	resp.Body.Close()
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return true, nil
+	case http.StatusNotFound:
+		return false, nil
+	}
+	return false, fmt.Errorf("发布源返回 HTTP %d", resp.StatusCode)
 }
 
 // Check compares current with the latest published, non-prerelease version.
@@ -106,21 +154,11 @@ func (u Updater) Check(ctx context.Context, current string) (UpdateInfo, error) 
 	}
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	resp, err := u.get(ctx, u.API)
+	tag, err := u.latestTag(ctx)
 	if err != nil {
 		return UpdateInfo{}, err
 	}
-	defer resp.Body.Close()
-	var release struct {
-		Tag    string `json:"tag_name"`
-		Assets []struct {
-			Name string `json:"name"`
-		} `json:"assets"`
-	}
-	if err := json.NewDecoder(io.LimitReader(resp.Body, 4<<20)).Decode(&release); err != nil {
-		return UpdateInfo{}, fmt.Errorf("发布信息无法解析: %w", err)
-	}
-	latest := strings.TrimPrefix(release.Tag, "v")
+	latest := strings.TrimPrefix(tag, "v")
 	lat, err := parseSemver(latest)
 	if err != nil {
 		return UpdateInfo{}, err
@@ -135,14 +173,16 @@ func (u Updater) Check(ctx context.Context, current string) (UpdateInfo, error) 
 		return info, nil
 	}
 	asset := "MCP-Gateway-" + latest + "-" + u.Suffix
-	for _, a := range release.Assets {
-		if a.Name == asset {
-			info.Available, info.Asset = true, asset
-			info.Message = "发现新版本 " + latest + "（当前 " + current + "）。"
-			return info, nil
-		}
+	ready, err := u.assetReady(ctx, u.DownloadBase+"/"+tag+"/"+asset)
+	if err != nil {
+		return UpdateInfo{}, err
 	}
-	info.Message = "新版本 " + latest + " 已发布，但安装包尚未就绪，稍后再试。"
+	if !ready {
+		info.Message = "新版本 " + latest + " 已发布，但安装包尚未就绪，稍后再试。"
+		return info, nil
+	}
+	info.Available, info.Asset = true, asset
+	info.Message = "发现新版本 " + latest + "（当前 " + current + "）。"
 	return info, nil
 }
 

@@ -21,7 +21,7 @@ import (
 	"github.com/mark3labs/mcp-go/client"
 )
 
-const Version = "0.1.13"
+const Version = "0.1.14"
 
 type Settings struct {
 	Theme             string `json:"theme"`

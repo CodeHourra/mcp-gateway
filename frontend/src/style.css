@@ -638,8 +638,9 @@ main { flex: 1; min-width: 0; }
 }
 .filter-row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 6px; }
 .filter-row .field { width: auto; margin: 0 0 12px; }
+.filter-row.with-label { align-items: flex-end; }
 .filter-row .search-box { flex: 1; min-width: 180px; margin-bottom: 12px; }
-.tool-source-filter .select { display: block; margin-top: 6px; }
+.tool-source-filter .select { display: block; margin-top: 6px; min-height: 41px; }
 
 /* ==========================================================================
    Services
