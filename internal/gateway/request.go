@@ -208,6 +208,9 @@ func (m *Manager) Request(ctx context.Context, method string, params string) (an
 		if err != nil {
 			return nil, err
 		}
+		m.mu.Lock()
+		m.verifiedPath = path
+		m.mu.Unlock()
 		return Object{"path": path, "version": info.Latest, "message": "已下载并通过 SHA-256 校验：" + path}, nil
 	default:
 		return nil, fmt.Errorf("未知管理操作: %s", method)

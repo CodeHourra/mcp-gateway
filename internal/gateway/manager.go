@@ -52,6 +52,7 @@ type Manager struct {
 	http         *http.Client
 	previews     map[string]*ImportPlan
 	updates      Updater
+	verifiedPath string // newest installer that passed SHA-256; guarded by mu
 }
 
 func New(dir, binary string) (*Manager, error) {
@@ -90,6 +91,19 @@ func validateSettings(s Settings) error {
 		return errors.New("日志保留天数须为 1–365")
 	}
 	return nil
+}
+
+// VerifiedUpdate returns the installer downloaded and checked by downloadUpdate.
+func (m *Manager) VerifiedUpdate() (string, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.verifiedPath == "" {
+		return "", false
+	}
+	if _, err := os.Stat(m.verifiedPath); err != nil {
+		return "", false
+	}
+	return m.verifiedPath, true
 }
 
 func (m *Manager) Preferences() Settings { m.mu.Lock(); defer m.mu.Unlock(); return m.settings }

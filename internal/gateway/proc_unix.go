@@ -22,6 +22,11 @@ func processGroupAttr() *syscall.SysProcAttr {
 	return &syscall.SysProcAttr{Setpgid: true}
 }
 
+// detachedAttr lets the update helper outlive this process.
+func detachedAttr() *syscall.SysProcAttr {
+	return &syscall.SysProcAttr{Setsid: true}
+}
+
 // terminateProcess requests the core's normal exit so it can clean up its
 // upstreams. Only the exact process group created here is signalled.
 func terminateProcess(p *os.Process) error {

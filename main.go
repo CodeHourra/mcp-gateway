@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -33,6 +32,8 @@ var assets embed.FS
 type GatewayService struct {
 	manager *gateway.Manager
 	app     *application.App
+	// installAndQuit queues the update helper and starts the normal graceful quit.
+	installAndQuit func(start func() error)
 }
 
 func (s *GatewayService) Request(ctx context.Context, method, params string) (any, error) {
@@ -84,25 +85,29 @@ func (s *GatewayService) Request(ctx context.Context, method, params string) (an
 		}
 		return result, err
 	}
+	if method == "installUpdate" {
+		path, ok := s.manager.VerifiedUpdate()
+		if !ok {
+			return nil, errors.New("尚未下载更新，请先下载并校验")
+		}
+		start, err := gateway.PrepareInstall(path, s.manager.Dir)
+		if errors.Is(err, gateway.ErrManualInstall) {
+			// The verified installer is intact; show it so the user can install by hand.
+			_ = s.app.Browser.OpenFile(path)
+			return nil, fmt.Errorf("%w。已打开安装包，请手动安装", err)
+		}
+		if err != nil {
+			return nil, err
+		}
+		s.installAndQuit(start)
+		return map[string]any{"message": "正在退出并更新，完成后会自动重新打开。"}, nil
+	}
 	result, err := s.manager.Request(ctx, method, params)
 	if err == nil && method == "exportDiagnostics" {
 		if data, ok := result.(map[string]any); ok {
 			if path, ok := data["path"].(string); ok {
 				// The file is already saved; failure to reveal it must not hide its path.
 				_ = s.app.Browser.OpenFile(filepath.Dir(path))
-			}
-		}
-	}
-	if err == nil && method == "downloadUpdate" {
-		if data, ok := result.(map[string]any); ok {
-			if path, ok := data["path"].(string); ok {
-				// A dmg mounts for drag-to-Applications; a zip is shown in its folder. The
-				// verified file is already on disk, so failure to open must not hide its path.
-				target := filepath.Dir(path)
-				if runtime.GOOS == "darwin" {
-					target = path
-				}
-				_ = s.app.Browser.OpenFile(target)
 			}
 		}
 	}
@@ -178,6 +183,8 @@ func main() {
 	var window *application.WebviewWindow
 	var app *application.App
 	var quitAllowed, quitting, forceQuit atomic.Bool
+	// pendingUpdate runs as the last step of shutdown; every aborted quit clears it.
+	var pendingUpdate atomic.Pointer[func() error]
 	show := func() {
 		if window != nil {
 			setDockVisible(true)
@@ -195,6 +202,7 @@ func main() {
 				if err := manager.Stop(ctx, true); err != nil {
 					forceQuit.Store(false)
 					quitting.Store(false)
+					pendingUpdate.Store(nil)
 					app.Dialog.Error().SetMessage(err.Error()).Show()
 					return
 				}
@@ -212,6 +220,7 @@ func main() {
 					return
 				}
 				quitting.Store(false)
+				pendingUpdate.Store(nil)
 				app.Dialog.Error().SetTitle("暂时无法安全退出").SetMessage(err.Error() + "。可重试，或从菜单选择立即停止并退出。").Show()
 				return
 			}
@@ -222,6 +231,7 @@ func main() {
 			defer cancel()
 			if err := manager.Stop(ctx, false); err != nil {
 				quitting.Store(false)
+				pendingUpdate.Store(nil)
 				app.Dialog.Error().SetMessage(err.Error()).Show()
 				return
 			}
@@ -248,9 +258,18 @@ func main() {
 			if err := manager.Stop(ctx, forceQuit.Load()); err != nil {
 				slog.Error("停止网关失败", "error", err)
 			}
+			if start := pendingUpdate.Load(); start != nil {
+				if err := (*start)(); err != nil {
+					slog.Error("启动更新程序失败", "error", err)
+				}
+			}
 		},
 	})
 	service.app = app
+	service.installAndQuit = func(start func() error) {
+		pendingUpdate.Store(&start)
+		quit(false)
+	}
 	window = app.Window.NewWithOptions(application.WebviewWindowOptions{Name: "manager", Title: "MCP Gateway", Width: 1180, Height: 780, MinWidth: 760, MinHeight: 560, URL: "/"})
 	window.RegisterHook(events.Common.WindowClosing, func(event *application.WindowEvent) {
 		event.Cancel()

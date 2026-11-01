@@ -22,6 +22,11 @@ func processGroupAttr() *syscall.SysProcAttr {
 	return &syscall.SysProcAttr{CreationFlags: windows.CREATE_NEW_PROCESS_GROUP}
 }
 
+// detachedAttr lets the update helper outlive this process without a console window.
+func detachedAttr() *syscall.SysProcAttr {
+	return &syscall.SysProcAttr{CreationFlags: windows.CREATE_NEW_PROCESS_GROUP | windows.CREATE_NO_WINDOW}
+}
+
 // terminateProcess is a no-op on Windows: the core was already asked to stop
 // through its management API, and process signals other than Kill are
 // unsupported there.
