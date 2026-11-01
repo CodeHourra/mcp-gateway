@@ -19,18 +19,18 @@ set_version() {
 import json, pathlib, re, sys
 root, version = pathlib.Path(sys.argv[1]), sys.argv[2]
 package = root / "frontend/package.json"
-data = json.loads(package.read_text())
+data = json.loads(package.read_text(encoding="utf-8"))
 data["version"] = version
-package.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+package.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 lock = root / "frontend/package-lock.json"
-text = lock.read_text()
-lock.write_text(re.sub(r'("version":\s*)"[^"]*"', r'\g<1>"%s"' % version, text, count=2))
+text = lock.read_text(encoding="utf-8")
+lock.write_text(re.sub(r'("version":\s*)"[^"]*"', r'\g<1>"%s"' % version, text, count=2), encoding="utf-8")
 manager = root / "internal/gateway/manager.go"
-source = manager.read_text()
+source = manager.read_text(encoding="utf-8")
 new, replaced = re.subn(r'(?m)^(const Version = ")[^"]*(")', r'\g<1>%s\2' % version, source, count=1)
 if not replaced:
     sys.exit("internal/gateway/manager.go 未找到 const Version")
-manager.write_text(new)
+manager.write_text(new, encoding="utf-8")
 PY
   echo "version $version"
 }

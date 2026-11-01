@@ -10,7 +10,7 @@ destination.mkdir(parents=True, exist_ok=True)
 modules = {}
 decoder = json.JSONDecoder()
 for directory in sys.argv[2:]:
-    stream = subprocess.check_output(["go", "list", "-deps", "-json", "./..."], cwd=directory, text=True)
+    stream = subprocess.check_output(["go", "list", "-deps", "-json", "./..."], cwd=directory, text=True, encoding="utf-8")
     offset = 0
     while offset < len(stream):
         while offset < len(stream) and stream[offset].isspace():
@@ -23,11 +23,11 @@ for directory in sys.argv[2:]:
             modules[module["Path"] + "@" + module["Version"]] = Path(module["Dir"])
 
 frontend = Path(__file__).resolve().parents[1] / "frontend"
-for directory in subprocess.check_output(["npm", "ls", "--omit=dev", "--all", "--parseable"], cwd=frontend, text=True).splitlines():
+for directory in subprocess.check_output(["npm", "ls", "--omit=dev", "--all", "--parseable"], cwd=frontend, text=True, encoding="utf-8").splitlines():
     path = Path(directory)
     if path == frontend:
         continue
-    manifest = json.loads((path / "package.json").read_text())
+    manifest = json.loads((path / "package.json").read_text(encoding="utf-8"))
     modules[manifest["name"] + "@" + manifest["version"]] = path
 
 manifest = {}
@@ -39,7 +39,7 @@ for name, directory in sorted(modules.items()):
             shutil.copyfile(file, destination / target)
             notices.append(target)
     manifest[name] = notices
-go_root = Path(subprocess.check_output(["go", "env", "GOROOT"], text=True).strip())
+go_root = Path(subprocess.check_output(["go", "env", "GOROOT"], text=True, encoding="utf-8").strip())
 shutil.copyfile(go_root / "LICENSE", destination / "Go-runtime-LICENSE")
-(destination / "versions.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+(destination / "versions.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 print(f"Collected notices for {len(manifest)} dependency modules.")
