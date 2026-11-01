@@ -7,7 +7,7 @@ test -x "$bundle/Contents/MacOS/mcpproxy"
 test "$(lipo -archs "$bundle/Contents/MacOS/mcp-gateway")" = arm64
 test "$(lipo -archs "$bundle/Contents/MacOS/mcpproxy")" = arm64
 codesign --verify --deep --strict "$bundle"
-version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$bundle/Contents/Info.plist")
+version="$("$root/scripts/version.sh" read)"
 name="MCP-Gateway-$version-arm64.dmg"
 mkdir -p "$root/.cache" "$root/bin"
 stage=$(mktemp -d "$root/.cache/dmg.XXXXXX")
