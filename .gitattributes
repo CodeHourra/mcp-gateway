@@ -1,0 +1,7 @@
+# Unified diffs must keep LF so git apply matches the LF sources they patch.
+# Git for Windows defaults to core.autocrlf=true, which would rewrite these
+# files to CRLF on checkout and make every hunk fail with "patch does not apply".
+*.patch text eol=lf
+
+# Shell scripts are consumed by bash on both platforms.
+*.sh text eol=lf
