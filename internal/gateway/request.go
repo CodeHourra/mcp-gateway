@@ -202,7 +202,13 @@ func (m *Manager) Request(ctx context.Context, method string, params string) (an
 		}
 		return Object{"filename": filename, "path": path}, nil
 	case "checkUpdates":
-		return Object{"message": "当前为本地开发版 " + Version + "，尚未配置本应用的发布源，无法判断更新。核心版本不会自动替换。"}, nil
+		return m.updates.Check(ctx, Version)
+	case "downloadUpdate":
+		path, info, err := m.updates.Download(ctx, Version, filepath.Join(m.Dir, "updates"))
+		if err != nil {
+			return nil, err
+		}
+		return Object{"path": path, "version": info.Latest, "message": "已下载并通过 SHA-256 校验：" + path}, nil
 	default:
 		return nil, fmt.Errorf("未知管理操作: %s", method)
 	}

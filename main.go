@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -89,6 +90,19 @@ func (s *GatewayService) Request(ctx context.Context, method, params string) (an
 			if path, ok := data["path"].(string); ok {
 				// The file is already saved; failure to reveal it must not hide its path.
 				_ = s.app.Browser.OpenFile(filepath.Dir(path))
+			}
+		}
+	}
+	if err == nil && method == "downloadUpdate" {
+		if data, ok := result.(map[string]any); ok {
+			if path, ok := data["path"].(string); ok {
+				// A dmg mounts for drag-to-Applications; a zip is shown in its folder. The
+				// verified file is already on disk, so failure to open must not hide its path.
+				target := filepath.Dir(path)
+				if runtime.GOOS == "darwin" {
+					target = path
+				}
+				_ = s.app.Browser.OpenFile(target)
 			}
 		}
 	}

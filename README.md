@@ -2,7 +2,7 @@
 
 个人 MCP 管理器，使用 Wails v3 + Vue 3，复用固定版本的 MCPProxy Go。提供服务和认证管理、工具目录与调用、配置导入/备份、五类客户端接入及原生菜单栏。macOS 与 Windows 共用同一套服务端与界面代码。
 
-当前为开发中的本地应用，版本 `0.1.12`。受控协议和关键数据检查已取得结果，真实提供方、真实客户端和原生交互的完成情况以 [验收报告](docs/acceptance.md) 为准；未全部通过前不作为完成版本。
+当前为开发中的本地应用，版本 `0.1.13`。受控协议和关键数据检查已取得结果，真实提供方、真实客户端和原生交互的完成情况以 [验收报告](docs/acceptance.md) 为准；未全部通过前不作为完成版本。
 
 ## 下载
 
@@ -10,8 +10,8 @@
 
 | 平台 | 产物 | 说明 |
 | --- | --- | --- |
-| macOS arm64 | `MCP-Gateway-0.1.12-arm64.dmg` | Apple Silicon / macOS 15 或以上；ad-hoc 签名，未公证 |
-| Windows x64 | `MCP-Gateway-0.1.12-windows-amd64.zip` | Windows 10 1809+ / Windows 11；未签名，首次运行需通过 SmartScreen 确认 |
+| macOS arm64 | `MCP-Gateway-0.1.13-arm64.dmg` | Apple Silicon / macOS 15 或以上；ad-hoc 签名，未公证 |
+| Windows x64 | `MCP-Gateway-0.1.13-windows-amd64.zip` | Windows 10 1809+ / Windows 11；未签名，首次运行需通过 SmartScreen 确认 |
 
 每个产物旁附 `.sha256` 校验文件。合入 `main` 后由 [Release workflow](.github/workflows/release.yml) 自动创建 `release/<version>` 分支、打 `v<version>` tag、构建上述两个产物并发布 Release。
 
@@ -60,6 +60,7 @@
 
 覆盖安装即可，无需卸载旧版本、也无需导出再导入配置。
 
+- 更新检查：应用启动时及之后每天向 GitHub Releases 查询一次最新版本（设置 → 关于 → “自动检查更新”可关闭，也可手动点“检查更新”）。发现新版本时设置导航出现提示点，点“下载并校验”会把安装包下载到数据目录的 `updates/`，用 Release 附带的 `.sha256` 校验通过后打开（macOS 挂载 DMG，Windows 打开所在目录）。应用只检查与下载，不会自动替换正在运行的程序；校验失败的文件会被丢弃。之后按上面的“安装”步骤退出旧版本并覆盖安装。
 - 数据目录不随安装包移动，也不在应用包内：macOS 为 `~/Library/Application Support/MCP Gateway/`，Windows 为 `%APPDATA%\MCP Gateway\`。
 - 覆盖安装不会删除该目录中的 `settings.json`、`services.json`、`core.json`、`backups/`、日志与 `credentials/`（本机管理与客户端 token）。上游服务的凭证仍存放在系统凭证库中，不受影响。
 - 升级后建议在 Agent 接入页重新预览并更新客户端配置，确认 `connect` 命令仍指向新应用的绝对路径；移动过应用位置时必须重新预览。
@@ -113,7 +114,7 @@ macOS 需要 Apple Silicon Mac、macOS 15 或以上、Xcode Command Line Tools�
 # macOS arm64：构建应用 + DMG
 ./scripts/build.sh
 ./scripts/package-dmg.sh
-open 'bin/MCP-Gateway-0.1.12-arm64.dmg'
+open 'bin/MCP-Gateway-0.1.13-arm64.dmg'
 
 # Windows x64：构建应用 + zip（在 Windows 上运行）
 ./scripts/package-windows.sh

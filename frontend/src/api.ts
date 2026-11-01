@@ -36,6 +36,7 @@ export interface ScannedImportSource {
   id: string; name: string; path: string; status: 'found' | 'empty' | 'invalid' | 'unavailable'
   serviceCount: number; blockedCount: number; message: string
 }
+export interface UpdateInfo { current: string; latest: string; available: boolean; asset?: string; message: string }
 export interface Backup { id: string; time: string; reason: string }
 export interface Agent { id: string; name: string; status: string; configPath?: string; message?: string; disabled?: boolean; canConfigure: boolean; canDisconnect: boolean }
 export interface AgentPreview { id: string; agentId: string; path: string; before: string; after: string; warnings: string[]; disconnect?: boolean }

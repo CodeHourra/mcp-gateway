@@ -26,7 +26,8 @@
 | `copyGatewayAddress` | `{}` | Any successful result; native clipboard copy |
 | `copyText` | `{ text }` | Any successful result; native clipboard copy of non-empty text |
 | `exportDiagnostics` | `{}` | `{ filename: string, path: string }`; returns only after the redacted report is saved, with its full local path |
-| `checkUpdates` | `{}` | `{ message: string }`; accurate source/status, never fake up-to-date |
+| `checkUpdates` | `{}` | `UpdateInfo` (`current`, `latest`, `available`, `asset?`, `message`); queries the latest GitHub Release, compares X.Y.Z numerically; `available` only when this platform's asset is published; network failure rejects, never reports up-to-date |
+| `downloadUpdate` | `{}` | `{ path, version, message }`; downloads the platform installer into `<data>/updates/` (older installers removed), keeps it only if its SHA-256 matches the release `.sha256`; native code then opens the dmg (macOS) or its folder (Windows). Never installs or replaces the running app |
 
 Service IDs and tool IDs are opaque and never inferred from names. `Pair.stored` / `auth.tokenStored` marks an existing redacted secret; submitting an empty value with that marker preserves the original. Changing auth type must clear unused secret material in the backend. Transport values are `stdio`, `http`, `sse`; auth values are `none`, `bearer`, `api_key`, `headers`, `env`, `oauth`. An API key is passed in a named HTTP header.
 

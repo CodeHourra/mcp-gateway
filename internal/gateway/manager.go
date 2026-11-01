@@ -21,7 +21,7 @@ import (
 	"github.com/mark3labs/mcp-go/client"
 )
 
-const Version = "0.1.12"
+const Version = "0.1.13"
 
 type Settings struct {
 	Theme             string `json:"theme"`
@@ -51,6 +51,7 @@ type Manager struct {
 	stopping     bool
 	http         *http.Client
 	previews     map[string]*ImportPlan
+	updates      Updater
 }
 
 func New(dir, binary string) (*Manager, error) {
@@ -60,7 +61,7 @@ func New(dir, binary string) (*Manager, error) {
 	if err := os.Chmod(dir, 0700); err != nil {
 		return nil, err
 	}
-	m := &Manager{Dir: dir, Binary: binary, status: "stopped", http: &http.Client{Timeout: 5 * time.Minute}, previews: map[string]*ImportPlan{}, settings: Settings{Theme: "system", Mode: "progressive", ListenAddress: "127.0.0.1:17840", LogRetentionDays: 14}}
+	m := &Manager{Dir: dir, Binary: binary, status: "stopped", http: &http.Client{Timeout: 5 * time.Minute}, previews: map[string]*ImportPlan{}, updates: newUpdater(), settings: Settings{Theme: "system", Mode: "progressive", ListenAddress: "127.0.0.1:17840", LogRetentionDays: 14}}
 	if err := readJSON(filepath.Join(dir, "settings.json"), &m.settings); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("读取偏好设置: %w", err)
 	}
