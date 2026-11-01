@@ -2,7 +2,7 @@
 
 个人 MCP 管理器，使用 Wails v3 + Vue 3，复用固定版本的 MCPProxy Go。提供服务和认证管理、工具目录与调用、配置导入/备份、五类客户端接入及原生菜单栏。macOS 与 Windows 共用同一套服务端与界面代码。
 
-当前为开发中的本地应用，版本 `0.1.13`。受控协议和关键数据检查已取得结果，真实提供方、真实客户端和原生交互的完成情况以 [验收报告](docs/acceptance.md) 为准；未全部通过前不作为完成版本。
+当前为开发中的本地应用，版本 `0.1.14`。受控协议和关键数据检查已取得结果，真实提供方、真实客户端和原生交互的完成情况以 [验收报告](docs/acceptance.md) 为准；未全部通过前不作为完成版本。
 
 ## 下载
 
@@ -10,8 +10,8 @@
 
 | 平台 | 产物 | 说明 |
 | --- | --- | --- |
-| macOS arm64 | `MCP-Gateway-0.1.13-arm64.dmg` | Apple Silicon / macOS 15 或以上；ad-hoc 签名，未公证 |
-| Windows x64 | `MCP-Gateway-0.1.13-windows-amd64.zip` | Windows 10 1809+ / Windows 11；未签名，首次运行需通过 SmartScreen 确认 |
+| macOS arm64 | `MCP-Gateway-0.1.14-arm64.dmg` | Apple Silicon / macOS 15 或以上；ad-hoc 签名，未公证 |
+| Windows x64 | `MCP-Gateway-0.1.14-windows-amd64.zip` | Windows 10 1809+ / Windows 11；未签名，首次运行需通过 SmartScreen 确认 |
 
 每个产物旁附 `.sha256` 校验文件。合入 `main` 后由 [Release workflow](.github/workflows/release.yml) 自动创建 `release/<version>` 分支、打 `v<version>` tag、构建上述两个产物并发布 Release。
 
@@ -114,7 +114,7 @@ macOS 需要 Apple Silicon Mac、macOS 15 或以上、Xcode Command Line Tools�
 # macOS arm64：构建应用 + DMG
 ./scripts/build.sh
 ./scripts/package-dmg.sh
-open 'bin/MCP-Gateway-0.1.13-arm64.dmg'
+open 'bin/MCP-Gateway-0.1.14-arm64.dmg'
 
 # Windows x64：构建应用 + zip（在 Windows 上运行）
 ./scripts/package-windows.sh
@@ -130,7 +130,7 @@ open 'bin/MCP-Gateway-0.1.13-arm64.dmg'
 
 ```sh
 ./scripts/version.sh read          # 读取当前版本
-./scripts/version.sh set 0.1.13    # 同步写入以上各处
+./scripts/version.sh set 0.1.14    # 同步写入以上各处
 ```
 
 Release workflow 会先校验这几处一致，再以 `v<version>` 为 tag 发布；不一致时直接失败，不会发出版本号互相矛盾的产物。

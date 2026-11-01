@@ -13,31 +13,30 @@ import (
 	"testing"
 )
 
-// releaseServer serves a latest-release JSON plus downloadable assets. body is
-// the installer content; sumBody overrides the .sha256 file content when set.
+// releaseServer mimics github.com: /latest redirects to /tag/<tag>, and only the
+// listed assets are downloadable. body is the installer content; sumBody
+// overrides the .sha256 file content when set.
 func releaseServer(t *testing.T, tag string, assets []string, body, sumBody string) Updater {
 	t.Helper()
 	mux := http.NewServeMux()
-	mux.HandleFunc("/latest", func(w http.ResponseWriter, _ *http.Request) {
-		names := make([]string, len(assets))
-		for i, a := range assets {
-			names[i] = fmt.Sprintf(`{"name":%q}`, a)
-		}
-		fmt.Fprintf(w, `{"tag_name":%q,"assets":[%s]}`, tag, strings.Join(names, ","))
+	mux.HandleFunc("/latest", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/owner/repo/releases/tag/"+tag, http.StatusFound)
 	})
-	name := "MCP-Gateway-" + strings.TrimPrefix(tag, "v") + "-arm64.dmg"
-	mux.HandleFunc("/dl/"+tag+"/"+name, func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, body) })
-	mux.HandleFunc("/dl/"+tag+"/"+name+".sha256", func(w http.ResponseWriter, _ *http.Request) {
-		if sumBody != "" {
-			fmt.Fprint(w, sumBody)
-			return
-		}
-		sum := sha256.Sum256([]byte(body))
-		fmt.Fprintf(w, "%s  %s\n", hex.EncodeToString(sum[:]), name)
-	})
+	for _, name := range assets {
+		name := name
+		mux.HandleFunc("/dl/"+tag+"/"+name, func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, body) })
+		mux.HandleFunc("/dl/"+tag+"/"+name+".sha256", func(w http.ResponseWriter, _ *http.Request) {
+			if sumBody != "" {
+				fmt.Fprint(w, sumBody)
+				return
+			}
+			sum := sha256.Sum256([]byte(body))
+			fmt.Fprintf(w, "%s  %s\n", hex.EncodeToString(sum[:]), name)
+		})
+	}
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
-	return Updater{API: srv.URL + "/latest", DownloadBase: srv.URL + "/dl", Suffix: "arm64.dmg", Client: srv.Client()}
+	return Updater{LatestURL: srv.URL + "/latest", DownloadBase: srv.URL + "/dl", Suffix: "arm64.dmg", Client: srv.Client()}
 }
 
 func TestCheckComparesVersionsNumerically(t *testing.T) {
@@ -65,6 +64,20 @@ func TestCheckRequiresPlatformAssetAndValidTag(t *testing.T) {
 	u = releaseServer(t, "nightly", nil, "x", "")
 	if _, err := u.Check(context.Background(), "0.1.0"); err == nil {
 		t.Fatal("non-semver tag must be rejected")
+	}
+}
+
+func TestCheckReportsRepositoryWithoutReleases(t *testing.T) {
+	// github.com redirects /releases/latest to /releases when nothing is published.
+	mux := http.NewServeMux()
+	mux.HandleFunc("/latest", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/owner/repo/releases", http.StatusFound)
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+	u := Updater{LatestURL: srv.URL + "/latest", DownloadBase: srv.URL + "/dl", Suffix: "arm64.dmg", Client: srv.Client()}
+	if info, err := u.Check(context.Background(), "0.1.0"); err == nil || info.Available {
+		t.Fatalf("repository without releases must error, got %+v, %v", info, err)
 	}
 }
 
