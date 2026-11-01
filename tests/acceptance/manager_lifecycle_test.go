@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -18,6 +19,12 @@ import (
 )
 
 func TestStartupTimeoutStopsOwnedCoreWithoutManagementAPI(t *testing.T) {
+	// The controlled core below is a /bin/sh script, and only POSIX processes
+	// can be probed with signal 0. Both are Unix-only, so Windows CI skips it
+	// rather than failing; the Windows stop path is not covered here.
+	if runtime.GOOS == "windows" {
+		t.Skip("controlled core is a POSIX shell script")
+	}
 	keyring.MockInit()
 	dir := t.TempDir()
 	listener, err := net.Listen("tcp", "127.0.0.1:0")

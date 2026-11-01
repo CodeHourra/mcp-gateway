@@ -15,7 +15,7 @@ set_version() {
   # BSD and GNU sed disagree on -i; go through a temp file so both work.
   sed "s|<key>CFBundleShortVersionString</key><string>[^<]*</string>|<key>CFBundleShortVersionString</key><string>$version</string>|" "$plist" > "$plist.tmp"
   mv "$plist.tmp" "$plist"
-  python3 - "$root" "$version" <<'PY'
+  "$(command -v python3 || command -v python)" - "$root" "$version" <<'PY'
 import json, pathlib, re, sys
 root, version = pathlib.Path(sys.argv[1]), sys.argv[2]
 package = root / "frontend/package.json"

@@ -10,6 +10,7 @@ export GOCACHE="${GOCACHE:-$root/.cache/go-build}"
 export MACOSX_DEPLOYMENT_TARGET=15.0
 export CGO_CFLAGS="-mmacosx-version-min=15.0"
 export CGO_LDFLAGS="-mmacosx-version-min=15.0"
+py="$(command -v python3 || command -v python)"
 mkdir -p .cache/bin bin
 if [ ! -x .cache/bin/wails3 ]; then
   GOBIN="$root/.cache/bin" go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.16
@@ -25,7 +26,7 @@ go build -tags production -trimpath -buildvcs=false -ldflags="-w -s" -o "$bundle
 source_dir="$root/.cache/mcpproxy-src"
 "$root/scripts/build-core.sh" "$bundle/Contents/MacOS/mcpproxy" "$source_dir"
 rm -rf "$bundle/Contents/Resources/Licenses"
-python3 scripts/licenses.py "$bundle/Contents/Resources/Licenses" "$root" "$source_dir"
+"$py" scripts/licenses.py "$bundle/Contents/Resources/Licenses" "$root" "$source_dir"
 cp "$source_dir/LICENSE" "$bundle/Contents/Resources/Licenses/MCPProxy-Go.txt"
 rm -rf "$source_dir"
 cp build/Info.plist "$bundle/Contents/Info.plist"
