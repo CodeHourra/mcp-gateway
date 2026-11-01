@@ -52,13 +52,9 @@ cp docs/install-and-verify-windows.txt "$stage/安装与测试说明.txt"
 
 name="MCP-Gateway-$version-windows-amd64.zip"
 rm -f "bin/$name"
-# Git Bash on Windows has no zip; fall back to PowerShell's archiver, which
-# needs native paths (cygpath) rather than the MSYS /d/... form.
-if command -v zip >/dev/null 2>&1; then
-  (cd "$stage" && zip -q -r "$root/bin/$name" .)
-else
-  powershell -NoProfile -Command "Compress-Archive -Path '$(cygpath -w "$stage")\\*' -DestinationPath '$(cygpath -w "$root/bin/$name")' -Force"
-fi
+# zipdir.py instead of Compress-Archive: PowerShell writes backslash entry
+# names, which unzip/7-Zip/macOS then read as one flat filename.
+"$py" scripts/zipdir.py "$stage" "$root/bin/$name"
 (cd "$root/bin" && {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$name"
   elif command -v shasum >/dev/null 2>&1; then shasum -a 256 "$name"
