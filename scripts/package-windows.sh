@@ -23,10 +23,16 @@ wails3=".cache/bin/wails3"
 "$wails3" generate bindings -ts -b -d frontend/bindings ./...
 npm --prefix frontend ci
 npm --prefix frontend run build
-# Host-side checks run natively; only the Windows artefacts cross-compile.
-# The acceptance suite drives POSIX shell scripts and signals, so it runs on the
-# Unix host and Windows CI gets vet + the build instead.
-if [ "$(uname -s)" = "Windows_NT" ]; then
+# Host-native checks; only the Windows artefacts cross-compile. Git Bash reports
+# MINGW*/MSYS*, not Windows_NT, so match those too.
+# The unit and acceptance suites assert POSIX permission bits (0600 files,
+# unreadable directories) and drive /bin/sh children, which Windows cannot
+# satisfy, so a Windows host gets vet plus the builds instead of the suite.
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*|Windows_NT) windows_host=1 ;;
+  *) windows_host=0 ;;
+esac
+if [ "$windows_host" = 1 ]; then
   go vet ./...
 else
   go test ./...
@@ -46,16 +52,17 @@ cp docs/install-and-verify-windows.txt "$stage/安装与测试说明.txt"
 
 name="MCP-Gateway-$version-windows-amd64.zip"
 rm -f "bin/$name"
-# Git Bash on Windows has no zip; fall back to PowerShell's archiver.
+# Git Bash on Windows has no zip; fall back to PowerShell's archiver, which
+# needs native paths (cygpath) rather than the MSYS /d/... form.
 if command -v zip >/dev/null 2>&1; then
   (cd "$stage" && zip -q -r "$root/bin/$name" .)
 else
-  powershell -NoProfile -Command "Compress-Archive -Path '$stage/*' -DestinationPath '$root/bin/$name' -Force"
+  powershell -NoProfile -Command "Compress-Archive -Path '$(cygpath -w "$stage")\\*' -DestinationPath '$(cygpath -w "$root/bin/$name")' -Force"
 fi
 (cd "$root/bin" && {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$name"
   elif command -v shasum >/dev/null 2>&1; then shasum -a 256 "$name"
-  else powershell -NoProfile -Command "(Get-FileHash '$root/bin/$name' -Algorithm SHA256).Hash.ToLower() + '  $name'"
+  else powershell -NoProfile -Command "(Get-FileHash '$(cygpath -w "$root/bin/$name")' -Algorithm SHA256).Hash.ToLower() + '  $name'"
   fi
 } > "$name.sha256")
 printf 'Packaged %s\n' "$root/bin/$name"
