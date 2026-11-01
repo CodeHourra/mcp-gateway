@@ -8,7 +8,7 @@ import AgentConnections from './AgentConnections.vue'
 import GatewayTools from './GatewayTools.vue'
 import AgentGuide from './AgentGuide.vue'
 import Icon, { type IconName } from './Icon.vue'
-import { emptyService, errorMessage, request, type Activity, type Agent, type AgentPreview, type Backup, type ImportItem, type ImportPreview, type ImportResult, type ScannedImportSource, type OAuthResult, type Service, type ServiceConfig, type Settings, type Snapshot, type Theme, type Tool } from './api'
+import { emptyService, errorMessage, request, type Activity, type Agent, type AgentPreview, type Backup, type ImportItem, type ImportPreview, type ImportResult, type ScannedImportSource, type OAuthResult, type Service, type ServiceConfig, type Settings, type Snapshot, type Theme, type Tool, type UpdateInfo } from './api'
 
 type Page = 'services' | 'tools' | 'import' | 'agents' | 'activity' | 'guide' | 'settings'
 type Segment = 'tools' | 'connection' | 'activity'
@@ -42,6 +42,8 @@ const themeOptions = [{ value: 'light', label: '浅色' }, { value: 'dark', labe
 const gatewayModeOptions = [{ value: 'progressive', label: '渐进发现' }, { value: 'aggregate', label: '普通聚合' }] as const
 const retentionOptions = [1, 7, 14, 30].map(value => ({ value, label: `${value} 天` }))
 const theme = ref<Theme>(readTheme())
+const autoCheckUpdates = ref(readAutoCheck())
+const updateInfo = ref<UpdateInfo>()
 const settings = reactive<Settings>({ theme: theme.value, mode: 'progressive', listenAddress: '127.0.0.1:8787', launchAtLogin: false, allowAnonymousMcp: false, logRetentionDays: 7 })
 const importMode = ref<'scan' | 'file' | 'paste'>('scan')
 const importModeOptions = [{ value: 'scan', label: '自动扫描' }, { value: 'file', label: '选择配置文件' }, { value: 'paste', label: '粘贴配置' }] as const
@@ -70,6 +72,7 @@ let editorTrigger: HTMLElement | null = null
 const confirmation = ref<{ title: string; message: string; label: string; perform: () => Promise<void> }>()
 let poll: ReturnType<typeof setTimeout> | undefined
 let feedbackTimer: ReturnType<typeof setTimeout> | undefined
+let updateTimer: ReturnType<typeof setInterval> | undefined
 let unmounted = false
 let refreshGeneration = 0
 let initialSettings = false
@@ -95,6 +98,19 @@ const importSelectionCount = computed(() => importPreview.value?.items.filter(it
 
 function readTheme(): Theme {
   try { const value = localStorage.getItem('mcp-gateway-theme'); return value === 'light' || value === 'dark' ? value : 'system' } catch { return 'system' }
+}
+function readAutoCheck() {
+  try { return localStorage.getItem('mcp-gateway-auto-update-check') !== 'off' } catch { return true }
+}
+function setAutoCheck(value: boolean) {
+  autoCheckUpdates.value = value
+  try { localStorage.setItem('mcp-gateway-auto-update-check', value ? 'on' : 'off') } catch { /* Preference stays in memory for this window. */ }
+  if (value) void silentUpdateCheck()
+}
+// Background checks stay quiet: no busy lock, no toast, and a failed lookup is not worth interrupting for.
+async function silentUpdateCheck() {
+  if (!window.gateway) return
+  try { updateInfo.value = await request<UpdateInfo>('checkUpdates') } catch { /* The manual button reports errors. */ }
 }
 function applyTheme(value: Theme) {
   document.documentElement.dataset.theme = value
@@ -219,6 +235,14 @@ function deleteService(server: Service) {
   const { id, name } = server
   void askConfirmation('删除服务', `确定删除“${name}”？删除前会备份网关配置，删除后 agent 将无法通过网关调用它的工具。原始导入文件不受影响。`, '删除服务', () => mutate('deleteService', { serviceId: id }, '服务已删除。', `delete:${id}`))
 }
+function installUpdate() {
+  const latest = updateInfo.value?.latest
+  if (!latest) return
+  void askConfirmation(`更新到 ${latest}`, '将下载并校验安装包，然后退出本应用并停止网关（进行中的调用会先完成），替换为新版本后自动重新打开。期间 agent 无法使用网关工具；校验或替换失败时保留当前版本。', '下载并更新', () => run(async () => {
+    await request('downloadUpdate')
+    feedback.value = (await request<{ message: string }>('installUpdate')).message
+  }, '', 'install-update'))
+}
 async function confirmAction() {
   if (!confirmation.value || busy.value) return
   await confirmation.value.perform(); if (!actionError.value) confirmDialog.value?.close()
@@ -309,8 +333,10 @@ onMounted(async () => {
   window.addEventListener('gateway:navigate', nativeNavigate)
   await refresh(false, true)
   void pollSnapshot()
+  if (autoCheckUpdates.value) void silentUpdateCheck()
+  updateTimer = setInterval(() => { if (autoCheckUpdates.value) void silentUpdateCheck() }, 24 * 60 * 60 * 1000)
 })
-onUnmounted(() => { unmounted = true; clearTimeout(feedbackTimer); window.removeEventListener('gateway:navigate', nativeNavigate); if (poll) clearTimeout(poll); refreshGeneration++ })
+onUnmounted(() => { unmounted = true; clearInterval(updateTimer); clearTimeout(feedbackTimer); window.removeEventListener('gateway:navigate', nativeNavigate); if (poll) clearTimeout(poll); refreshGeneration++ })
 </script>
 
 <template>
@@ -318,7 +344,7 @@ onUnmounted(() => { unmounted = true; clearTimeout(feedbackTimer); window.remove
     <nav class="sidebar" aria-label="应用导航">
       <div class="brand"><span class="brand-mark" aria-hidden="true">m</span><span>MCP Gateway<small>个人工作区</small></span></div>
       <div class="nav-caption">工作区</div>
-      <button v-for="item in nav" :key="item.id" class="nav-button" :class="{ 'settings-nav': item.id === 'settings' }" :aria-current="page === item.id ? 'page' : undefined" @click="page = item.id"><span class="nav-icon" aria-hidden="true"><Icon :name="item.icon" /></span>{{ item.label }}<span v-if="item.id === 'services' && snapshot" class="count">{{ services.length }}</span><span v-if="item.id === 'settings' && settingsDirty" class="dirty-dot" role="img" aria-label="设置有未保存修改" /></button>
+      <button v-for="item in nav" :key="item.id" class="nav-button" :class="{ 'settings-nav': item.id === 'settings' }" :aria-current="page === item.id ? 'page' : undefined" @click="page = item.id"><span class="nav-icon" aria-hidden="true"><Icon :name="item.icon" /></span>{{ item.label }}<span v-if="item.id === 'services' && snapshot" class="count">{{ services.length }}</span><span v-if="item.id === 'settings' && settingsDirty" class="dirty-dot" role="img" aria-label="设置有未保存修改" /><span v-if="item.id === 'settings' && updateInfo?.available" class="dirty-dot" role="img" aria-label="有可用更新" /></button>
       <div class="local-note"><span class="status-dot" :class="connected ? stateClass(snapshot!.gateway.status) : 'neutral'" />{{ connected ? '仅在本机运行' : snapshot?.servicesSource === 'config' ? '等待网关状态' : '管理接口未连接' }}</div>
     </nav>
     <div class="main-shell">
@@ -429,7 +455,7 @@ onUnmounted(() => { unmounted = true; clearTimeout(feedbackTimer); window.remove
         <section v-else-if="page === 'guide'" class="page"><AgentGuide :mode="snapshot?.settings.mode" :busy="busy" @navigate="page = $event" @copy="copyText" /></section>
 
         <section v-else-if="page === 'settings'" class="page settings-page"><div class="page-head"><div><h1 tabindex="-1">设置</h1><p>管理本机运行和桌面行为。</p></div></div><section class="settings-group"><h2>外观</h2><p class="muted">跟随系统会随 macOS 外观自动切换。</p><div class="theme-cards"><label v-for="item in themeOptions" :key="item.value" class="theme-choice"><span class="theme-thumb" :class="`${item.value}-preview`" /><span><input v-model="theme" type="radio" name="theme" :value="item.value">{{ item.label }}</span></label></div></section><form @submit.prevent="mutate('saveSettings', { ...settings, theme }, '运行设置已保存。', 'save-settings')"><section class="settings-group"><h2>网关运行</h2><p class="muted">以下选项需点击“保存运行设置”后生效。</p><div class="setting-row"><span><strong>工具发现模式</strong><small>渐进发现按需读取 schema；普通聚合供兼容客户端使用。</small></span><ChoiceGroup v-model="settings.mode" label="工具发现模式" :options="gatewayModeOptions" hide-label /></div><label class="setting-row"><span><strong>本机监听地址</strong><small>仅允许本机回环地址，改变端口可能需要重新接入客户端。</small></span><input v-model="settings.listenAddress" required class="address-input" placeholder="127.0.0.1:8787"></label><label class="setting-row"><span><strong>允许无 Token 访问</strong><small>关闭时 HTTP 接入必须带客户端 Bearer。打开后本机任意进程或网页都能调用已启用的工具。</small></span><input v-model="settings.allowAnonymousMcp" type="checkbox" role="switch" class="switch-input"></label><label class="setting-row"><span><strong>登录时启动</strong><small>登录 macOS 后在菜单栏运行。</small></span><input v-model="settings.launchAtLogin" type="checkbox" role="switch" class="switch-input"></label><div class="setting-row"><span><strong>日志保留</strong><small>活动记录与归档日志的保留天数；当前日志按大小轮转。</small></span><ChoiceGroup v-model="settings.logRetentionDays" label="日志保留" :options="retentionOptions" hide-label /></div><div class="actions form-actions settings-savebar"><span v-if="settingsDirty" class="dirty-note" role="status">有未保存修改</span><button class="control primary" :disabled="busy || !connected || !settingsDirty" :title="offlineHint" :aria-busy="pendingAction === 'save-settings'"><span v-if="pendingAction === 'save-settings'" class="spinner" aria-hidden="true" />{{ pendingAction === 'save-settings' ? '正在保存…' : '保存运行设置' }}</button></div></section></form>
-<section class="settings-group"><h2>运行控制</h2><p class="muted">立即生效，无需保存。</p><div class="setting-row"><span><strong>暂停新调用</strong><small>已在执行的调用继续完成。</small></span><button type="button" class="control" :disabled="busy || !connected" :title="offlineHint" :aria-busy="pendingAction === 'pause'" @click="mutate('setPaused', { paused: !snapshot?.gateway.paused }, snapshot?.gateway.paused ? '已恢复新调用。' : '已暂停新调用。', 'pause')"><span v-if="pendingAction === 'pause'" class="spinner" aria-hidden="true" />{{ snapshot?.gateway.paused ? '恢复调用' : '暂停新调用' }}</button></div></section><section class="settings-group"><h2>认证与存储</h2><div class="setting-row"><span><strong>凭证保存方式</strong><small>{{ snapshot?.gateway.credentialStorage || '等待管理接口提供存储状态' }}</small></span></div><p class="note">网关接入凭证、管理接口凭证与上游服务凭证分别管理。导出配置和诊断不包含明文凭证。</p></section><section class="settings-group"><div class="section-heading"><h2>配置备份</h2><button class="control" :disabled="busy || !connected" :title="offlineHint" @click="loadBackups">刷新备份</button></div><p class="muted">恢复前会再次保存当前配置备份。</p><p v-if="backupsLoaded && !backups.length" class="note">尚无配置备份。</p><div v-for="backup in backups" :key="backup.id" class="wide-row"><div class="grow"><strong>{{ backup.reason }}</strong><small>{{ date(backup.time) }} · {{ backup.id }}</small></div><button class="control" :disabled="busy" @click="askConfirmation('恢复配置备份', `恢复 ${date(backup.time)} 的配置；当前配置会先保存为新备份。`, '备份当前配置并恢复', () => mutate('restoreBackup', { backupId: backup.id }, '配置备份已恢复。'))">恢复</button></div></section><section class="settings-group"><h2>关于</h2><div class="setting-row"><span><strong>MCP Gateway</strong><small>{{ snapshot?.gateway.version ? `版本 ${snapshot.gateway.version}` : '版本信息尚不可用' }}</small></span><button class="control" :disabled="busy || !connected" :title="offlineHint" :aria-busy="pendingAction === 'check-updates'" @click="run(async () => { const result = await request<{ message: string }>('checkUpdates'); feedback = result.message }, '', 'check-updates')"><span v-if="pendingAction === 'check-updates'" class="spinner" aria-hidden="true" />检查更新</button></div></section></section>
+<section class="settings-group"><h2>运行控制</h2><p class="muted">立即生效，无需保存。</p><div class="setting-row"><span><strong>暂停新调用</strong><small>已在执行的调用继续完成。</small></span><button type="button" class="control" :disabled="busy || !connected" :title="offlineHint" :aria-busy="pendingAction === 'pause'" @click="mutate('setPaused', { paused: !snapshot?.gateway.paused }, snapshot?.gateway.paused ? '已恢复新调用。' : '已暂停新调用。', 'pause')"><span v-if="pendingAction === 'pause'" class="spinner" aria-hidden="true" />{{ snapshot?.gateway.paused ? '恢复调用' : '暂停新调用' }}</button></div></section><section class="settings-group"><h2>认证与存储</h2><div class="setting-row"><span><strong>凭证保存方式</strong><small>{{ snapshot?.gateway.credentialStorage || '等待管理接口提供存储状态' }}</small></span></div><p class="note">网关接入凭证、管理接口凭证与上游服务凭证分别管理。导出配置和诊断不包含明文凭证。</p></section><section class="settings-group"><div class="section-heading"><h2>配置备份</h2><button class="control" :disabled="busy || !connected" :title="offlineHint" @click="loadBackups">刷新备份</button></div><p class="muted">恢复前会再次保存当前配置备份。</p><p v-if="backupsLoaded && !backups.length" class="note">尚无配置备份。</p><div v-for="backup in backups" :key="backup.id" class="wide-row"><div class="grow"><strong>{{ backup.reason }}</strong><small>{{ date(backup.time) }} · {{ backup.id }}</small></div><button class="control" :disabled="busy" @click="askConfirmation('恢复配置备份', `恢复 ${date(backup.time)} 的配置；当前配置会先保存为新备份。`, '备份当前配置并恢复', () => mutate('restoreBackup', { backupId: backup.id }, '配置备份已恢复。'))">恢复</button></div></section><section class="settings-group"><h2>关于</h2><div class="setting-row"><span><strong>MCP Gateway</strong><small>{{ snapshot?.gateway.version ? `版本 ${snapshot.gateway.version}` : '版本信息尚不可用' }}<template v-if="updateInfo"> · {{ updateInfo.message }}</template></small></span><span class="actions"><button class="control" :disabled="busy" :aria-busy="pendingAction === 'check-updates'" @click="run(async () => { updateInfo = await request<UpdateInfo>('checkUpdates'); feedback = updateInfo.message }, '', 'check-updates')"><span v-if="pendingAction === 'check-updates'" class="spinner" aria-hidden="true" />检查更新</button><button v-if="updateInfo?.available" class="control primary" :disabled="busy" :aria-busy="pendingAction === 'install-update'" @click="installUpdate"><span v-if="pendingAction === 'install-update'" class="spinner" aria-hidden="true" />更新到 {{ updateInfo.latest }}</button></span></div><label class="setting-row"><span><strong>自动检查更新</strong><small>启动时及之后每天向 GitHub Releases 查询一次最新版本；只检查，不会自动安装。</small></span><input :checked="autoCheckUpdates" type="checkbox" role="switch" class="switch-input" @change="setAutoCheck(($event.target as HTMLInputElement).checked)"></label></section></section>
       </main>
       <footer class="app-footer"><span>{{ connected ? `${services.filter(server => ['ready', 'connected'].includes(server.status)).length} / ${services.length} 个服务可用` : snapshot?.servicesSource === 'config' ? `${services.length} 个服务 · 状态待更新` : '等待连接' }}</span><span v-if="snapshot && snapshot.servicesSource !== 'config'">{{ allTools.length }} 个工具<span v-if="snapshot.gateway.activeCalls"> · {{ snapshot.gateway.activeCalls }} 个调用执行中</span></span><span class="footer-right">本机 · macOS</span></footer>
     </div>

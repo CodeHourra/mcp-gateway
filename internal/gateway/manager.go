@@ -21,7 +21,7 @@ import (
 	"github.com/mark3labs/mcp-go/client"
 )
 
-const Version = "0.1.12"
+const Version = "0.1.13"
 
 type Settings struct {
 	Theme             string `json:"theme"`
@@ -51,6 +51,8 @@ type Manager struct {
 	stopping     bool
 	http         *http.Client
 	previews     map[string]*ImportPlan
+	updates      Updater
+	verifiedPath string // newest installer that passed SHA-256; guarded by mu
 }
 
 func New(dir, binary string) (*Manager, error) {
@@ -60,7 +62,7 @@ func New(dir, binary string) (*Manager, error) {
 	if err := os.Chmod(dir, 0700); err != nil {
 		return nil, err
 	}
-	m := &Manager{Dir: dir, Binary: binary, status: "stopped", http: &http.Client{Timeout: 5 * time.Minute}, previews: map[string]*ImportPlan{}, settings: Settings{Theme: "system", Mode: "progressive", ListenAddress: "127.0.0.1:17840", LogRetentionDays: 14}}
+	m := &Manager{Dir: dir, Binary: binary, status: "stopped", http: &http.Client{Timeout: 5 * time.Minute}, previews: map[string]*ImportPlan{}, updates: newUpdater(), settings: Settings{Theme: "system", Mode: "progressive", ListenAddress: "127.0.0.1:17840", LogRetentionDays: 14}}
 	if err := readJSON(filepath.Join(dir, "settings.json"), &m.settings); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("读取偏好设置: %w", err)
 	}
@@ -89,6 +91,19 @@ func validateSettings(s Settings) error {
 		return errors.New("日志保留天数须为 1–365")
 	}
 	return nil
+}
+
+// VerifiedUpdate returns the installer downloaded and checked by downloadUpdate.
+func (m *Manager) VerifiedUpdate() (string, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.verifiedPath == "" {
+		return "", false
+	}
+	if _, err := os.Stat(m.verifiedPath); err != nil {
+		return "", false
+	}
+	return m.verifiedPath, true
 }
 
 func (m *Manager) Preferences() Settings { m.mu.Lock(); defer m.mu.Unlock(); return m.settings }
