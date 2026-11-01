@@ -16,13 +16,12 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/mark3labs/mcp-go/client"
 )
 
-const Version = "0.1.11-dev"
+const Version = "0.1.12"
 
 type Settings struct {
 	Theme             string `json:"theme"`
@@ -169,7 +168,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	cmd.Env = coreEnvironment(os.Environ(), key)
 	// Core logging owns retention and redaction; do not create an unbounded second log.
 	cmd.Stdout, cmd.Stderr = io.Discard, io.Discard
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.SysProcAttr = processGroupAttr()
 	if err := cmd.Start(); err != nil {
 		return fail(fmt.Errorf("启动网关核心: %w", err))
 	}
@@ -230,7 +229,7 @@ func (m *Manager) Stop(ctx context.Context, force bool) error {
 	if cmd == nil {
 		return nil
 	}
-	if force {
+	if force || apiStopFirst {
 		cleanupCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		_, err := m.API(cleanupCtx, http.MethodPost, "/api/v1/gateway/stop", Object{"force": true})
 		cancel()
@@ -243,7 +242,7 @@ func (m *Manager) Stop(ctx context.Context, force bool) error {
 		}
 	}
 	// Only signal the exact process group we created. Never find/kill by name or port.
-	_ = cmd.Process.Signal(syscall.SIGTERM)
+	_ = terminateProcess(cmd.Process)
 	limit := 45 * time.Second
 	timer := time.NewTimer(limit)
 	defer timer.Stop()
@@ -254,7 +253,7 @@ func (m *Manager) Stop(ctx context.Context, force bool) error {
 		return ctx.Err()
 	case <-timer.C:
 	}
-	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil && !errors.Is(err, syscall.ESRCH) {
+	if err := hardKill(cmd.Process); err != nil && !errors.Is(err, os.ErrProcessDone) {
 		return err
 	}
 	select {
