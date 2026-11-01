@@ -50,8 +50,8 @@ def click_text(text, scope="main"):
 
 
 def open_config(name):
-    """Open one service's configuration panel, which now expands in place under its row."""
-    return js("const b=[...document.querySelectorAll('.service-config-button')].find(e=>e.getAttribute('aria-label')===" + json.dumps(name + " 配置详情") + ");if(!b)throw Error('Missing config button for '+" + json.dumps(name) + ");if(b.getAttribute('aria-expanded')==='true')return true;b.click();return true")
+    """Expand one service card and show its 连接与认证 segment (segment 2 of the disclosure body)."""
+    return js("const r=[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong')?.textContent===" + json.dumps(name) + ");if(!r)throw Error('Missing service row for '+" + json.dumps(name) + ");if(r.getAttribute('aria-expanded')!=='true')r.click();const body=document.getElementById('service-panel-'+r.id.replace('service-header-',''));const s=body&&body.querySelector('.service-segments .choice-option:nth-of-type(2) input');if(!s)throw Error('Missing segments for '+" + json.dumps(name) + ");s.click();return true")
 
 
 def snap():
@@ -60,7 +60,7 @@ def snap():
 
 def idle():
     for _ in range(80):
-        value = js("return {busy:!!document.querySelector('.section-heading .control:disabled,.service-config-panel .inspect-top input:disabled,.tool-access input:disabled')||[...document.querySelectorAll('button')].some(e=>/正在保存|正在导入|正在检查|正在处理/.test(e.textContent)),errors:[...document.querySelectorAll('.error-feedback,.config-form .error-text')].map(e=>e.textContent),feedback:document.querySelector('.feedback:not(.error-feedback)')?.textContent||'',title:document.querySelector('h1')?.textContent}")
+        value = js("return {busy:!!document.querySelector('.section-heading .control:disabled,.service-group-header input[role=switch]:disabled,.tool-access input:disabled')||[...document.querySelectorAll('button')].some(e=>/正在保存|正在导入|正在检查|正在处理/.test(e.textContent)),errors:[...document.querySelectorAll('.toast.error-feedback,.config-form .error-text')].map(e=>e.textContent),feedback:document.querySelector('.toast.feedback:not(.error-feedback)')?.textContent||'',title:document.querySelector('h1')?.textContent}")
         if not value["busy"]:
             if value["errors"]:
                 raise AssertionError(value)
@@ -176,8 +176,8 @@ def service_tools():
     click(".nav-button:nth-of-type(1)")
     if any(s["id"] == "native-crud" for s in baseline["services"]):
         open_config('native-crud')
-        click('.tab-bar [role=tab]:nth-of-type(2)')
-        click_text("移除服务", ".panel-body")
+        click('.service-segments .choice-option:nth-of-type(2) input')
+        click_text("删除服务", ".danger-zone")
         click("dialog[open] .control.danger")
         idle()
         baseline = snap()
@@ -192,13 +192,13 @@ def service_tools():
     ready = wait_ready(["native-echo", "native-crud"])
     tool_id = next(t["id"] for t in ready["tools"] if t["serviceId"] == "native-crud")
     record("created_service", next(s for s in ready["services"] if s["id"] == "native-crud"))
-    click('.tab-bar [role=tab]:nth-of-type(2)')
+    click('.service-segments .choice-option:nth-of-type(2) input')
     for label in ("测试连接", "重新连接"):
-        click_text(label, ".panel-body")
+        click_text(label, ".service-segment-connection")
         feedback = idle()
         wait_ready(["native-crud"])
         record(label, feedback)
-    click_text("编辑配置", ".panel-body")
+    click_text("编辑配置", ".service-segment-connection")
     fill(".config-form textarea", json.dumps(source["args"] + ["edited-by-native-ui"]))
     fill('input[placeholder="/Users/…/project"]', str(ROOT))
     click(".config-form .form-actions .control.primary")
@@ -207,16 +207,16 @@ def service_tools():
     edited = next(s for s in value["services"] if s["id"] == "native-crud")
     assert edited["args"] == source["args"] + ["edited-by-native-ui"] and edited["cwd"] == str(ROOT)
     record("edited_service", edited)
-    click(".service-config-panel .inspect-top input[type=checkbox]")
+    click(".service-group-header input[role=switch]")
     idle()
     disabled = next(s for s in snap()["services"] if s["id"] == "native-crud")
     denial = invoke(tool_id, "should-be-denied-service-disabled")
     record("service_disabled_cached_call", {"service": disabled, "call": denial})
     assert not disabled["enabled"] and (denial.get("error") or denial.get("result", {}).get("isError")), denial
-    click(".service-config-panel .inspect-top input[type=checkbox]")
+    click(".service-group-header input[role=switch]")
     idle()
     wait_ready(["native-crud"])
-    click('.tab-bar [role=tab]:nth-of-type(1)')
+    click('.service-segments .choice-option:nth-of-type(1) input')
     click(".tool-summary")
     click(".tool-access input[type=checkbox]")
     idle()
@@ -241,8 +241,8 @@ def service_tools():
     assert not no_services["serviceRows"] and "没有匹配的服务" in no_services["text"]
     fill('input[aria-label="搜索 MCP 服务"]', "")
     open_config('native-crud')
-    click('.tab-bar [role=tab]:nth-of-type(2)')
-    click_text("移除服务", ".panel-body")
+    click('.service-segments .choice-option:nth-of-type(2) input')
+    click_text("删除服务", ".danger-zone")
     click("dialog[open] .control.danger")
     idle()
     final = wait_ready(["native-echo"])
@@ -285,7 +285,7 @@ def auth_forms():
             click(".config-form .form-actions .control.primary")
             idle()
         wait_ready([fixture["name"]])
-        click('.tab-bar [role=tab]:nth-of-type(1)')
+        click('.service-segments .choice-option:nth-of-type(1) input')
         click(".tool-summary")
         fill(".tool-content textarea", json.dumps({"text": "native form proof"}))
         click(".tool-content form button")
@@ -295,8 +295,8 @@ def auth_forms():
         assert response["structuredContent"]["authentication_accepted"] is True
         assert all(response["structuredContent"]["expected_headers_matched"].values())
         assert response["structuredContent"]["text"] == "native form proof"
-        click('.tab-bar [role=tab]:nth-of-type(2)')
-        click_text("编辑配置", ".panel-body")
+        click('.service-segments .choice-option:nth-of-type(2) input')
+        click_text("编辑配置", ".service-segment-connection")
         stored = js("return {passwords:[...document.querySelectorAll('.config-form input[type=password]')].map(e=>({empty:e.value==='',placeholder:e.placeholder,required:e.required})),authType:document.querySelector('.config-form .form-section select').value}")
         record(fixture["name"] + "_saved_credential_form", stored)
         assert stored["authType"] == fixture["type"] and stored["passwords"]
@@ -308,7 +308,7 @@ def auth_forms():
 def big_diagnostics():
     click(".nav-button:nth-of-type(1)")
     open_config('native-echo')
-    click('.tab-bar [role=tab]:nth-of-type(1)')
+    click('.service-segments .choice-option:nth-of-type(1) input')
     click(".tool-summary")
     js("const e=document.querySelector('.tool-content textarea');e.value=JSON.stringify({text:'A'.repeat(1048576)+'NATIVE_UI_END_20260907'});e.dispatchEvent(new Event('input',{bubbles:true}));return true")
     click(".tool-content form button")
@@ -359,8 +359,8 @@ def env_form():
     click(".nav-button:nth-of-type(1)")
     if any(s["id"] == "native-env" for s in snap()["services"]):
         open_config('native-env')
-        click('.tab-bar [role=tab]:nth-of-type(2)')
-        click_text("移除服务", ".panel-body")
+        click('.service-segments .choice-option:nth-of-type(2) input')
+        click_text("删除服务", ".danger-zone")
         click("dialog[open] .control.danger")
         idle()
     click(".page-head .control.primary")
@@ -375,7 +375,7 @@ def env_form():
     click(".config-form .form-actions .control.primary")
     idle()
     wait_ready(["native-env"])
-    click('.tab-bar [role=tab]:nth-of-type(1)')
+    click('.service-segments .choice-option:nth-of-type(1) input')
     click(".tool-summary")
     fill(".tool-content textarea", "{}")
     click(".tool-content form button")
@@ -383,8 +383,8 @@ def env_form():
     record("three_environment_values_reached_stdio", response)
     assert response["structuredContent"]["all_environment_matched"] is True
     assert response["structuredContent"]["management_key_not_inherited"] is True
-    click('.tab-bar [role=tab]:nth-of-type(2)')
-    click_text("编辑配置", ".panel-body")
+    click('.service-segments .choice-option:nth-of-type(2) input')
+    click_text("编辑配置", ".service-segment-connection")
     stored = js("return [...document.querySelectorAll('.config-form input[type=password]')].map(e=>({empty:e.value==='',stored:e.placeholder.includes('已保存'),required:e.required}))")
     record("environment_form_saved_values_hidden", stored)
     assert len(stored) == 3 and all(p["empty"] and p["stored"] and not p["required"] for p in stored)
@@ -406,21 +406,21 @@ def oauth_form():
         record("oauth_configuration_fields", js("return {authType:document.querySelector('.config-form .form-section select').value,labels:[...document.querySelectorAll('.config-form .form-section label')].map(e=>e.textContent),publicFieldsBlank:[...document.querySelectorAll('.config-form .form-section input')].every(e=>!e.value)}"))
         click(".config-form .form-actions .control.primary")
         idle()
-    click('.tab-bar [role=tab]:nth-of-type(2)')
-    click_text("清除本地授权", ".panel-body")
+    click('.service-segments .choice-option:nth-of-type(2) input')
+    click_text("清除本地授权", ".service-segment-connection")
     record("clear_authorization_confirmation", wait_js("return document.querySelector('dialog[open]')?.textContent||null"))
     click("dialog[open] .control.danger")
     idle()
     cleared = next(s for s in snap()["services"] if s["id"] == "native-oauth")
-    record("local_oauth_cleared", {"serviceStatus": cleared["status"], "message": js("return document.querySelector('.service-config-panel .panel-body .callout')?.textContent")})
+    record("local_oauth_cleared", {"serviceStatus": cleared["status"], "message": js("return document.querySelector('.service-segment-tools .callout, .service-segment-connection .callout')?.textContent")})
     assert cleared["status"] != "ready"
     js("window.__qaOAuth={};window.__qaOriginalRequest=window.gateway.request;window.gateway.request=async function(method,params){const value=await window.__qaOriginalRequest(method,params);if(['startOAuth','cancelOAuth','refreshOAuth'].includes(method))window.__qaOAuth[method]=value;return value};return true")
     try:
-        click_text("在浏览器中登录", ".panel-body")
+        click_text("在浏览器中登录", ".service-segment-connection")
         idle()
         first = wait_js("return window.__qaOAuth.startOAuth||null")
         assert first["status"] == "pending"
-        click_text("取消登录", ".panel-body")
+        click_text("取消登录", ".service-segment-connection")
         idle()
         record("oauth_cancelled_from_ui", wait_js("return window.__qaOAuth.cancelOAuth||null"))
         time.sleep(6)  # The fixture's real browser page submits after five seconds.
@@ -428,12 +428,12 @@ def oauth_form():
         record("cancelled_flow_remains_unauthorized_after_fixture_autosubmit", {"serviceStatus": cancelled["status"]})
         assert cancelled["status"] != "ready"
         js("delete window.__qaOAuth.startOAuth;return true")
-        click_text("在浏览器中登录", ".panel-body")
+        click_text("在浏览器中登录", ".service-segment-connection")
         idle()
         record("oauth_native_browser_login_started", wait_js("return window.__qaOAuth.startOAuth||null"))
         ready = wait_ready(["native-oauth"])
         record("oauth_authorized_service", {"service": next(s for s in ready["services"] if s["id"] == "native-oauth"), "consentMechanism": "The actual browser loads the official loopback fixture page, whose login.html submits its public test account and consent after five seconds. No agent POST or manual consent click is claimed."})
-        click_text("刷新授权", ".panel-body")
+        click_text("刷新授权", ".service-segment-connection")
         idle()
         record("oauth_refresh_from_ui", wait_js("return window.__qaOAuth.refreshOAuth||null"))
         ready = wait_ready(["native-oauth"])
@@ -543,8 +543,9 @@ def retention_settings():
         record("retention_" + str(days) + "_days_applied", {**current, "activityRetentionDays": cfg["activity_retention_days"], "logArchiveMaxAge": cfg["logging"]["max_age"], "calls": echo_after_restart("native-retention-" + str(days))})
         prior = current
     for theme in ("light", baseline["theme"]):
-        fill(".theme-picker select", theme)
-        click(".settings-page form .control.primary")
+        click(".nav-button:nth-of-type(6)")
+        js("const e=[...document.querySelectorAll('.theme-cards input[type=radio]')].find(e=>e.value===" + json.dumps(theme) + ");if(!e)throw Error('Missing theme option');e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));return true")
+        click(".settings-savebar .control.primary")
         idle()
         current = owned_core()
         assert current["corePID"] == prior["corePID"] and snap()["settings"]["theme"] == theme
@@ -559,33 +560,33 @@ def final_status_catalog():
     record("existing_oauth_restored_after_final_bundle_restart", {"ownership": owned_core(), "oauthStatus": oauth["authStatus"], "calls": echo_after_restart("native-final-bundle-restart")})
     click(".nav-button:nth-of-type(1)")
     open_config('native-oauth')
-    click('.tab-bar [role=tab]:nth-of-type(2)')
+    click('.service-segments .choice-option:nth-of-type(2) input')
     auth_text = wait_js("const d=[...document.querySelectorAll('.detail-list div')].find(e=>e.querySelector('dt')?.textContent==='认证状态');const text=d?.querySelector('dd')?.textContent;return text==='已登录'?text:null")
     record("oauth_authenticated_label", auth_text)
     open_config('native-echo')
-    click('.tab-bar [role=tab]:nth-of-type(1)')
-    live = js("return {inspector:document.querySelector('.service-config-panel .inspect-name h2')?.textContent,offlineNotice:[...document.querySelectorAll('.service-config-panel .panel-body .callout')].some(e=>e.textContent.includes('连接恢复后'))}")
+    click('.service-segments .choice-option:nth-of-type(1) input')
+    live = js("return {inspector:document.querySelector('.service-row strong')?.textContent,offlineNotice:[...document.querySelectorAll('.service-segment-tools .callout, .service-segment-connection .callout')].some(e=>e.textContent.includes('连接恢复后'))}")
     record("live_catalog_has_no_offline_notice", live)
     assert live["inspector"] == "native-echo" and not live["offlineNotice"]
-    click(".service-config-panel .inspect-top input[type=checkbox]")
+    click(".service-group-header input[role=switch]")
     idle()
-    cached = wait_js("const e=document.querySelector('.service-config-panel .panel-body .callout');return e?.textContent.includes('缓存目录')?e.textContent:null")
+    cached = wait_js("const e=document.querySelector('.service-segment-tools .callout, .service-segment-connection .callout');return e?.textContent.includes('缓存目录')?e.textContent:null")
     record("disabled_service_keeps_cached_notice", cached)
-    click(".service-config-panel .inspect-top input[type=checkbox]")
+    click(".service-group-header input[role=switch]")
     idle()
     wait_ready(["native-echo"])
-    wait_js("return document.querySelector('.service-config-panel .inspect-name h2')?.textContent==='native-echo'&&!document.querySelector('.service-config-panel .panel-body .callout')")
+    wait_js("return document.querySelector('.service-row strong')?.textContent==='native-echo'&&!document.querySelector('.service-segment-tools .callout, .service-segment-connection .callout')")
     record("reconnected_live_catalog_notice_removed", True)
     open_config('native-oauth')
-    click('.tab-bar [role=tab]:nth-of-type(2)')
-    click_text("清除本地授权", ".panel-body")
+    click('.service-segments .choice-option:nth-of-type(2) input')
+    click_text("清除本地授权", ".service-segment-connection")
     click("dialog[open] .control.danger")
     idle()
     cleared = next(s for s in snap()["services"] if s["id"] == "native-oauth")
     assert cleared["authStatus"] == "none" and cleared["status"] != "ready", cleared
     clear_label = wait_js("const d=[...document.querySelectorAll('.detail-list div')].find(e=>e.querySelector('dt')?.textContent==='认证状态');const text=d?.querySelector('dd')?.textContent;return text==='需要登录'?text:null")
-    record("oauth_cleared_label", {"authStatus": cleared["authStatus"], "label": clear_label, "message": js("return document.querySelector('.service-config-panel .panel-body .callout')?.textContent")})
-    click_text("在浏览器中登录", ".panel-body")
+    record("oauth_cleared_label", {"authStatus": cleared["authStatus"], "label": clear_label, "message": js("return document.querySelector('.service-segment-tools .callout, .service-segment-connection .callout')?.textContent")})
+    click_text("在浏览器中登录", ".service-segment-connection")
     idle()
     wait_ready(["native-oauth"])
     record("oauth_relogin_and_final_calls", echo_after_restart("native-final-status-projection"))

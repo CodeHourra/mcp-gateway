@@ -54,9 +54,11 @@ try:
   report['services']=[{k:s.get(k) for k in ('name','status','statusMessage','statusDetail')} for s in snapshot['services']]
   bad=next(s for s in snapshot['services'] if s['name']=='missing-fixture')
   assert '找不到启动命令' in bad['statusMessage'] and 'gateway-missing-test' in bad['statusDetail'] and len(bad['statusDetail'])>50
-  until(lambda:js("[...document.querySelectorAll('.service-config-button')].find(e=>e.getAttribute('aria-label')==='missing-fixture 配置详情').click();return true"),lambda v:v is True)
-  until(lambda:js("return !!document.querySelector('.service-config-panel .connection-detail')"),lambda v:v is True)
-  report['detail']=js("const d=document.querySelector('.service-config-panel .connection-detail');d.querySelector('summary').click();return {open:d.open,text:d.querySelector('pre').textContent}")
+  until(lambda:js("const r=[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong')?.textContent==='missing-fixture');if(!r)throw Error('row missing');if(r.getAttribute('aria-expanded')!=='true')r.click();return true"),lambda v:v is True)
+  until(lambda:js("return !!document.querySelector('.service-body .service-segments .choice-option:nth-of-type(2) input')"),lambda v:v is True)
+  until(lambda:js("const b=[...document.querySelectorAll('.service-row')].find(e=>e.querySelector('strong')?.textContent==='missing-fixture');document.getElementById('service-panel-'+b.id.replace('service-header-','')).querySelector('.service-segments .choice-option:nth-of-type(2) input').click();return true"),lambda v:v is True)
+  until(lambda:js("return !!document.querySelector('.service-body .connection-detail')"),lambda v:v is True)
+  report['detail']=js("const d=document.querySelector('.service-body .connection-detail');d.querySelector('summary').click();return {open:d.open,text:d.querySelector('pre').textContent}")
   assert report['detail']['open'] and report['detail']['text']==bad['statusDetail']
   def policy():return int(subprocess.check_output([str(stage/'policy'),str(app.pid)],text=True))
   report['activationPolicyOpen']=policy();assert report['activationPolicyOpen']==visible_policy
