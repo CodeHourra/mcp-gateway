@@ -121,7 +121,9 @@ jobs:
 
   publish:
     needs: [version, build]
-    if: needs.build.result == 'success'
+    # always() is required: release-branch is skipped when the tag already
+    # exists, and without it the skipped path cancels this job too.
+    if: always() && needs.version.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
