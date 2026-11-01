@@ -41,6 +41,21 @@ func (s *GatewayService) Request(ctx context.Context, method, params string) (an
 		}
 		return nil, nil
 	}
+	if method == "copyText" {
+		var body struct {
+			Text string `json:"text"`
+		}
+		if err := json.Unmarshal([]byte(params), &body); err != nil {
+			return nil, err
+		}
+		if body.Text == "" {
+			return nil, errors.New("没有可复制的内容")
+		}
+		if !s.app.Clipboard.SetText(body.Text) {
+			return nil, errors.New("复制失败")
+		}
+		return nil, nil
+	}
 	if method == "saveSettings" {
 		var settings gateway.Settings
 		if err := json.Unmarshal([]byte(params), &settings); err != nil {
