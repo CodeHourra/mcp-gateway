@@ -1,5 +1,5 @@
 <script lang="ts">
-export type IconName = 'services' | 'tools' | 'import' | 'agents' | 'activity' | 'settings' | 'chevron' | 'search' | 'plus' | 'close' | 'check' | 'alert'
+export type IconName = 'services' | 'tools' | 'import' | 'agents' | 'activity' | 'guide' | 'settings' | 'chevron' | 'search' | 'plus' | 'close' | 'check' | 'alert'
 </script>
 
 <script setup lang="ts">
@@ -11,6 +11,7 @@ const paths: Record<IconName, string> = {
   import: '<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/>',
   agents: '<path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4"/>',
   activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  guide: '<path d="M5 4.5h9.5a4 4 0 0 1 4 4V20H9a4 4 0 0 1-4-4V4.5Z"/><path d="M9 9h5.5M9 13h5.5"/>',
   settings: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
   chevron: '<path d="m9 6 6 6-6 6"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',

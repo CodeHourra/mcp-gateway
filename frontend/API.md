@@ -24,6 +24,7 @@
 | `saveSettings` | `Settings` | Any successful result |
 | `setPaused` | `{ paused: boolean }` | Pause/resume new calls; any successful result |
 | `copyGatewayAddress` | `{}` | Any successful result; native clipboard copy |
+| `copyText` | `{ text }` | Any successful result; native clipboard copy of non-empty text |
 | `exportDiagnostics` | `{}` | `{ filename: string, path: string }`; returns only after the redacted report is saved, with its full local path |
 | `checkUpdates` | `{}` | `{ message: string }`; accurate source/status, never fake up-to-date |
 
