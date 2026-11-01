@@ -1,0 +1,120 @@
+diff --git a/internal/upstream/core/command_path.go b/internal/upstream/core/command_path.go
+new file mode 100644
+index 0000000..d041d2a
+--- /dev/null
++++ b/internal/upstream/core/command_path.go
+@@ -0,0 +1,18 @@
++package core
++
++import (
++	"path/filepath"
++)
++
++// prependCommandDirToPath puts the directory of an absolute stdio command
++// at the front of PATH so sibling binaries resolve. Runners such as npx,
++// npm, yarn and pnpm are #!/usr/bin/env node scripts; a user-selected
++// absolute path from nvm, fnm, volta or PhpWebStudy otherwise fails with
++// "env: node: No such file or directory" when that bin directory is
++// absent from the sanitized or login-shell PATH.
++func prependCommandDirToPath(env []string, command string) []string {
++	if !filepath.IsAbs(command) {
++		return env
++	}
++	return prependDockerDirToPath(env, filepath.Dir(command))
++}
+diff --git a/internal/upstream/core/command_path_test.go b/internal/upstream/core/command_path_test.go
+new file mode 100644
+index 0000000..f1da380
+--- /dev/null
++++ b/internal/upstream/core/command_path_test.go
+@@ -0,0 +1,66 @@
++package core
++
++import (
++	"os"
++	"os/exec"
++	"path/filepath"
++	"runtime"
++	"strings"
++	"testing"
++
++	"github.com/smart-mcp-proxy/mcpproxy-go/internal/shellwrap"
++)
++
++func TestPrependCommandDirToPath(t *testing.T) {
++	sep := string(os.PathListSeparator)
++	dir := filepath.FromSlash("/Users/test/Library/PhpWebStudy/env/node/bin")
++	command := filepath.Join(dir, "npx")
++
++	t.Run("absolute command prepends sibling dir", func(t *testing.T) {
++		env := []string{"PATH=/usr/bin" + sep + "/bin"}
++		got := prependCommandDirToPath(env, command)
++		var path string
++		for _, kv := range got {
++			if strings.HasPrefix(kv, "PATH=") {
++				path = strings.TrimPrefix(kv, "PATH=")
++			}
++		}
++		parts := filepath.SplitList(path)
++		if len(parts) == 0 || parts[0] != dir {
++			t.Fatalf("command dir must be first on PATH, got %q", path)
++		}
++	})
++
++	t.Run("relative command is a no-op", func(t *testing.T) {
++		env := []string{"PATH=/usr/bin"}
++		got := prependCommandDirToPath(env, "npx")
++		if got[0] != env[0] {
++			t.Fatalf("relative command must leave PATH unchanged, got %v", got)
++		}
++	})
++}
++
++func TestCommandDirOnPathResolvesShebangInterpreter(t *testing.T) {
++	if runtime.GOOS == "windows" {
++		t.Skip("POSIX shebang regression")
++	}
++	dir := t.TempDir()
++	node := filepath.Join(dir, "node")
++	npx := filepath.Join(dir, "npx")
++	if err := os.WriteFile(node, []byte("#!/bin/sh\nprintf found-node\n"), 0700); err != nil {
++		t.Fatal(err)
++	}
++	if err := os.WriteFile(npx, []byte("#!/usr/bin/env node\n"), 0700); err != nil {
++		t.Fatal(err)
++	}
++
++	env := []string{"PATH=/usr/bin:/bin", "HOME=" + t.TempDir(), "TERM=dumb"}
++	env = prependCommandDirToPath(env, npx)
++	shell, args := shellwrap.WrapWithUserShell(nil, npx, nil)
++	cmd := exec.Command(shell, args...)
++	cmd.Env = env
++	out, err := cmd.CombinedOutput()
++	if err != nil || string(out) != "found-node" {
++		t.Fatalf("npx shebang should find sibling node: %v %q", err, out)
++	}
++}
+diff --git a/internal/upstream/core/connection_launcher.go b/internal/upstream/core/connection_launcher.go
+index 266d104..f006e97 100644
+--- a/internal/upstream/core/connection_launcher.go
++++ b/internal/upstream/core/connection_launcher.go
+@@ -299,6 +299,7 @@ func (c *Client) buildLauncherCmd(_ context.Context, willUseDocker bool) (*exec.
+ 	} else {
+ 		// Plain (non-docker) launcher command. Shell-wrap for login-env inheritance.
+ 		finalCommand, finalArgs = c.wrapWithUserShell(c.config.Command, args)
++		envVars = prependCommandDirToPath(envVars, c.config.Command)
+ 
+ 		// Native sandbox isolation (MCP-34.3): mirror connectStdio — re-exec the
+ 		// shell-wrapped command through the sandbox wrapper when mode is "sandbox".
+diff --git a/internal/upstream/core/connection_stdio.go b/internal/upstream/core/connection_stdio.go
+index b233895..ed9becb 100644
+--- a/internal/upstream/core/connection_stdio.go
++++ b/internal/upstream/core/connection_stdio.go
+@@ -214,6 +214,7 @@ func (c *Client) connectStdio(ctx context.Context) error {
+ 		// .bashrc, .zshrc, etc.).
+ 		finalCommand, finalArgs = c.wrapWithUserShell(c.config.Command, args)
+ 		c.isDockerCommand = false
++		envVars = prependCommandDirToPath(envVars, c.config.Command)
+ 
+ 		// Native sandbox isolation (MCP-34.3): when the resolved mode is
+ 		// "sandbox", re-exec the shell-wrapped command through the mcpproxy

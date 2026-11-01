@@ -8,6 +8,7 @@ import (
 func TestConnectionErrorSummary(t *testing.T) {
 	for _, tc := range []struct{ detail, want string }{
 		{`stdio transport (command="/bin/zsh"): zsh:1: command not found: uvx`, `找不到启动命令 "uvx"`},
+		{"env: node: No such file or directory", "npx 找不到同目录的 node"},
 		{"fork/exec permission denied", "执行权限"},
 		{"context deadline exceeded", "连接超时"},
 		{"unknown failure", "错误详情"},

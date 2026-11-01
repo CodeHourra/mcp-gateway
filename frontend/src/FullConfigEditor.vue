@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { errorMessage, request } from './api'
 
 const props = defineProps<{ active: boolean; busy: boolean }>()
@@ -13,6 +13,7 @@ const error = ref('')
 const message = ref('')
 const preview = ref<Preview>()
 const confirmRemoved = ref(false)
+const previewPanel = ref<HTMLElement>()
 const dirty = computed(() => content.value !== original.value)
 const disabled = computed(() => props.busy || loading.value)
 watch(content, () => { preview.value = undefined; confirmRemoved.value = false })
@@ -32,6 +33,7 @@ async function check() {
   await run(async () => {
     const value = await request<Preview>('previewFullMCPConfig', { editorId: editorId.value, content: content.value })
     preview.value = value; confirmRemoved.value = false
+    await nextTick(); previewPanel.value?.focus()
   })
 }
 async function save() {
@@ -54,11 +56,11 @@ async function save() {
 <template>
   <section class="full-config-editor" aria-label="全部 MCP JSON 配置" :aria-busy="loading">
     <p class="callout">编辑全部 MCP 服务配置。保留已有的 <code>${stored:…}</code> 标记可保留原值，替换标记可更新，删除字段可清除对应配置。网关运行设置不在此处修改。</p>
-    <p v-if="error" class="error-text" role="alert">{{ error }}</p>
+    <p v-if="error" class="callout callout-error" role="alert">{{ error }}</p>
     <p v-if="message" class="callout" role="status">{{ message }}</p>
     <label class="field">完整 JSON 配置 <small v-if="dirty">有未保存的修改，切换展示方式后仍会保留草稿。</small><textarea v-model="content" class="code-input full-json" :disabled="disabled || !editorId" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="正在读取配置…" /></label>
     <div class="actions"><button class="control" :disabled="disabled || dirty" @click="load">重新读取</button><button v-if="dirty" class="control" :disabled="disabled" @click="content = original">撤销本次编辑</button><button class="control primary" :disabled="disabled || !editorId || !dirty" @click="check">{{ loading ? '正在处理…' : '校验并预览变更' }}</button></div>
-    <section v-if="preview" class="preview-panel" aria-label="全部配置变更预览">
+    <section v-if="preview" ref="previewPanel" tabindex="-1" class="preview-panel" aria-label="全部配置变更预览">
       <h2>变更预览</h2><p>新增 {{ preview.added }} 项 · 修改 {{ preview.updated }} 项 · 移除 {{ preview.removed }} 项 · 不变 {{ preview.unchanged }} 项</p>
       <template v-if="preview.removed"><p class="warning-text">将移除：{{ preview.removedNames.join('、') }}。这些服务的工具将不再通过网关提供。</p><label class="check-row"><input v-model="confirmRemoved" type="checkbox" :disabled="disabled">确认移除上述 {{ preview.removed }} 个服务</label></template>
       <p class="note">保存前自动备份；如果配置在编辑后发生变化，将拒绝覆盖并提示重新读取。</p>

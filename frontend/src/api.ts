@@ -20,7 +20,7 @@ export interface Activity {
   id: string; time: string; serviceId?: string; serviceName?: string; toolName?: string
   kind: string; status: string; durationMs?: number; message: string; detail?: unknown
 }
-export interface Settings { theme: Theme; mode: 'progressive' | 'aggregate'; listenAddress: string; launchAtLogin: boolean; logRetentionDays: number }
+export interface Settings { theme: Theme; mode: 'progressive' | 'aggregate'; listenAddress: string; launchAtLogin: boolean; allowAnonymousMcp: boolean; logRetentionDays: number }
 export interface GatewayState {
   status: string; address: string; version: string; error?: string; activeCalls: number
   paused: boolean; credentialStorage?: string

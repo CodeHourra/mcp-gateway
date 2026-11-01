@@ -236,13 +236,13 @@ func (m *Manager) SaveSettings(ctx context.Context, s Settings) error {
 	if _, err := m.backup("更新偏好设置"); err != nil {
 		return err
 	}
-	patch := Object{"listen": s.ListenAddress, "activity_retention_days": s.LogRetentionDays, "logging": Object{"max_age": s.LogRetentionDays}}
+	patch := Object{"listen": s.ListenAddress, "activity_retention_days": s.LogRetentionDays, "require_mcp_auth": !s.AllowAnonymousMCP, "logging": Object{"max_age": s.LogRetentionDays}}
 	if running {
 		if _, err := m.API(ctx, http.MethodPatch, "/api/v1/config", patch); err != nil {
 			return err
 		}
 	} else {
-		cfg["listen"], cfg["activity_retention_days"] = s.ListenAddress, s.LogRetentionDays
+		cfg["listen"], cfg["activity_retention_days"], cfg["require_mcp_auth"] = s.ListenAddress, s.LogRetentionDays, !s.AllowAnonymousMCP
 		logging := object(cfg["logging"])
 		logging["max_age"] = s.LogRetentionDays
 		cfg["logging"] = logging
@@ -264,7 +264,7 @@ func (m *Manager) SaveSettings(ctx context.Context, s Settings) error {
 	m.mu.Lock()
 	m.settings = s
 	m.mu.Unlock()
-	if old.ListenAddress != s.ListenAddress || old.LogRetentionDays != s.LogRetentionDays || !running {
+	if old.ListenAddress != s.ListenAddress || old.LogRetentionDays != s.LogRetentionDays || old.AllowAnonymousMCP != s.AllowAnonymousMCP || !running {
 		if running {
 			if err := m.Drain(ctx); err != nil {
 				return fmt.Errorf("设置已保存，等待调用结束失败，尚未重启: %w", err)

@@ -138,7 +138,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		binary = filepath.Join(filepath.Dir(exe), "mcpproxy")
+		binary = filepath.Join(filepath.Dir(exe), "mcpproxy"+filepath.Ext(exe))
 	}
 	manager, err := gateway.New(dir, binary)
 	if err != nil {

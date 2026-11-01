@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { errorMessage, type AuthType, type ServiceConfig } from './api'
 import ChoiceGroup from './ChoiceGroup.vue'
 
@@ -9,13 +9,17 @@ const form = reactive<ServiceConfig>(JSON.parse(JSON.stringify(props.config)))
 const args = ref(JSON.stringify(form.args, null, 2))
 const scopes = ref(form.auth.scopes.join(' '))
 const error = ref('')
+const errorEl = ref<HTMLElement>()
+const snapshotJson = JSON.stringify([form, args.value, scopes.value])
+const dirty = computed(() => JSON.stringify([form, args.value, scopes.value]) !== snapshotJson)
+defineExpose({ dirty })
 const transportOptions = [{ value: 'stdio', label: 'stdio · 本地命令' }, { value: 'http', label: 'Streamable HTTP' }, { value: 'sse', label: 'SSE · 旧版兼容' }] as const
 const authOptions = computed<{ value: AuthType; label: string }[]>(() => form.transport === 'stdio'
   ? [{ value: 'none', label: '无认证' }, { value: 'env', label: '环境变量' }]
   : [{ value: 'none', label: '无认证' }, { value: 'bearer', label: 'Bearer Token' }, { value: 'api_key', label: 'API Key' }, { value: 'headers', label: '自定义 Header' }, { value: 'oauth', label: 'OAuth' }])
 watch(() => form.transport, () => { if (!authOptions.value.some(item => item.value === form.auth.type)) form.auth.type = 'none' })
 
-function submit() {
+async function submit() {
   error.value = ''
   try {
     const parsed: unknown = JSON.parse(args.value)
@@ -30,7 +34,7 @@ function submit() {
       if (new Set(keys.map(key => label === 'Header' ? key.toLowerCase() : key)).size !== keys.length) throw new Error(`${label}名称不能重复。`)
     }
     emit('save', JSON.parse(JSON.stringify({ ...form, args: parsed, auth: { ...form.auth, scopes: scopes.value.split(/\s+/).filter(Boolean) } })))
-  } catch (cause) { error.value = errorMessage(cause) }
+  } catch (cause) { error.value = errorMessage(cause); await nextTick(); errorEl.value?.focus() }
 }
 </script>
 
@@ -78,8 +82,8 @@ function submit() {
       </template>
       <p v-if="form.auth.type !== 'none'" class="note">凭证仅用于当前服务。已保存的敏感值不会在表单中回显。</p>
     </section>
-    <label class="check-row"><input v-model="form.enabled" type="checkbox">启用此服务</label>
-    <p v-if="error" role="alert" class="error-text">{{ error }}</p>
+    <label class="check-row"><input v-model="form.enabled" type="checkbox" role="switch" class="switch-input">启用此服务</label>
+    <p v-if="error" ref="errorEl" tabindex="-1" role="alert" class="error-text">{{ error }}</p>
     <div class="actions form-actions"><button type="button" class="control" :disabled="busy" @click="emit('cancel')">取消</button><button class="control primary" :disabled="busy">{{ busy ? '正在保存…' : '保存服务' }}</button></div>
   </form>
 </template>

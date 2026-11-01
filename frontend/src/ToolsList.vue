@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import Icon from './Icon.vue'
 import { errorMessage, parseArguments, request, type Tool } from './api'
 
 const props = defineProps<{ tools: Tool[]; busy?: boolean; grouped?: boolean; gatewayAddress?: string }>()
@@ -29,19 +30,19 @@ async function call(tool: Tool) {
   <div v-if="!props.tools.length" class="empty-state compact"><strong>没有匹配的工具</strong><p>调整搜索条件，或检查服务是否连接并完成工具发现。</p></div>
   <div v-else class="tools-list" :class="{ 'tools-list-grouped': grouped }">
     <details v-for="tool in tools" :key="tool.id" class="tool-entry">
-      <summary class="tool-summary"><span class="chevron" aria-hidden="true">›</span><span class="grow"><strong>{{ tool.name }}</strong><small class="tool-description">{{ tool.description || '上游未提供说明' }}</small><small v-if="!grouped">{{ tool.serviceName }}<template v-if="tool.catalogStatus === 'cached' || tool.catalogStatus === 'unavailable'"> · {{ tool.catalogStatus === 'cached' ? '缓存目录' : '目录不可用' }}</template></small></span><span class="badge" :class="tool.enabled ? 'good' : 'neutral'">{{ tool.enabled ? '允许调用' : '已禁用' }}</span></summary>
+      <summary class="tool-summary"><span class="chevron" aria-hidden="true"><Icon name="chevron" /></span><span class="grow"><strong>{{ tool.name }}</strong><small class="tool-description">{{ tool.description || '上游未提供说明' }}</small><small v-if="!grouped">{{ tool.serviceName }}<template v-if="tool.catalogStatus === 'cached' || tool.catalogStatus === 'unavailable'"> · {{ tool.catalogStatus === 'cached' ? '缓存目录' : '目录不可用' }}</template></small></span><span class="badge" :class="tool.enabled ? 'good' : 'neutral'">{{ tool.enabled ? '允许调用' : '已禁用' }}</span></summary>
       <div class="tool-content">
         <p v-if="gatewayAddress" class="note">这是独立的调试连接，不会影响已接入 Agent 的当前会话。</p>
-        <div v-else class="tool-access"><span>最终调用受此权限控制</span><label class="check-row"><input type="checkbox" :checked="tool.enabled" :disabled="busy" @change="emit('toggle', tool, ($event.target as HTMLInputElement).checked)">允许调用</label></div>
+        <div v-else class="tool-access"><span>最终调用受此权限控制</span><label class="check-row"><input type="checkbox" role="switch" class="switch-input" :checked="tool.enabled" :disabled="busy" @change="emit('toggle', tool, ($event.target as HTMLInputElement).checked)">允许调用</label></div>
         <table v-if="parameters(tool).length" class="param-table"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr v-for="param in parameters(tool)" :key="param.name"><td><code>{{ param.name }}</code><span v-if="param.required" class="required"> 必填</span></td><td><code>{{ param.type }}</code></td><td>{{ param.description || '—' }}</td></tr></tbody></table>
         <p v-else class="muted">没有命名参数；请以完整 schema 为准。</p>
         <details class="schema-details"><summary>查看完整 JSON Schema</summary><pre>{{ JSON.stringify(tool.inputSchema, null, 2) }}</pre></details>
         <form @submit.prevent="call(tool)">
           <label class="field">调用参数 <small>JSON 对象</small><textarea :value="argumentsByTool[tool.id] ?? '{}'" class="code-input" spellcheck="false" rows="4" @input="argumentsByTool[tool.id] = ($event.target as HTMLTextAreaElement).value" /></label>
           <p class="note">{{ gatewayAddress ? '这是真实调用。检索与定义工具用于查看信息，call_tool_* 等执行工具可能修改上游数据，请先核对参数。' : '调用会实际执行此上游工具，请先核对参数与操作影响。' }}</p>
-          <button class="control" :disabled="!tool.enabled || busy || results[tool.id]?.loading">{{ results[tool.id]?.loading ? '正在调用…' : '执行调用' }}</button>
+          <button class="control" :disabled="!tool.enabled || busy || results[tool.id]?.loading" :aria-busy="results[tool.id]?.loading"><span v-if="results[tool.id]?.loading" class="spinner" aria-hidden="true" />{{ results[tool.id]?.loading ? '正在调用…' : '执行调用' }}</button>
         </form>
-        <p v-if="results[tool.id]?.error" class="error-text" role="alert">{{ results[tool.id]?.error }}</p>
+        <p v-if="results[tool.id]?.error" class="result-banner error" role="alert"><Icon name="alert" /><span>{{ results[tool.id]?.error }}</span></p>
         <div v-if="results[tool.id]?.value !== undefined" class="result-box" aria-live="polite"><h4>调用结果</h4><pre>{{ JSON.stringify(results[tool.id]?.value, null, 2) }}</pre></div>
       </div>
     </details>

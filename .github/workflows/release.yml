@@ -1,0 +1,145 @@
+name: Release
+
+# Every merge into main ships: create the release branch, tag it, build both
+# production bundles, then publish one GitHub Release with those assets.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  GOTOOLCHAIN: auto
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      tag: ${{ steps.read.outputs.tag }}
+      create: ${{ steps.tag.outputs.create }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: read
+        run: |
+          # build/Info.plist is the single source of truth; scripts/version.sh
+          # keeps package.json and internal/gateway/manager.go in sync with it.
+          version="$(sed -n 's|.*<key>CFBundleShortVersionString</key><string>\([^<]*\)</string>.*|\1|p' build/Info.plist)"
+          test -n "$version" || { echo "build/Info.plist 缺少 CFBundleShortVersionString" >&2; exit 1; }
+          for file in frontend/package.json internal/gateway/manager.go; do
+            grep -q "$version" "$file" || { echo "$file 的版本与 build/Info.plist ($version) 不一致，先运行 scripts/version.sh set $version" >&2; exit 1; }
+          done
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+      - id: tag
+        env:
+          TAG: ${{ steps.read.outputs.tag }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "create=false" >> "$GITHUB_OUTPUT"
+            echo "$TAG 已存在，跳过建分支与打 tag，仅补建产物或 Release" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "create=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  release-branch:
+    needs: version
+    if: needs.version.outputs.create == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          TAG: ${{ needs.version.outputs.tag }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          branch="release/$VERSION"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "$branch 已存在，跳过创建" >> "$GITHUB_STEP_SUMMARY"
+          else
+            git push origin "HEAD:refs/heads/$branch"
+            echo "已创建 $branch" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          git tag -a "$TAG" -m "MCP Gateway $VERSION"
+          git push origin "refs/tags/$TAG"
+          echo "已打 tag $TAG" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    # Only two targets are shipped: Windows x64 and macOS arm64.
+    needs: [version, release-branch]
+    if: always() && needs.version.result == 'success' && (needs.release-branch.result == 'success' || needs.release-branch.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            name: macos-arm64
+            artifact: MCP-Gateway-*-arm64.dmg
+          - os: windows-latest
+            name: windows-amd64
+            artifact: MCP-Gateway-*-windows-amd64.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install wails3
+        shell: bash
+        run: GOBIN="$PWD/.cache/bin" go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.16
+      - name: Build macOS arm64 DMG
+        if: matrix.name == 'macos-arm64'
+        run: ./scripts/build.sh && ./scripts/package-dmg.sh
+      - name: Build Windows amd64 zip
+        if: matrix.name == 'windows-amd64'
+        shell: bash
+        run: ./scripts/package-windows.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            bin/${{ matrix.artifact }}
+            bin/${{ matrix.artifact }}.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: [version, build]
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: List release assets
+        run: find dist -type f | sort | tee assets.txt
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.version.outputs.tag }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          # Re-running on an existing tag must not fail: reuse that Release.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" $(cat assets.txt) --clobber
+          else
+            gh release create "$TAG" $(cat assets.txt) \
+              --title "MCP Gateway $VERSION" \
+              --generate-notes \
+              --notes "macOS arm64：\`MCP-Gateway-$VERSION-arm64.dmg\`（ad-hoc 签名，未公证）。Windows x64：\`MCP-Gateway-$VERSION-windows-amd64.zip\`（未签名）。安装与验证步骤见包内“安装与测试说明”。"
+          fi
+          gh release view "$TAG" --json assets --jq '.assets[] | "\(.name) \(.size)"' >> "$GITHUB_STEP_SUMMARY"

@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -26,11 +25,11 @@ func (m *Manager) lockCredentials(ctx context.Context) (func(), error) {
 		return nil, err
 	}
 	for {
-		err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
-		if err == nil {
+		busy, err := tryLockFile(f)
+		if err == nil && !busy {
 			return func() { _ = f.Close() }, nil
 		}
-		if !errors.Is(err, syscall.EWOULDBLOCK) {
+		if err != nil {
 			_ = f.Close()
 			return nil, err
 		}

@@ -82,12 +82,28 @@ func (m *Manager) GatewayDebug(ctx context.Context, method string, p Object) (an
 		}
 		return Object{"address": address, "tools": tools}, nil
 	}
+	// The caller may know this tool under the name another gateway surface
+	// uses — "server:tool" from the progressive entry, or the bare name it
+	// had before the MCP server was proxied. Resolve to the listed name and
+	// call that; the arguments are unchanged, so nothing is guessed except
+	// the target.
+	names := make([]string, 0, len(list.Tools))
 	for _, tool := range list.Tools {
-		if tool.Name != name {
+		names = append(names, tool.Name)
+	}
+	resolved, ambiguous := resolveToolName(name, names)
+	if resolved == "" {
+		if len(ambiguous) > 1 {
+			return nil, unresolvedToolError(name, ambiguous)
+		}
+		return nil, errors.New("当前入口未暴露此工具，请刷新目录")
+	}
+	for _, tool := range list.Tools {
+		if tool.Name != resolved {
 			continue
 		}
 		request := mcp.CallToolRequest{}
-		request.Params.Name, request.Params.Arguments = name, args
+		request.Params.Name, request.Params.Arguments = resolved, args
 		result, err := m.debugClient.CallTool(ctx, request)
 		if err != nil {
 			m.resetGatewayDebug()

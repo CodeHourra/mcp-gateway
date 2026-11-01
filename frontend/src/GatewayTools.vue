@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onUnmounted, ref, watch } from 'vue'
 import ToolsList from './ToolsList.vue'
+import Icon from './Icon.vue'
 import { errorMessage, request, type Tool } from './api'
 
 const props = defineProps<{ address: string; connected: boolean; busy: boolean }>()
@@ -37,7 +38,7 @@ onUnmounted(() => { generation++ })
 
 <template>
   <details class="gateway-debug" @toggle="toggle">
-    <summary><span class="chevron" aria-hidden="true">›</span><span class="grow"><strong>网关工具与调用调试</strong><small>查看 Agent 实际可见的工具、参数定义与调用结果</small></span><span class="badge">{{ expanded ? '收起' : '展开调试' }}<template v-if="loaded"> · {{ tools.length }} 个工具</template></span></summary>
+    <summary><span class="chevron" aria-hidden="true"><Icon name="chevron" /></span><span class="grow"><strong>网关工具与调用调试</strong><small>查看 Agent 实际可见的工具、参数定义与调用结果</small></span><span class="badge">{{ expanded ? '收起' : '展开调试' }}<template v-if="loaded"> · {{ tools.length }} 个工具</template></span></summary>
     <div class="gateway-debug-content">
       <div class="gateway-debug-actions"><p class="note">按当前入口实时读取。渐进模式可先检索工具，再查看定义和执行调用；收起面板会保留本页参数与结果。</p><div class="actions"><button class="control" :disabled="busy || !connected || loading || calling" @click="load()">{{ loading ? '正在读取…' : '刷新工具' }}</button><button class="control" :disabled="busy || !connected || loading || calling || !loaded" @click="load(true)">重置调试连接</button></div></div>
       <p v-if="!connected" class="callout" role="status">网关连接后即可读取工具目录。</p>
@@ -50,6 +51,6 @@ onUnmounted(() => { generation++ })
 </template>
 
 <style scoped>
-.gateway-debug{border:1px solid var(--line);border-radius:10px;background:var(--bg);margin:16px 0 22px}.gateway-debug>summary{display:flex;align-items:center;gap:12px;padding:17px 18px;list-style:none}.gateway-debug>summary::-webkit-details-marker{display:none}.gateway-debug>summary strong{display:block;font-size:16px;font-weight:600}.gateway-debug>summary small{display:block;margin-top:4px;color:var(--muted);font-size:13px}.gateway-debug[open]>summary{border-bottom:1px solid var(--line);background:var(--soft)}.gateway-debug[open]>summary>.chevron{transform:rotate(90deg)}.gateway-debug-content{padding:18px;min-width:0}.gateway-debug-actions{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.gateway-debug-actions .note{margin:0}.gateway-debug-actions .actions{flex-shrink:0}
+.gateway-debug{border:1px solid var(--line);border-radius:var(--r-card);background:var(--card);margin:16px 0 22px}.gateway-debug>summary{display:flex;align-items:center;gap:12px;padding:17px 18px;list-style:none}.gateway-debug>summary::-webkit-details-marker{display:none}.gateway-debug>summary strong{display:block;font-size:16px;font-weight:600}.gateway-debug>summary small{display:block;margin-top:4px;color:var(--muted);font-size:13px}.gateway-debug[open]>summary{border-bottom:1px solid var(--line);background:var(--soft)}.gateway-debug[open]>summary>.chevron{transform:rotate(90deg)}.gateway-debug-content{padding:18px;min-width:0}.gateway-debug-actions{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.gateway-debug-actions .note{margin:0}.gateway-debug-actions .actions{flex-shrink:0}
 @media(max-width:1000px){.gateway-debug-actions{flex-direction:column}.gateway-debug>summary{flex-wrap:wrap}.gateway-debug>summary .grow{min-width:160px}}
 </style>
