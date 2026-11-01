@@ -150,7 +150,10 @@ summary:focus-visible,
 }
 
 h1, h2, h3, h4, p { margin: 0; }
-h1:focus { outline: none; }
+/* Page headings are focus targets for navigation, not user-activated
+   controls, so they never show the focus ring. */
+h1:focus,
+h1[tabindex]:focus-visible { outline: none; box-shadow: none; }
 h1 { font-size: 26px; font-weight: 600; letter-spacing: -.5px; }
 h2 { font-size: 18px; font-weight: 600; letter-spacing: -.2px; }
 h3 { font-size: 15px; font-weight: 600; }

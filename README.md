@@ -17,6 +17,17 @@
 
 ## 界面
 
+![服务列表：单个展开入口，分段切换工具、连接与认证、活动](docs/screenshots/02-tools.png)
+
+| | |
+| --- | --- |
+| ![连接与认证分段](docs/screenshots/03-connection.png) | ![活动分段，两次真实 tool_call](docs/screenshots/04-activity.png) |
+| 连接与认证：地址、传输、认证状态与三个操作 | 活动：本服务的真实调用记录 |
+| ![添加服务弹窗](docs/screenshots/05-add-service-light.png) | ![深色主题下的服务列表](docs/screenshots/06-services-dark.png) |
+| 添加服务为模态表单，关闭前确认未保存修改 | 同一界面在深色主题下 |
+
+截图来自本机打包后的应用，采集于 macOS 15 / Apple Silicon，使用隔离数据目录，`demo-echo` 是仓库内一个仅做本机回显的 stdio 服务；活动页两条记录是真实 `tool_call`，不是伪造数据。来源与复现方式见 [截图说明](docs/screenshots/README.md)。
+
 界面采用 Liquid Glass 材质：侧栏、工具栏、对话框与提示条为半透明毛玻璃，卡片与按钮带细高光描边和柔和阴影。系统开启“减少透明度”“提高对比度”或不支持背景模糊时，自动回退为不透明填充，文字对比度始终满足 WCAG AA。
 
 服务页每张卡片只有一个展开入口，面板内以分段切换三种内容：
